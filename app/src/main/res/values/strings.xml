@@ -1,0 +1,9 @@
+<resources>
+  <string name="app_name">EasyTrip_test</string>
+  <string name="title_review">리뷰</string>
+  <string name="title_schedule">스케줄</string>
+  <string name="title_home">Home</string>
+  <string name="title_traffic">교통</string>
+  <string name="title_mypage">마이페이지</string>
+  <string name="spinner_prompt">성별</string>
+</resources>

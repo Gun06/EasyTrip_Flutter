@@ -1,0 +1,423 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:id="@+id/text_mypage"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:background="#FFFFFF"
+  android:orientation="vertical"
+  android:padding="10dp"
+  tools:context=".ui.mypage.MypageFragment">
+
+  <RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <!-- 상단바 -->
+    <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:gravity="center_vertical"
+      android:orientation="horizontal">
+
+      <!-- Back Button -->
+      <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/backbtn_bg"
+        android:contentDescription="뒤로가기 버튼입니다."
+        android:padding="15dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/angle_left" />
+
+      <!-- Title -->
+      <TextView
+        android:id="@+id/title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="프로필"
+        android:textColor="#000000"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+      <!-- Edit Profile Button -->
+      <ImageButton
+        android:id="@+id/edit_profile_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/backbtn_bg"
+        android:contentDescription="편집하기 버튼입니다."
+        android:padding="15dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/edit" />
+    </LinearLayout>
+
+
+    <!-- Profile Picture -->
+    <de.hdodenhof.circleimageview.CircleImageView
+      android:id="@+id/profile_image"
+      android:layout_width="100dp"
+      android:layout_height="100dp"
+      android:layout_centerHorizontal="true"
+      android:layout_marginTop="80dp"
+      android:src="@drawable/profile_img" />
+
+    <!-- Name -->
+    <TextView
+      android:id="@+id/profile_name"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_below="@id/profile_image"
+      android:layout_centerHorizontal="true"
+      android:layout_marginTop="10dp"
+      android:text="고재건"
+      android:textColor="#000000"
+      android:textSize="25sp"
+      android:textStyle="bold" />
+
+    <!-- Email -->
+    <TextView
+      android:id="@+id/profile_email"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_below="@id/profile_name"
+      android:layout_centerHorizontal="true"
+      android:layout_marginTop="4dp"
+      android:text="kogun0626@naver.com"
+      android:textColor="#888888"
+      android:textSize="15sp" />
+
+    <!-- Stats (게시물, 팔로워, 팔로잉) -->
+    <LinearLayout
+      android:id="@+id/stats_layout"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_below="@id/profile_email"
+      android:layout_marginLeft="10dp"
+      android:layout_marginTop="20dp"
+      android:layout_marginRight="10dp"
+      android:background="@drawable/r_corner_white"
+      android:elevation="5dp"
+      android:orientation="horizontal"
+      android:padding="10dp"
+      android:weightSum="3">
+
+      <!-- 게시물 -->
+      <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <LinearLayout
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:gravity="center"
+          android:orientation="vertical">
+
+          <TextView
+            android:id="@+id/posts_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="게시글"
+            android:textColor="#000000"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+          <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="300"
+            android:textColor="@android:color/holo_orange_dark"
+            android:textSize="14sp" />
+
+        </LinearLayout>
+      </LinearLayout>
+
+      <View
+        android:layout_width="2dp"
+        android:layout_height="match_parent"
+        android:background="#F2F2F2" />
+
+      <!-- 팔로워 -->
+      <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <LinearLayout
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:gravity="center"
+          android:orientation="vertical">
+
+          <TextView
+            android:id="@+id/followers_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="팔로워"
+            android:textColor="#000000"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+          <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="238"
+            android:textColor="@android:color/holo_orange_dark"
+            android:textSize="14sp" />
+
+        </LinearLayout>
+      </LinearLayout>
+
+      <View
+        android:layout_width="2dp"
+        android:layout_height="match_parent"
+        android:background="#F2F2F2" />
+
+      <!-- 팔로잉 -->
+      <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+          android:id="@+id/following_count"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="팔로잉"
+          android:textColor="#000000"
+          android:textSize="16sp"
+          android:textStyle="bold" />
+
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="473"
+          android:textColor="@android:color/holo_orange_dark"
+          android:textSize="14sp" />
+      </LinearLayout>
+    </LinearLayout>
+
+    <!-- Menu Items -->
+    <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_below="@id/stats_layout"
+      android:layout_marginLeft="10dp"
+      android:layout_marginTop="30dp"
+      android:layout_marginBottom="10dp"
+      android:layout_marginRight="10dp"
+      android:background="@drawable/r_corner_white"
+      android:elevation="5dp"
+      android:orientation="vertical">
+
+      <!-- My Page -->
+      <RelativeLayout
+        android:id="@+id/my_page_region"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <ImageView
+          android:id="@+id/my_page_icon"
+          android:layout_width="20dp"
+          android:layout_height="20dp"
+          android:layout_alignParentStart="true"
+          android:layout_alignParentLeft="true"
+          android:layout_centerVertical="true"
+          android:src="@drawable/mypage_icon" />
+
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginStart="16dp"
+          android:layout_toEndOf="@id/my_page_icon"
+          android:layout_toRightOf="@id/my_page_icon"
+          android:text="마이페이지"
+          android:textColor="#000000"
+          android:textSize="16sp" />
+
+        <ImageView
+          android:layout_width="20dp"
+          android:layout_height="20dp"
+          android:layout_alignParentEnd="true"
+          android:layout_alignParentRight="true"
+          android:layout_centerVertical="true"
+          android:src="@drawable/angle_right" />
+
+      </RelativeLayout>
+
+      <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="#F2F2F2" />
+
+      <!-- Shopping Cart -->
+      <RelativeLayout
+        android:id="@+id/cart_region"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <ImageView
+          android:id="@+id/cart_icon"
+          android:layout_width="24dp"
+          android:layout_height="24dp"
+          android:layout_alignParentStart="true"
+          android:layout_alignParentLeft="true"
+          android:layout_centerVertical="true"
+          android:src="@drawable/cart_icon" />
+
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginStart="16dp"
+          android:layout_toEndOf="@id/cart_icon"
+          android:layout_toRightOf="@id/cart_icon"
+          android:text="장바구니"
+          android:textColor="#000000"
+          android:textSize="16sp" />
+
+        <ImageView
+          android:layout_width="20dp"
+          android:layout_height="20dp"
+          android:layout_alignParentEnd="true"
+          android:layout_alignParentRight="true"
+          android:layout_centerVertical="true"
+          android:src="@drawable/angle_right" />
+      </RelativeLayout>
+
+      <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="#F2F2F2" />
+
+      <!-- Friend Management -->
+      <RelativeLayout
+        android:id="@+id/friend_region"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <ImageView
+          android:id="@+id/friend_icon"
+          android:layout_width="24dp"
+          android:layout_height="24dp"
+          android:layout_alignParentStart="true"
+          android:layout_alignParentLeft="true"
+          android:layout_centerVertical="true"
+          android:src="@drawable/friend_icon" />
+
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginStart="16dp"
+          android:layout_toEndOf="@id/friend_icon"
+          android:layout_toRightOf="@id/friend_icon"
+          android:text="친구관리"
+          android:textColor="#000000"
+          android:textSize="16sp" />
+
+        <ImageView
+          android:layout_width="20dp"
+          android:layout_height="20dp"
+          android:layout_alignParentEnd="true"
+          android:layout_alignParentRight="true"
+          android:layout_centerVertical="true"
+          android:src="@drawable/angle_right" />
+      </RelativeLayout>
+
+      <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="#F2F2F2" />
+
+      <!-- Inquiry -->
+      <RelativeLayout
+        android:id="@+id/setting_region"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <ImageView
+          android:id="@+id/setting_icon"
+          android:layout_width="24dp"
+          android:layout_height="24dp"
+          android:layout_alignParentStart="true"
+          android:layout_alignParentLeft="true"
+          android:layout_centerVertical="true"
+          android:src="@drawable/setting_icon" />
+
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginStart="16dp"
+          android:layout_toEndOf="@id/setting_icon"
+          android:layout_toRightOf="@id/setting_icon"
+          android:text="문의하기"
+          android:textColor="#000000"
+          android:textSize="16sp" />
+
+        <ImageView
+          android:layout_width="20dp"
+          android:layout_height="20dp"
+          android:layout_alignParentEnd="true"
+          android:layout_alignParentRight="true"
+          android:layout_centerVertical="true"
+          android:src="@drawable/angle_right" />
+      </RelativeLayout>
+
+      <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="#F2F2F2" />
+
+      <!-- SNS Share -->
+      <RelativeLayout
+        android:id="@+id/sns_region"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <ImageView
+          android:id="@+id/sns_icon"
+          android:layout_width="20dp"
+          android:layout_height="20dp"
+          android:layout_alignParentStart="true"
+          android:layout_alignParentLeft="true"
+          android:layout_centerVertical="true"
+          android:src="@drawable/sns_icon" />
+
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginStart="16dp"
+          android:layout_toEndOf="@id/sns_icon"
+          android:layout_toRightOf="@id/sns_icon"
+          android:text="SNS 공유하기"
+          android:textColor="#000000"
+          android:textSize="16sp" />
+
+        <ImageView
+          android:layout_width="20dp"
+          android:layout_height="20dp"
+          android:layout_alignParentEnd="true"
+          android:layout_alignParentRight="true"
+          android:layout_centerVertical="true"
+          android:src="@drawable/angle_right" />
+      </RelativeLayout>
+    </LinearLayout>
+  </RelativeLayout>
+</ScrollView>

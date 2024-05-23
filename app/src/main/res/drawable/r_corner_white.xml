@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- rounded_corner.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+  android:shape="rectangle">
+  <corners android:radius="20dp" /> <!-- 이 값은 테두리의 둥근 정도를 나타냅니다. -->
+  <solid android:color="#ffffff" /> <!-- 배경 색상을 지정합니다. -->
+</shape>
