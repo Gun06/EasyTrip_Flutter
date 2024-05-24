@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:padding="16dp">
+
+  <LinearLayout
+    android:id="@+id/topbar"
+    android:layout_width="match_parent"
+    android:layout_height="50dp"
+    android:layout_marginTop="20dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <ImageButton
+      android:id="@+id/backButton"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:padding="15dp"
+      android:scaleType="fitCenter"
+      android:background="@android:color/transparent"
+      android:src="@drawable/angle_left" />
+  </LinearLayout>
+
+  <TextView
+    android:id="@+id/title"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="여행 시 가장 고려하는 요소는?"
+    android:textSize="24sp"
+    android:textStyle="bold"
+    android:layout_below="@id/topbar"
+    android:layout_marginTop="16dp"
+    android:layout_centerHorizontal="true" />
+
+  <Button
+    android:id="@+id/femaleButton"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_below="@id/title"
+    android:layout_marginTop="24dp"
+    android:text="여성"
+    android:background="@drawable/cursor"
+    android:textColor="@android:color/black"
+    android:layout_marginBottom="8dp"/>
+
+  <Button
+    android:id="@+id/maleButton"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_below="@id/femaleButton"
+    android:layout_marginTop="8dp"
+    android:text="남성"
+    android:background="@drawable/rounded_corner"
+    android:textColor="@android:color/black"
+    android:layout_marginBottom="8dp"/>
+
+  <Button
+    android:id="@+id/otherButton"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_below="@id/maleButton"
+    android:layout_marginTop="8dp"
+    android:text="더 보기"
+    android:background="@drawable/cursor"
+    android:textColor="@android:color/black" />
+
+  <Button
+    android:id="@+id/nextButton"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_alignParentBottom="true"
+    android:layout_marginBottom="16dp"
+    android:text="다음"
+    android:background="@drawable/cursor"
+    android:textColor="@android:color/white" />
+
+</RelativeLayout>

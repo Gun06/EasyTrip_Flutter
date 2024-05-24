@@ -47,7 +47,7 @@ class PopupActivity_1 : Activity() {
   fun mOnClose(v: View) {
     // 데이터 전달하기
     val intent = Intent()
-    intent.putExtra("result_1", closePopup1)
+    intent.putExtra("result", closePopup1)
     setResult(RESULT_OK, intent)
 
     // 액티비티(팝업) 닫기

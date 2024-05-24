@@ -13,7 +13,7 @@ import java.io.IOException
 import java.io.InputStream
 
 class PopupActivity_2 : Activity() {
-  private val closePopup_2 = "Close Popup_2"
+  private val closePopup2 = "Close Popup_2"
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -47,7 +47,7 @@ class PopupActivity_2 : Activity() {
   fun mOnClose(v: View) {
     // 데이터 전달하기
     val intent = Intent()
-    intent.putExtra("result_2", closePopup_2)
+    intent.putExtra("result", closePopup2)
     setResult(RESULT_OK, intent)
 
     // 액티비티(팝업) 닫기
@@ -56,9 +56,7 @@ class PopupActivity_2 : Activity() {
 
   override fun onTouchEvent(event: MotionEvent): Boolean {
     // 바깥레이어 클릭시 안닫히게
-    return if (event.action == MotionEvent.ACTION_OUTSIDE) {
-      false
-    } else true
+    return event.action != MotionEvent.ACTION_OUTSIDE
   }
 
   override fun onBackPressed() {
