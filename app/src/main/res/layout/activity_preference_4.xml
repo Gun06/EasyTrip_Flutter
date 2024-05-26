@@ -1,18 +1,97 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
   android:layout_width="match_parent"
-  android:layout_height="match_parent">
+  android:layout_height="match_parent"
+  android:background="@android:color/white"
+  android:padding="16dp">
 
+  <!-- Title Text -->
+  <TextView
+    android:id="@+id/title4"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="숙박은 어디서?"
+    android:textSize="24sp"
+    android:textStyle="bold"
+    android:textColor="@color/black"
+    android:layout_centerHorizontal="true"
+    android:layout_marginTop="20dp" />
+
+  <!-- Subtitle Text -->
+  <TextView
+    android:id="@+id/subtitle4"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="원하시는 숙박시설을 순서대로 선택해주세요."
+    android:textSize="16sp"
+    android:textColor="@android:color/darker_gray"
+    android:layout_below="@id/title4"
+    android:layout_centerHorizontal="true"
+    android:layout_marginTop="8dp" />
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_below="@id/subtitle4"
+    android:layout_marginTop="32dp"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <Button
+      android:id="@+id/hotel"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="호텔"
+      android:textSize="18sp"
+      android:textColor="@android:color/black"
+      android:background="@drawable/rounded_corner"
+      android:padding="16dp"
+      android:layout_marginBottom="16dp"
+      android:gravity="center"
+      android:clickable="true"
+      android:focusable="true"/>
+
+    <Button
+      android:id="@+id/motel"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="모텔"
+      android:textSize="18sp"
+      android:textColor="@android:color/black"
+      android:background="@drawable/rounded_corner"
+      android:padding="16dp"
+      android:layout_marginBottom="16dp"
+      android:gravity="center"
+      android:clickable="true"
+      android:focusable="true"/>
+
+    <Button
+      android:id="@+id/guestHouse"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="게스트 하우스"
+      android:textSize="18sp"
+      android:textColor="@android:color/black"
+      android:background="@drawable/rounded_corner"
+      android:padding="16dp"
+      android:gravity="center"
+      android:clickable="true"
+      android:focusable="true"/>
+  </LinearLayout>
+
+  <!-- Next Button -->
   <Button
     android:id="@+id/endButton"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginLeft="50dp"
-    android:text="완료"
-    android:backgroundTint="@color/blue_dark"
+    android:text="선호 순서대로 선택해주세요"
+    android:textSize="16sp"
     android:textColor="@android:color/white"
-    android:textSize="18sp"
+    android:background="@color/blue_dark"
+    android:padding="12dp"
     android:layout_alignParentBottom="true"
     android:layout_centerHorizontal="true"
-    android:onClick="goToLoginActivity" />
+    android:gravity="center"
+    android:enabled="false" />
 </RelativeLayout>

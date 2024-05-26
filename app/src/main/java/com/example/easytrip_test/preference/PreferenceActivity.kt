@@ -2,12 +2,19 @@ package com.example.easytrip_test.preference
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 import android.os.Bundle
+import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.ProgressBar
+import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import com.example.easytrip_test.R
 import com.example.easytrip_test.login.SignUpActivity
@@ -16,6 +23,11 @@ class PreferenceActivity : AppCompatActivity() {
 
   private lateinit var progressBar: ProgressBar
   private var currentProgress: Int = 0
+  private val selectedImages = mutableListOf<Int>()
+  private val selectedFoods = mutableListOf<Int>()
+  private val selectedAccommodations = mutableListOf<Int>()
+  private lateinit var nextButton: Button
+  private lateinit var layout: FrameLayout
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -24,7 +36,7 @@ class PreferenceActivity : AppCompatActivity() {
     supportActionBar?.hide()
 
     // 레이아웃 설정
-    val layout = FrameLayout(this)
+    layout = FrameLayout(this)
     layout.layoutParams = ViewGroup.LayoutParams(
       ViewGroup.LayoutParams.MATCH_PARENT,
       ViewGroup.LayoutParams.MATCH_PARENT
@@ -51,28 +63,77 @@ class PreferenceActivity : AppCompatActivity() {
     progressBar.progress = currentProgress
 
     // 각 단계에 맞는 레이아웃 설정
-    when (intent.getIntExtra("step", 1)) {
+    setupStepLayout(intent.getIntExtra("step", 1))
+
+    // Back press callback
+    onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+      override fun handleOnBackPressed() {
+        if (currentProgress > 0) {
+          // 프로그래스바 진행도 감소
+          currentProgress -= 25
+          updateProgressBar(currentProgress)
+
+          // 진행 상태 저장
+          val sharedPref = getSharedPreferences("progress_prefs", Context.MODE_PRIVATE)
+          with(sharedPref.edit()) {
+            putInt("progress", currentProgress)
+            apply()
+          }
+
+          // 이전 단계로 이동
+          val previousStep = intent.getIntExtra("step", 1) - 1
+          if (previousStep > 0) {
+            setupStepLayout(previousStep)
+          } else {
+            isEnabled = false
+            onBackPressedDispatcher.onBackPressed()
+          }
+        } else {
+          isEnabled = false
+          onBackPressedDispatcher.onBackPressed()
+        }
+      }
+    })
+  }
+
+  private fun setupStepLayout(step: Int) {
+    layout.removeAllViews()
+
+    // 각 단계 레이아웃 설정
+    when (step) {
       1 -> {
-        layout.addView(layoutInflater.inflate(R.layout.activity_preference_1, null))
-        setupNextButton(layout, R.id.nextButton, 2)
+        val stepLayout = layoutInflater.inflate(R.layout.activity_preference_1, layout, false) as ViewGroup
+        layout.addView(stepLayout)
+        setupBackButton(stepLayout)
+        setupNextButton(stepLayout, R.id.nextButton1, 2)
       }
       2 -> {
-        layout.addView(layoutInflater.inflate(R.layout.activity_preference_2, null))
-        setupNextButton(layout, R.id.nextButton, 3)
+        val stepLayout = layoutInflater.inflate(R.layout.activity_preference_2, layout, false) as ViewGroup
+        layout.addView(stepLayout)
+        setupNextButton(stepLayout, R.id.nextButton2, 3)
+        setupImageSelection(stepLayout, R.id.nextButton2, selectedImages, 4) // 4개 선택 시 활성화
       }
       3 -> {
-        layout.addView(layoutInflater.inflate(R.layout.activity_preference_3, null))
-        setupNextButton(layout, R.id.nextButton, 4)
+        val stepLayout = layoutInflater.inflate(R.layout.activity_preference_3, layout, false) as ViewGroup
+        layout.addView(stepLayout)
+        setupNextButton(stepLayout, R.id.nextButton3, 4)
+        setupImageSelection(stepLayout, R.id.nextButton3, selectedFoods, 5) // 5개 선택 시 활성화
       }
       4 -> {
-        layout.addView(layoutInflater.inflate(R.layout.activity_preference_4, null))
-        setupNextButton(layout, R.id.endButton, -1) // -1 means end
+        val stepLayout = layoutInflater.inflate(R.layout.activity_preference_4, layout, false) as ViewGroup
+        layout.addView(stepLayout)
+        setupNextButton(stepLayout, R.id.endButton, -1)
+        setupTextViewSelection(stepLayout, R.id.endButton, selectedAccommodations, 3) // 3개 선택 시 활성화
       }
     }
+
+    // 프로그래스바를 항상 맨 위에 유지
+    layout.addView(progressBar)
   }
 
   private fun setupNextButton(layout: ViewGroup, buttonId: Int, nextStep: Int) {
-    val nextButton: Button = layout.findViewById(buttonId)
+    nextButton = layout.findViewById(buttonId)
+    nextButton.isEnabled = buttonId == R.id.nextButton1 // 초기에는 버튼 비활성화
     nextButton.setOnClickListener {
       if (nextStep == -1) {
         // 마지막 단계에서 SignUpActivity로 이동
@@ -92,40 +153,62 @@ class PreferenceActivity : AppCompatActivity() {
         }
 
         // 다음 단계로 이동
-        val intent = Intent(this, PreferenceActivity::class.java)
-        intent.putExtra("step", nextStep)
-        startActivity(intent)
-        finish()
+        setupStepLayout(nextStep)
       }
     }
   }
 
-  override fun onBackPressed() {
-    if (currentProgress > 0) {
-      // 프로그레스바 진행도 감소
-      currentProgress -= 25
-      updateProgressBar(currentProgress)
+  private fun setupBackButton(layout: ViewGroup) {
+    val imageclose: ImageButton = layout.findViewById(R.id.imageclose)
+    imageclose.setOnClickListener {
+      onBackPressedDispatcher.onBackPressed()
+    }
+  }
 
-      // 진행 상태 저장
-      val sharedPref = getSharedPreferences("progress_prefs", Context.MODE_PRIVATE)
-      with(sharedPref.edit()) {
-        putInt("progress", currentProgress)
-        apply()
+  private fun setupImageSelection(layout: ViewGroup, nextButtonId: Int, selectionList: MutableList<Int>, requiredSelections: Int) {
+    val imageIds = listOf(R.id.image1, R.id.image2, R.id.image3, R.id.image4, R.id.food1, R.id.food2, R.id.food3, R.id.food4, R.id.food5)
+    for (imageId in imageIds) {
+      val imageView: ImageView? = layout.findViewById(imageId)
+      imageView?.setOnClickListener {
+        handleSelection(imageView, imageId, nextButtonId, selectionList, requiredSelections)
       }
+    }
+  }
 
-      // 이전 단계로 이동
-      val previousStep = intent.getIntExtra("step", 1) - 1
-      if (previousStep > 0) {
-        val intent = Intent(this, PreferenceActivity::class.java)
-        intent.putExtra("step", previousStep)
-        startActivity(intent)
-        finish()
-      } else {
-        super.onBackPressed() // 맨 처음 단계에서는 기본 뒤로 가기 동작을 수행
+  private fun setupTextViewSelection(layout: ViewGroup, nextButtonId: Int, selectionList: MutableList<Int>, requiredSelections: Int) {
+    val textViewIds = listOf(R.id.hotel, R.id.motel, R.id.guestHouse)
+    for (textViewId in textViewIds) {
+      val textView: TextView? = layout.findViewById(textViewId)
+      textView?.setOnClickListener {
+        handleSelection(textView, textViewId, nextButtonId, selectionList, requiredSelections)
+      }
+    }
+  }
+
+  private fun handleSelection(view: View, viewId: Int, nextButtonId: Int, selectionList: MutableList<Int>, requiredSelections: Int) {
+    if (!selectionList.contains(viewId)) {
+      selectionList.add(viewId)
+      val colorMatrix = ColorMatrix()
+      colorMatrix.setSaturation(0f)
+      val filter = ColorMatrixColorFilter(colorMatrix)
+      if (view is ImageView) {
+        view.colorFilter = filter
+        view.imageAlpha = 100 // 반투명 효과
+      } else if (view is TextView) {
+        view.background.colorFilter = filter
       }
     } else {
-      super.onBackPressed() // 맨 처음 단계에서는 기본 뒤로 가기 동작을 수행
+      selectionList.remove(viewId)
+      if (view is ImageView) {
+        view.clearColorFilter()
+        view.imageAlpha = 255 // 원래 상태로
+      } else if (view is TextView) {
+        view.background.clearColorFilter()
+      }
     }
+
+    val nextButton: Button = findViewById(nextButtonId)
+    nextButton.isEnabled = selectionList.size >= requiredSelections
   }
 
   // ProgressBar 업데이트 메서드 추가

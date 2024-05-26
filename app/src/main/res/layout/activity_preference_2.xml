@@ -1,27 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
+  android:background="@android:color/white"
   android:padding="16dp">
 
-  <LinearLayout
-    android:id="@+id/topbar"
-    android:layout_width="match_parent"
-    android:layout_height="50dp"
-    android:layout_marginTop="20dp"
-    android:gravity="center_vertical"
-    android:orientation="horizontal">
-
-    <ImageButton
-      android:id="@+id/backButton"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:padding="15dp"
-      android:scaleType="fitCenter"
-      android:background="@android:color/transparent"
-      android:src="@drawable/angle_left" />
-  </LinearLayout>
-
+  <!-- Title Text -->
   <TextView
     android:id="@+id/title"
     android:layout_width="wrap_content"
@@ -29,50 +14,113 @@
     android:text="여행 시 가장 고려하는 요소는?"
     android:textSize="24sp"
     android:textStyle="bold"
-    android:layout_below="@id/topbar"
-    android:layout_marginTop="16dp"
-    android:layout_centerHorizontal="true" />
+    android:textColor="@color/black"
+    android:layout_centerHorizontal="true"
+    android:layout_marginTop="20dp" />
 
-  <Button
-    android:id="@+id/femaleButton"
-    android:layout_width="match_parent"
+  <!-- Subtitle Text -->
+  <TextView
+    android:id="@+id/subtitle"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:text="취향을 분석해서 좋아할 여행코스를 추천해드릴게요!"
+    android:textSize="16sp"
+    android:textColor="@android:color/darker_gray"
     android:layout_below="@id/title"
-    android:layout_marginTop="24dp"
-    android:text="여성"
-    android:background="@drawable/cursor"
-    android:textColor="@android:color/black"
-    android:layout_marginBottom="8dp"/>
+    android:layout_centerHorizontal="true"
+    android:layout_marginTop="8dp" />
 
+  <!-- ScrollView for Images -->
+  <ScrollView
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_below="@id/subtitle"
+    android:layout_above="@id/nextButton2"
+    android:layout_marginTop="16dp"
+    android:layout_marginBottom="16dp">
+
+    <!-- ConstraintLayout for Images -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+      android:id="@+id/constraintLayout"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginBottom="16dp">
+
+      <!-- Image Items -->
+      <ImageView
+        android:id="@+id/image1"
+        android:layout_width="0dp"
+        android:layout_height="250dp"
+        android:layout_margin="4dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/food"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintWidth_percent="0.48"
+        app:layout_constraintHeight_percent="0.45" />
+
+      <ImageView
+        android:id="@+id/image2"
+        android:layout_width="0dp"
+        android:layout_height="200dp"
+        android:layout_margin="4dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/lodgment"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.48"
+        app:layout_constraintHeight_percent="0.55" />
+
+      <ImageView
+        android:id="@+id/image3"
+        android:layout_width="0dp"
+        android:layout_height="200dp"
+        android:layout_margin="4dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/play"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintTop_toBottomOf="@id/image1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintWidth_percent="0.48"
+        app:layout_constraintHeight_percent="0.55" />
+
+      <ImageView
+        android:id="@+id/image4"
+        android:layout_width="0dp"
+        android:layout_height="250dp"
+        android:layout_margin="4dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/tourist"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintTop_toBottomOf="@id/image2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.48"
+        app:layout_constraintHeight_percent="0.45" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+  </ScrollView>
+
+  <!-- Next Button -->
   <Button
-    android:id="@+id/maleButton"
+    android:id="@+id/nextButton2"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_below="@id/femaleButton"
-    android:layout_marginTop="8dp"
-    android:text="남성"
-    android:background="@drawable/rounded_corner"
-    android:textColor="@android:color/black"
-    android:layout_marginBottom="8dp"/>
-
-  <Button
-    android:id="@+id/otherButton"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_below="@id/maleButton"
-    android:layout_marginTop="8dp"
-    android:text="더 보기"
-    android:background="@drawable/cursor"
-    android:textColor="@android:color/black" />
-
-  <Button
-    android:id="@+id/nextButton"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:text="선호 순서대로 선택해주세요"
+    android:textSize="16sp"
+    android:textColor="@android:color/white"
+    android:background="@color/blue_dark"
+    android:padding="12dp"
     android:layout_alignParentBottom="true"
-    android:layout_marginBottom="16dp"
-    android:text="다음"
-    android:background="@drawable/cursor"
-    android:textColor="@android:color/white" />
-
+    android:layout_centerHorizontal="true"
+    android:gravity="center"
+    android:enabled="false" />
 </RelativeLayout>
