@@ -118,6 +118,7 @@
     android:backgroundTint="@color/blue_dark"
     android:textColor="@android:color/white"
     android:textSize="18sp"
+    android:padding="12dp"
     android:layout_alignParentBottom="true"
     android:layout_centerHorizontal="true" />
 

@@ -16,6 +16,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.example.easytrip_test.R
 import com.example.easytrip_test.login.SignUpActivity
 
@@ -105,25 +106,25 @@ class PreferenceActivity : AppCompatActivity() {
         val stepLayout = layoutInflater.inflate(R.layout.activity_preference_1, layout, false) as ViewGroup
         layout.addView(stepLayout)
         setupBackButton(stepLayout)
-        setupNextButton(stepLayout, R.id.nextButton1, 2)
+        setupNextButton(stepLayout, R.id.nextButton1, 2, true) // 초기 배경색을 blue_dark로 설정
       }
       2 -> {
         val stepLayout = layoutInflater.inflate(R.layout.activity_preference_2, layout, false) as ViewGroup
         layout.addView(stepLayout)
-        setupNextButton(stepLayout, R.id.nextButton2, 3)
+        setupNextButton(stepLayout, R.id.nextButton2, 3, false) // 초기 배경색을 darker_gray로 설정
         setupImageSelection(stepLayout, R.id.nextButton2, selectedImages, 4) // 4개 선택 시 활성화
       }
       3 -> {
         val stepLayout = layoutInflater.inflate(R.layout.activity_preference_3, layout, false) as ViewGroup
         layout.addView(stepLayout)
-        setupNextButton(stepLayout, R.id.nextButton3, 4)
+        setupNextButton(stepLayout, R.id.nextButton3, 4, false) // 초기 배경색을 darker_gray로 설정
         setupImageSelection(stepLayout, R.id.nextButton3, selectedFoods, 5) // 5개 선택 시 활성화
       }
       4 -> {
         val stepLayout = layoutInflater.inflate(R.layout.activity_preference_4, layout, false) as ViewGroup
         layout.addView(stepLayout)
-        setupNextButton(stepLayout, R.id.endButton, -1)
-        setupTextViewSelection(stepLayout, R.id.endButton, selectedAccommodations, 3) // 3개 선택 시 활성화
+        setupNextButton(stepLayout, R.id.endButton, -1, false) // 초기 배경색을 darker_gray로 설정
+        setupButtonSelection(stepLayout, R.id.endButton, selectedAccommodations, 3) // 3개 선택 시 활성화
       }
     }
 
@@ -131,9 +132,14 @@ class PreferenceActivity : AppCompatActivity() {
     layout.addView(progressBar)
   }
 
-  private fun setupNextButton(layout: ViewGroup, buttonId: Int, nextStep: Int) {
+  private fun setupNextButton(layout: ViewGroup, buttonId: Int, nextStep: Int, isInitialEnabled: Boolean) {
     nextButton = layout.findViewById(buttonId)
-    nextButton.isEnabled = buttonId == R.id.nextButton1 // 초기에는 버튼 비활성화
+    nextButton.isEnabled = isInitialEnabled // 초기 버튼 활성화 상태 설정
+    if (isInitialEnabled) {
+      nextButton.setBackgroundColor(ContextCompat.getColor(this, R.color.blue_dark))
+    } else {
+      nextButton.setBackgroundColor(ContextCompat.getColor(this, android.R.color.darker_gray))
+    }
     nextButton.setOnClickListener {
       if (nextStep == -1) {
         // 마지막 단계에서 SignUpActivity로 이동
@@ -175,13 +181,32 @@ class PreferenceActivity : AppCompatActivity() {
     }
   }
 
-  private fun setupTextViewSelection(layout: ViewGroup, nextButtonId: Int, selectionList: MutableList<Int>, requiredSelections: Int) {
-    val textViewIds = listOf(R.id.hotel, R.id.motel, R.id.guestHouse)
-    for (textViewId in textViewIds) {
-      val textView: TextView? = layout.findViewById(textViewId)
-      textView?.setOnClickListener {
-        handleSelection(textView, textViewId, nextButtonId, selectionList, requiredSelections)
+  private fun setupButtonSelection(layout: ViewGroup, nextButtonId: Int, selectionList: MutableList<Int>, requiredSelections: Int) {
+    val buttonIds = listOf(R.id.hotel, R.id.motel, R.id.guestHouse)
+    for (buttonId in buttonIds) {
+      val button: Button? = layout.findViewById(buttonId)
+      button?.setOnClickListener {
+        handleButtonSelection(button, buttonId, nextButtonId, selectionList, requiredSelections)
       }
+    }
+  }
+
+  private fun handleButtonSelection(button: Button, buttonId: Int, nextButtonId: Int, selectionList: MutableList<Int>, requiredSelections: Int) {
+    if (!selectionList.contains(buttonId)) {
+      selectionList.add(buttonId)
+      button.setBackgroundResource(R.drawable.button_round)
+    } else {
+      selectionList.remove(buttonId)
+      button.setBackgroundColor(ContextCompat.getColor(this, R.color.WhiteSmoke))
+    }
+
+    val nextButton: Button = findViewById(nextButtonId)
+    if (selectionList.size >= requiredSelections) {
+      nextButton.isEnabled = true
+      nextButton.setBackgroundColor(ContextCompat.getColor(this, R.color.blue_dark))
+    } else {
+      nextButton.isEnabled = false
+      nextButton.setBackgroundColor(ContextCompat.getColor(this, android.R.color.darker_gray))
     }
   }
 
@@ -208,7 +233,13 @@ class PreferenceActivity : AppCompatActivity() {
     }
 
     val nextButton: Button = findViewById(nextButtonId)
-    nextButton.isEnabled = selectionList.size >= requiredSelections
+    if (selectionList.size >= requiredSelections) {
+      nextButton.isEnabled = true
+      nextButton.setBackgroundColor(ContextCompat.getColor(this, R.color.blue_dark))
+    } else {
+      nextButton.isEnabled = false
+      nextButton.setBackgroundColor(ContextCompat.getColor(this, android.R.color.darker_gray))
+    }
   }
 
   // ProgressBar 업데이트 메서드 추가
@@ -216,3 +247,6 @@ class PreferenceActivity : AppCompatActivity() {
     progressBar.progress = progress
   }
 }
+
+//2
+

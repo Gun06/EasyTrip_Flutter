@@ -213,7 +213,7 @@
     android:text="선호 순서대로 선택해주세요"
     android:textSize="16sp"
     android:textColor="@android:color/white"
-    android:background="@color/blue_dark"
+    android:backgroundTint="@color/blue_dark"
     android:padding="12dp"
     android:layout_alignParentBottom="true"
     android:layout_centerHorizontal="true"

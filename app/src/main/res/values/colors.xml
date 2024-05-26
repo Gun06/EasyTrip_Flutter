@@ -12,4 +12,5 @@
   <color name="blue_dark">@android:color/holo_blue_dark</color>
   <color name="gray">#7D848D</color>
   <color name="low_blue">#B0DFE5</color>
+  <color name="WhiteSmoke">#F5F5F5</color>
 </resources>

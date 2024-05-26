@@ -36,48 +36,49 @@
     android:layout_below="@id/subtitle4"
     android:layout_marginTop="32dp"
     android:orientation="vertical"
+    android:background="@color/white"
     android:padding="16dp">
 
-    <Button
+    <android.widget.Button
       android:id="@+id/hotel"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:text="호텔"
-      android:textSize="18sp"
+      android:textSize="20dp"
       android:textColor="@android:color/black"
       android:background="@drawable/rounded_corner"
-      android:padding="16dp"
+      android:padding="15dp"
       android:layout_marginBottom="16dp"
       android:gravity="center"
       android:clickable="true"
-      android:focusable="true"/>
+      android:focusable="true" />
 
-    <Button
+    <android.widget.Button
       android:id="@+id/motel"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:text="모텔"
-      android:textSize="18sp"
+      android:textSize="20dp"
       android:textColor="@android:color/black"
       android:background="@drawable/rounded_corner"
-      android:padding="16dp"
+      android:padding="15dp"
       android:layout_marginBottom="16dp"
       android:gravity="center"
       android:clickable="true"
-      android:focusable="true"/>
+      android:focusable="true" />
 
-    <Button
+    <android.widget.Button
       android:id="@+id/guestHouse"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:text="게스트 하우스"
-      android:textSize="18sp"
+      android:textSize="20dp"
       android:textColor="@android:color/black"
       android:background="@drawable/rounded_corner"
-      android:padding="16dp"
+      android:padding="15dp"
       android:gravity="center"
       android:clickable="true"
-      android:focusable="true"/>
+      android:focusable="true" />
   </LinearLayout>
 
   <!-- Next Button -->
@@ -88,7 +89,7 @@
     android:text="선호 순서대로 선택해주세요"
     android:textSize="16sp"
     android:textColor="@android:color/white"
-    android:background="@color/blue_dark"
+    android:backgroundTint="@color/blue_dark"
     android:padding="12dp"
     android:layout_alignParentBottom="true"
     android:layout_centerHorizontal="true"
