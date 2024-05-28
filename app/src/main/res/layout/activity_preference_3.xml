@@ -62,7 +62,7 @@
           android:layout_width="match_parent"
           android:layout_height="match_parent"
           android:scaleType="centerCrop"
-          android:src="@drawable/korea_food"
+          android:src="@drawable/ph_korea_food"
           android:background="?attr/selectableItemBackground"
           android:clickable="true"
           android:focusable="true" />
@@ -93,7 +93,7 @@
           android:layout_width="match_parent"
           android:layout_height="match_parent"
           android:scaleType="centerCrop"
-          android:src="@drawable/china_food"
+          android:src="@drawable/ph_china_food"
           android:background="?attr/selectableItemBackground"
           android:clickable="true"
           android:focusable="true" />
@@ -124,7 +124,7 @@
           android:layout_width="match_parent"
           android:layout_height="match_parent"
           android:scaleType="centerCrop"
-          android:src="@drawable/dessert"
+          android:src="@drawable/ph_dessert"
           android:background="?attr/selectableItemBackground"
           android:clickable="true"
           android:focusable="true" />
@@ -155,7 +155,7 @@
           android:layout_width="match_parent"
           android:layout_height="match_parent"
           android:scaleType="centerCrop"
-          android:src="@drawable/italy_food"
+          android:src="@drawable/ph_italy_food"
           android:background="?attr/selectableItemBackground"
           android:clickable="true"
           android:focusable="true" />
@@ -186,7 +186,7 @@
           android:layout_width="match_parent"
           android:layout_height="match_parent"
           android:scaleType="centerCrop"
-          android:src="@drawable/japan_food"
+          android:src="@drawable/ph_japan_food"
           android:background="?attr/selectableItemBackground"
           android:clickable="true"
           android:focusable="true" />

@@ -38,7 +38,7 @@
     android:id="@+id/LoginId"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/rounded_corner"
+    android:background="@drawable/bg_rounded_corner"
     android:hint="아이디"
     android:inputType="number"
     android:maxLength="10"
@@ -46,14 +46,14 @@
     android:layout_marginBottom="8dp"
     android:layout_marginLeft="20dp"
     android:layout_marginRight="20dp"
-    android:textCursorDrawable="@drawable/cursor"
+    android:textCursorDrawable="@drawable/bg_cursor"
     android:textSize="15sp" />
 
   <EditText
     android:id="@+id/LoginPw"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/rounded_corner"
+    android:background="@drawable/bg_rounded_corner"
     android:hint="비밀번호"
     android:inputType="textPassword"
     android:maxLength="16"
@@ -61,7 +61,7 @@
     android:layout_marginBottom="8dp"
     android:layout_marginLeft="20dp"
     android:layout_marginRight="20dp"
-    android:textCursorDrawable="@drawable/cursor"
+    android:textCursorDrawable="@drawable/bg_cursor"
     android:textSize="15sp" />
 
   <LinearLayout

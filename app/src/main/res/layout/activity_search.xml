@@ -13,7 +13,7 @@
     android:layout_marginTop="10dp"
     android:layout_marginRight="10dp"
     android:layout_weight="1330"
-    android:background="@drawable/round"
+    android:background="@drawable/bg_round"
     android:orientation="vertical"
     android:weightSum="5.5">
 
@@ -27,8 +27,8 @@
       <ImageView
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:background="@drawable/backbtn_bg"
-        android:src="@drawable/search_img3" />
+        android:background="@drawable/bg_backbtn"
+        android:src="@drawable/ic_search_id" />
 
     </LinearLayout>
 
@@ -72,12 +72,12 @@
         android:id="@+id/SearchName"
         android:layout_width="250dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/rounded_corner"
+        android:background="@drawable/bg_rounded_corner"
         android:hint="이름"
         android:minWidth="200dp"
         android:padding="10dp"
         android:paddingLeft="10dp"
-        android:textCursorDrawable="@drawable/cursor"
+        android:textCursorDrawable="@drawable/bg_cursor"
         android:textSize="15dp" />
 
       <requestFocus />
@@ -95,13 +95,13 @@
         android:id="@+id/SearchBirth"
         android:layout_width="250dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/rounded_corner"
+        android:background="@drawable/bg_rounded_corner"
         android:hint="생년월일"
         android:inputType="number"
         android:minWidth="200dp"
         android:paddingLeft="10dp"
         android:padding="10dp"
-        android:textCursorDrawable="@drawable/cursor"
+        android:textCursorDrawable="@drawable/bg_cursor"
         android:textSize="15dp" />
 
     </LinearLayout>
@@ -134,7 +134,7 @@
     android:layout_marginRight="10dp"
     android:layout_marginBottom="10dp"
     android:layout_weight="1230"
-    android:background="@drawable/round"
+    android:background="@drawable/bg_round"
     android:orientation="vertical"
     android:weightSum="6.5">
 
@@ -148,8 +148,8 @@
       <ImageView
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:background="@drawable/backbtn_bg"
-        android:src="@drawable/search_img4" />
+        android:background="@drawable/bg_backbtn"
+        android:src="@drawable/ic_search_pw" />
 
     </LinearLayout>
 
@@ -194,13 +194,13 @@
         android:id="@+id/SearchId"
         android:layout_width="250dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/rounded_corner"
+        android:background="@drawable/bg_rounded_corner"
         android:hint="아이디"
         android:inputType="number"
         android:minWidth="200dp"
         android:padding="10dp"
         android:paddingLeft="10dp"
-        android:textCursorDrawable="@drawable/cursor"
+        android:textCursorDrawable="@drawable/bg_cursor"
         android:textSize="15dp" />
 
     </LinearLayout>
@@ -216,12 +216,12 @@
         android:id="@+id/SearchNamePw"
         android:layout_width="250dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/rounded_corner"
+        android:background="@drawable/bg_rounded_corner"
         android:hint="이름"
         android:minWidth="200dp"
         android:padding="10dp"
         android:paddingLeft="10dp"
-        android:textCursorDrawable="@drawable/cursor"
+        android:textCursorDrawable="@drawable/bg_cursor"
         android:textSize="15dp" />
 
     </LinearLayout>
@@ -237,13 +237,13 @@
         android:id="@+id/SearchBirthPw"
         android:layout_width="250dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/rounded_corner"
+        android:background="@drawable/bg_rounded_corner"
         android:hint="생년월일"
         android:inputType="number"
         android:minWidth="200dp"
         android:padding="10dp"
         android:paddingLeft="10dp"
-        android:textCursorDrawable="@drawable/cursor"
+        android:textCursorDrawable="@drawable/bg_cursor"
         android:textSize="15dp" />
 
     </LinearLayout>

@@ -23,11 +23,11 @@
       <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/backbtn_bg"
+        android:background="@drawable/bg_backbtn"
         android:contentDescription="뒤로가기 버튼입니다."
         android:padding="15dp"
         android:scaleType="fitCenter"
-        android:src="@drawable/angle_left" />
+        android:src="@drawable/ic_angle_left" />
 
       <!-- Title -->
       <TextView
@@ -46,11 +46,11 @@
         android:id="@+id/edit_profile_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/backbtn_bg"
+        android:background="@drawable/bg_backbtn"
         android:contentDescription="편집하기 버튼입니다."
         android:padding="15dp"
         android:scaleType="fitCenter"
-        android:src="@drawable/edit" />
+        android:src="@drawable/ic_edit" />
     </LinearLayout>
 
 
@@ -61,7 +61,7 @@
       android:layout_height="100dp"
       android:layout_centerHorizontal="true"
       android:layout_marginTop="80dp"
-      android:src="@drawable/profile_img" />
+      android:src="@drawable/ph_profile_img" />
 
     <!-- Name -->
     <TextView
@@ -97,7 +97,7 @@
       android:layout_marginLeft="10dp"
       android:layout_marginTop="20dp"
       android:layout_marginRight="10dp"
-      android:background="@drawable/r_corner_white"
+      android:background="@drawable/bg_round_corner_white"
       android:elevation="5dp"
       android:orientation="horizontal"
       android:padding="10dp"
@@ -214,7 +214,7 @@
       android:layout_marginTop="30dp"
       android:layout_marginBottom="10dp"
       android:layout_marginRight="10dp"
-      android:background="@drawable/r_corner_white"
+      android:background="@drawable/bg_round_corner_white"
       android:elevation="5dp"
       android:orientation="vertical">
 
@@ -233,7 +233,7 @@
           android:layout_alignParentStart="true"
           android:layout_alignParentLeft="true"
           android:layout_centerVertical="true"
-          android:src="@drawable/mypage_icon" />
+          android:src="@drawable/ic_mypage2" />
 
         <TextView
           android:layout_width="wrap_content"
@@ -251,7 +251,7 @@
           android:layout_alignParentEnd="true"
           android:layout_alignParentRight="true"
           android:layout_centerVertical="true"
-          android:src="@drawable/angle_right" />
+          android:src="@drawable/ic_angle_right" />
 
       </RelativeLayout>
 
@@ -275,7 +275,7 @@
           android:layout_alignParentStart="true"
           android:layout_alignParentLeft="true"
           android:layout_centerVertical="true"
-          android:src="@drawable/cart_icon" />
+          android:src="@drawable/ic_cart" />
 
         <TextView
           android:layout_width="wrap_content"
@@ -293,7 +293,7 @@
           android:layout_alignParentEnd="true"
           android:layout_alignParentRight="true"
           android:layout_centerVertical="true"
-          android:src="@drawable/angle_right" />
+          android:src="@drawable/ic_angle_right" />
       </RelativeLayout>
 
       <View
@@ -316,7 +316,7 @@
           android:layout_alignParentStart="true"
           android:layout_alignParentLeft="true"
           android:layout_centerVertical="true"
-          android:src="@drawable/friend_icon" />
+          android:src="@drawable/ic_friend" />
 
         <TextView
           android:layout_width="wrap_content"
@@ -334,7 +334,7 @@
           android:layout_alignParentEnd="true"
           android:layout_alignParentRight="true"
           android:layout_centerVertical="true"
-          android:src="@drawable/angle_right" />
+          android:src="@drawable/ic_angle_right" />
       </RelativeLayout>
 
       <View
@@ -357,7 +357,7 @@
           android:layout_alignParentStart="true"
           android:layout_alignParentLeft="true"
           android:layout_centerVertical="true"
-          android:src="@drawable/setting_icon" />
+          android:src="@drawable/ic_setting" />
 
         <TextView
           android:layout_width="wrap_content"
@@ -375,7 +375,7 @@
           android:layout_alignParentEnd="true"
           android:layout_alignParentRight="true"
           android:layout_centerVertical="true"
-          android:src="@drawable/angle_right" />
+          android:src="@drawable/ic_angle_right" />
       </RelativeLayout>
 
       <View
@@ -398,7 +398,7 @@
           android:layout_alignParentStart="true"
           android:layout_alignParentLeft="true"
           android:layout_centerVertical="true"
-          android:src="@drawable/sns_icon" />
+          android:src="@drawable/ic_sns" />
 
         <TextView
           android:layout_width="wrap_content"
@@ -416,7 +416,7 @@
           android:layout_alignParentEnd="true"
           android:layout_alignParentRight="true"
           android:layout_centerVertical="true"
-          android:src="@drawable/angle_right" />
+          android:src="@drawable/ic_angle_right" />
       </RelativeLayout>
     </LinearLayout>
   </RelativeLayout>

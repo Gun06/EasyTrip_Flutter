@@ -194,7 +194,7 @@ class PreferenceActivity : AppCompatActivity() {
   private fun handleButtonSelection(button: Button, buttonId: Int, nextButtonId: Int, selectionList: MutableList<Int>, requiredSelections: Int) {
     if (!selectionList.contains(buttonId)) {
       selectionList.add(buttonId)
-      button.setBackgroundResource(R.drawable.button_round)
+      button.setBackgroundResource(R.drawable.bg_button_round)
     } else {
       selectionList.remove(buttonId)
       button.setBackgroundColor(ContextCompat.getColor(this, R.color.WhiteSmoke))

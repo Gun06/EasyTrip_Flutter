@@ -59,13 +59,13 @@
           android:id="@+id/InputId"
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
-          android:background="@drawable/rounded_corner"
+          android:background="@drawable/bg_rounded_corner"
           android:hint="아이디 ( 학번 )"
           android:inputType="number"
           android:maxLength="10"
           android:padding="20dp"
           android:singleLine="true"
-          android:textCursorDrawable="@drawable/cursor"
+          android:textCursorDrawable="@drawable/bg_cursor"
           android:textSize="15sp" />
 
         <requestFocus />
@@ -81,12 +81,12 @@
           android:id="@+id/InputPw"
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
-          android:background="@drawable/rounded_corner"
+          android:background="@drawable/bg_rounded_corner"
           android:hint="비밀번호"
           android:inputType="textPassword"
           android:padding="20dp"
           android:singleLine="true"
-          android:textCursorDrawable="@drawable/cursor"
+          android:textCursorDrawable="@drawable/bg_cursor"
           android:textSize="15sp" />
       </LinearLayout>
 
@@ -100,12 +100,12 @@
           android:id="@+id/InputConfirmPw"
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
-          android:background="@drawable/rounded_corner"
+          android:background="@drawable/bg_rounded_corner"
           android:hint="비밀번호 확인"
           android:inputType="textPassword"
           android:padding="20dp"
           android:singleLine="true"
-          android:textCursorDrawable="@drawable/cursor"
+          android:textCursorDrawable="@drawable/bg_cursor"
           android:textSize="15sp" />
       </LinearLayout>
 
@@ -131,11 +131,11 @@
           android:id="@+id/InputName"
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
-          android:background="@drawable/rounded_corner"
+          android:background="@drawable/bg_rounded_corner"
           android:hint="이름"
           android:padding="20dp"
           android:singleLine="true"
-          android:textCursorDrawable="@drawable/cursor"
+          android:textCursorDrawable="@drawable/bg_cursor"
           android:textSize="15sp" />
       </LinearLayout>
 
@@ -149,13 +149,13 @@
           android:id="@+id/InputBirth"
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
-          android:background="@drawable/rounded_corner"
+          android:background="@drawable/bg_rounded_corner"
           android:hint="생년월일 ( ex.931104 )"
           android:inputType="number"
           android:maxLength="6"
           android:padding="20dp"
           android:singleLine="true"
-          android:textCursorDrawable="@drawable/cursor"
+          android:textCursorDrawable="@drawable/bg_cursor"
           android:textSize="15sp" />
       </LinearLayout>
 
@@ -169,7 +169,7 @@
           android:id="@+id/spinner"
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
-          android:background="@drawable/rounded_corner"
+          android:background="@drawable/bg_rounded_corner"
           android:padding="20dp"
           android:prompt="@string/spinner_prompt"
           android:textSize="15sp" />
