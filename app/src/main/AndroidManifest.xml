@@ -41,6 +41,8 @@
     <activity android:name=".MainActivity" />
 
     <!--로그인 페이지-->
+    <activity android:name=".ui.mypage.MypageEditActivity" />
+
   </application>
 
 </manifest>

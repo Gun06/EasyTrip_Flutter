@@ -5,7 +5,13 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.*
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.CheckBox
+import android.widget.EditText
+import android.widget.Spinner
+import android.widget.Toast
 import com.example.easytrip_test.R
 import com.example.easytrip_test.popUp.PopupActivity_1
 import com.example.easytrip_test.popUp.PopupActivity_2
@@ -27,9 +33,11 @@ class SignUpActivity : Activity(), View.OnClickListener {
   private lateinit var tname: String
   private lateinit var tbirth: String
   private lateinit var tgender: String
+  private lateinit var tage: String
 
   private var pwCheck: Boolean = false
-  private lateinit var spinner: Spinner
+  private lateinit var genderSpinner: Spinner
+  private lateinit var ageSpinner: Spinner
   private lateinit var adapterSpinner: ArrayAdapter<String>
 
   private val closePopup1 = "Close Popup_1"
@@ -56,17 +64,33 @@ class SignUpActivity : Activity(), View.OnClickListener {
     watchBtn1.setOnClickListener(this)
     watchBtn2.setOnClickListener(this)
 
-    val data = listOf("남자", "여자")
-    spinner = findViewById(R.id.spinner)
-    adapterSpinner = ArrayAdapter(this, android.R.layout.simple_spinner_item, data)
+    val genderData = listOf("남자", "여자")
+    genderSpinner = findViewById(R.id.gender_spinner)
+    adapterSpinner = ArrayAdapter(this, android.R.layout.simple_spinner_item, genderData)
     adapterSpinner.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+    genderSpinner.adapter = NothingSelectedSpinnerAdapter(adapterSpinner, R.layout.spinner_row_nothing_selected_gender, this)
 
-    spinner.adapter = NothingSelectedSpinnerAdapter(adapterSpinner, R.layout.spinner_row_nothing_selected, this)
-
-    spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+    genderSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
       override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-        if (spinner.getItemAtPosition(position) != null) {
-          tgender = spinner.getItemAtPosition(position).toString()
+        if (genderSpinner.getItemAtPosition(position) != null) {
+          tgender = genderSpinner.getItemAtPosition(position).toString()
+        }
+      }
+
+      override fun onNothingSelected(parent: AdapterView<*>) {}
+    }
+
+    // 나이 데이터를 설정
+    val ages = (18..100).map { it.toString() } // 18세부터 100세까지 선택 가능
+    val ageAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, ages)
+    ageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+    ageSpinner = findViewById(R.id.age_spinner)
+    ageSpinner.adapter = ageAdapter
+
+    ageSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+      override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+        if (ageSpinner.getItemAtPosition(position) != null) {
+          tage = ageSpinner.getItemAtPosition(position).toString()
         }
       }
 
@@ -98,6 +122,11 @@ class SignUpActivity : Activity(), View.OnClickListener {
 
     if (tgender.isEmpty()) {
       Toast.makeText(this, "성별을 선택해주세요!", Toast.LENGTH_SHORT).show()
+      return
+    }
+
+    if (tage.isEmpty()) {
+      Toast.makeText(this, "나이를 선택해주세요!", Toast.LENGTH_SHORT).show()
       return
     }
 

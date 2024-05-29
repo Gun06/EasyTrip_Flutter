@@ -35,5 +35,4 @@
     android:label="@string/title_mypage"
     tools:layout="@layout/fragment_mypage" />
 
-
 </navigation>
