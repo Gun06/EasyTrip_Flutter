@@ -1,0 +1,301 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:id="@+id/text_edit_mypage"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:background="#FFFFFF"
+  tools:context=".ui.mypage.MypageFragment">
+
+  <!-- 상단바 -->
+  <LinearLayout
+    android:id="@+id/top_bar"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <!-- Back Button -->
+    <ImageButton
+      android:id="@+id/back_button"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:background="?attr/selectableItemBackgroundBorderless"
+      android:contentDescription="뒤로가기 버튼입니다."
+      android:padding="15dp"
+      android:scaleType="fitCenter"
+      android:src="@drawable/ic_angle_left" />
+
+    <!-- Title -->
+    <TextView
+      android:id="@+id/title"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_weight="1"
+      android:gravity="center"
+      android:text="프로필 편집"
+      android:textColor="#000000"
+      android:textSize="20sp"
+      android:textStyle="bold" />
+
+    <!-- Edit Profile Button -->
+    <TextView
+      android:id="@+id/edit_success_profile_button"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="완료"
+      android:textSize="20dp"
+      android:textColor="@android:color/holo_orange_dark"
+      android:padding="10dp"
+      android:scaleType="fitCenter" />
+  </LinearLayout>
+
+  <!-- Profile and Stats Section -->
+  <LinearLayout
+    android:id="@+id/profile_section"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_below="@id/top_bar"
+    android:gravity="center">
+
+    <!-- Profile Picture -->
+    <de.hdodenhof.circleimageview.CircleImageView
+      android:id="@+id/profile_image"
+      android:layout_width="100dp"
+      android:layout_height="100dp"
+      android:layout_gravity="center"
+      android:layout_marginTop="10dp"
+      android:src="@drawable/ph_profile_img" />
+
+    <!-- Name -->
+    <TextView
+      android:id="@+id/profile_name"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="center"
+      android:layout_marginTop="10dp"
+      android:text="고재건"
+      android:textColor="#000000"
+      android:textSize="25sp"
+      android:textStyle="bold" />
+
+    <!-- Change Profile Picture -->
+    <TextView
+      android:id="@+id/change_profile_picture"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="center"
+      android:layout_marginTop="4dp"
+      android:layout_marginBottom="15dp"
+      android:text="프로필 사진 바꾸기"
+      android:textColor="@android:color/holo_orange_dark"
+      android:textSize="15sp" />
+  </LinearLayout>
+
+  <!-- Scrollable Content -->
+  <ScrollView
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_below="@id/profile_section"
+    android:layout_above="@id/edit_profile_success"
+    android:fillViewport="true">
+
+    <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:paddingStart="16dp"
+      android:paddingEnd="16dp">
+
+
+
+      <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:orientation="vertical">
+
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="이름"
+          android:textColor="#000000"
+          android:textSize="16sp"
+          android:textStyle="bold"
+          android:layout_marginLeft="14dp"
+          android:layout_marginBottom="4dp" />
+
+        <EditText
+          android:id="@+id/InputName"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:background="@drawable/bg_rounded_corner"
+          android:hint="이름"
+          android:inputType="text"
+          android:padding="16dp"
+          android:singleLine="true"
+          android:textCursorDrawable="@drawable/bg_cursor"
+          android:textSize="15sp" />
+      </LinearLayout>
+
+      <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:orientation="vertical">
+
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="아이디(학번)"
+          android:textColor="#000000"
+          android:textSize="16sp"
+          android:textStyle="bold"
+          android:layout_marginLeft="14dp"
+          android:layout_marginBottom="4dp" />
+
+        <EditText
+          android:id="@+id/Inputstudentid"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:background="@drawable/bg_rounded_corner"
+          android:hint="아이디(학번)"
+          android:inputType="text"
+          android:padding="16dp"
+          android:singleLine="true"
+          android:textCursorDrawable="@drawable/bg_cursor"
+          android:textSize="15sp" />
+      </LinearLayout>
+
+      <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:orientation="vertical">
+
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="비밀번호"
+          android:textColor="#000000"
+          android:textSize="16sp"
+          android:textStyle="bold"
+          android:layout_marginLeft="14dp"
+          android:layout_marginBottom="4dp" />
+
+        <EditText
+          android:id="@+id/Inputpw"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:background="@drawable/bg_rounded_corner"
+          android:hint="Password"
+          android:inputType="text"
+          android:padding="16dp"
+          android:singleLine="true"
+          android:textCursorDrawable="@drawable/bg_cursor"
+          android:textSize="15sp" />
+      </LinearLayout>
+
+      <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:orientation="horizontal"
+        android:weightSum="2">
+
+        <LinearLayout
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:orientation="vertical">
+
+          <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="성별"
+            android:textColor="#000000"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginLeft="14dp"
+            android:layout_marginBottom="4dp" />
+
+          <Spinner
+            android:id="@+id/gender_spinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_rounded_corner"
+            android:padding="16dp"
+            android:prompt="@string/spinner_prompt"
+            android:textSize="15sp" />
+        </LinearLayout>
+
+        <LinearLayout
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:layout_marginStart="8dp"
+          android:orientation="vertical">
+
+          <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="나이"
+            android:textColor="#000000"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginLeft="14dp"
+            android:layout_marginBottom="4dp" />
+
+          <Spinner
+            android:id="@+id/age_spinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_rounded_corner"
+            android:padding="16dp"
+            android:prompt="@string/spinner_prompt"
+            android:textSize="15sp" />
+        </LinearLayout>
+      </LinearLayout>
+
+      <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+        android:orientation="vertical">
+
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="전화번호"
+          android:textColor="#000000"
+          android:textSize="16sp"
+          android:textStyle="bold"
+          android:layout_marginLeft="14dp"
+          android:layout_marginBottom="4dp" />
+
+        <EditText
+          android:id="@+id/InputPhoneNumber"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:background="@drawable/bg_rounded_corner"
+          android:hint="010-9465-6269"
+          android:inputType="phone"
+          android:padding="16dp"
+          android:singleLine="true"
+          android:textCursorDrawable="@drawable/bg_cursor"
+          android:textSize="15sp" />
+      </LinearLayout>
+    </LinearLayout>
+  </ScrollView>
+
+  <Button
+    android:id="@+id/edit_profile_success"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_alignParentBottom="true"
+    android:background="@color/blue_dark"
+    android:text="완료"
+    android:textColor="@color/white" />
+</RelativeLayout>

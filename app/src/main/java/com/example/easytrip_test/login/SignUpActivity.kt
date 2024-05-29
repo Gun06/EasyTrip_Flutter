@@ -81,7 +81,7 @@ class SignUpActivity : Activity(), View.OnClickListener {
     }
 
     // 나이 데이터를 설정
-    val ages = (18..100).map { it.toString() } // 18세부터 100세까지 선택 가능
+    val ages = (8..100).map { it.toString() } // 18세부터 100세까지 선택 가능
     val ageAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, ages)
     ageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
     ageSpinner = findViewById(R.id.age_spinner)
