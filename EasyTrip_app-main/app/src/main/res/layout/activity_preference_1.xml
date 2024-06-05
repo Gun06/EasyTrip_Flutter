@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/layout/activity_main.xml -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:padding="16dp"
+  tools:context=".MainActivity">
+
+  <LinearLayout
+    android:id="@+id/topbar"
+    android:layout_width="match_parent"
+    android:layout_height="50dp"
+    android:layout_marginTop="20dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <ImageButton
+      android:id="@+id/imageclose"
+      android:layout_width="25dp"
+      android:layout_height="wrap_content"
+      android:scaleType="fitCenter"
+      android:background="@color/white"
+      android:src="@drawable/ic_close"
+      android:layout_alignParentStart="true"
+      android:layout_alignParentTop="true" />
+
+
+  </LinearLayout>
+  <!-- Tinder Logo and Welcome Text -->
+
+  <TextView
+    android:id="@+id/welcomeText"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="EasyTrip에 오신 것을 환영합니다!"
+    android:textSize="40sp"
+    android:textStyle="bold"
+    android:textColor="@color/black"
+    android:layout_below="@id/topbar"
+    android:layout_centerHorizontal="true"
+    android:layout_marginBottom="24dp" />
+
+  <!-- Rules Text -->
+  <LinearLayout
+    android:id="@+id/rulesContainer"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_below="@id/welcomeText"
+    android:orientation="vertical">
+
+    <TextView
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="아래 사항을 꼼꼼히 확인햊주세요."
+      android:textSize="16sp"
+      android:layout_marginBottom="16dp" />
+
+    <TextView
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="본 어플은 이용하는 모든 분들의 \n더 나은 오늘을 위해 제작되었습니다.😃"
+      android:textSize="16sp"
+      android:layout_marginBottom="16dp" />
+
+    <TextView
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="가입하는 과정에서"
+      android:textSize="16sp"
+      android:textStyle="bold"
+      android:textColor="@color/black"/>
+
+    <TextView
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="타인에게 개인 정보가 노출되지 않도록 주의해주세요.☝ \n안전을 최우선으로❗ "
+      android:textSize="16sp"
+      android:layout_marginBottom="16dp" />
+
+    <TextView
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="여러분들의 데이트를 더 스마트하게 🗣"
+      android:textSize="16sp"
+      android:textColor="@color/black"
+      android:textStyle="bold"/>
+
+    <TextView
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="어플과 함께 더 나은 오늘을 만나세요."
+      android:textSize="16sp"
+      android:layout_marginBottom="16dp" />
+
+    <TextView
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="손 안의 세상, 당신의 손끝에서 펼쳐집니다."
+      android:textSize="16sp"
+      android:textColor="@color/black"
+      android:textStyle="bold"/>
+
+    <TextView
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="새로운 경험, 지금 다운로드하세요! 🚨"
+      android:textSize="16sp"
+      android:layout_marginBottom="24dp" />
+  </LinearLayout>
+
+  <!-- Agree Button -->
+  <Button
+    android:id="@+id/nextButton1"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="동의합니다"
+    android:backgroundTint="@color/blue_dark"
+    android:textColor="@android:color/white"
+    android:textSize="18sp"
+    android:padding="12dp"
+    android:layout_alignParentBottom="true"
+    android:layout_centerHorizontal="true" />
+
+</RelativeLayout>

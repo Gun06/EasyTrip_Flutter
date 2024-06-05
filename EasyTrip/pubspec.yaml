@@ -1,0 +1,41 @@
+name: easytrip
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.1 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  fluttertoast: ^8.0.9  # fluttertoast 패키지 추가
+  shared_preferences: ^2.0.6
+  motion_tab_bar: ^2.0.4
+  image_picker: ^0.8.4+4
+  anim_search_bar: ^2.0.0
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  cached_network_image: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/ic_ez.png
+    - assets/ph_food.jpg
+    - assets/ph_lodgment.jpg
+    - assets/ph_play.jpg
+    - assets/ph_tourist.jpg
+    - assets/ph_korea_food.jpeg
+    - assets/ph_china_food.jpeg
+    - assets/ph_japan_food.webp
+    - assets/ph_italy_food.jpeg
+    - assets/ph_dessert.jpeg
+    - assets/text_1.txt
+    - assets/text_2.txt

@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:background="@android:color/white"
+  android:padding="16dp">
+
+  <!-- Title Text -->
+  <TextView
+    android:id="@+id/title"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="여행 시 가장 고려하는 요소는?"
+    android:textSize="24sp"
+    android:textStyle="bold"
+    android:textColor="@color/black"
+    android:layout_centerHorizontal="true"
+    android:layout_marginTop="20dp" />
+
+  <!-- Subtitle Text -->
+  <TextView
+    android:id="@+id/subtitle"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="취향을 분석해서 좋아할 여행코스를 추천해드릴게요!"
+    android:textSize="16sp"
+    android:textColor="@android:color/darker_gray"
+    android:layout_below="@id/title"
+    android:layout_centerHorizontal="true"
+    android:layout_marginTop="8dp" />
+
+  <!-- ScrollView for Images -->
+  <ScrollView
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_below="@id/subtitle"
+    android:layout_above="@id/nextButton2"
+    android:layout_marginTop="16dp"
+    android:layout_marginBottom="16dp">
+
+    <!-- ConstraintLayout for Images -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+      android:id="@+id/constraintLayout"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginBottom="16dp">
+
+      <!-- FrameLayout for Image and Text -->
+      <FrameLayout
+        android:id="@+id/image1_box"
+        android:layout_width="0dp"
+        android:layout_height="250dp"
+        android:layout_margin="4dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintWidth_percent="0.48"
+        app:layout_constraintHeight_percent="0.45">
+
+        <ImageView
+          android:id="@+id/image1"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:scaleType="centerCrop"
+          android:src="@drawable/ph_food"
+          android:background="?attr/selectableItemBackground"
+          android:clickable="true"
+          android:focusable="true" />
+
+        <TextView
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:text="음식"
+          android:textSize="18sp"
+          android:textColor="@android:color/white"
+          android:gravity="center"
+          android:background="#80000000"
+          android:layout_gravity="bottom" />
+      </FrameLayout>
+
+      <FrameLayout
+        android:id="@+id/image2_box"
+        android:layout_width="0dp"
+        android:layout_height="200dp"
+        android:layout_margin="4dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.48"
+        app:layout_constraintHeight_percent="0.55">
+
+        <ImageView
+          android:id="@+id/image2"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:scaleType="centerCrop"
+          android:src="@drawable/ph_lodgment"
+          android:background="?attr/selectableItemBackground"
+          android:clickable="true"
+          android:focusable="true" />
+
+        <TextView
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:text="숙박"
+          android:textSize="18sp"
+          android:textColor="@android:color/white"
+          android:gravity="center"
+          android:background="#80000000"
+          android:layout_gravity="bottom" />
+      </FrameLayout>
+
+      <FrameLayout
+        android:id="@+id/image3_box"
+        android:layout_width="0dp"
+        android:layout_height="200dp"
+        android:layout_margin="4dp"
+        app:layout_constraintTop_toBottomOf="@id/image1_box"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintWidth_percent="0.48"
+        app:layout_constraintHeight_percent="0.55">
+
+        <ImageView
+          android:id="@+id/image3"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:scaleType="centerCrop"
+          android:src="@drawable/ph_play"
+          android:background="?attr/selectableItemBackground"
+          android:clickable="true"
+          android:focusable="true" />
+
+        <TextView
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:text="문화체험"
+          android:textSize="18sp"
+          android:textColor="@android:color/white"
+          android:gravity="center"
+          android:background="#80000000"
+          android:layout_gravity="bottom" />
+      </FrameLayout>
+
+      <FrameLayout
+        android:id="@+id/image4_box"
+        android:layout_width="0dp"
+        android:layout_height="250dp"
+        android:layout_margin="4dp"
+        app:layout_constraintTop_toBottomOf="@id/image2_box"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.48"
+        app:layout_constraintHeight_percent="0.45">
+
+        <ImageView
+          android:id="@+id/image4"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:scaleType="centerCrop"
+          android:src="@drawable/ph_tourist"
+          android:background="?attr/selectableItemBackground"
+          android:clickable="true"
+          android:focusable="true" />
+
+        <TextView
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:text="관광지"
+          android:textSize="18sp"
+          android:textColor="@android:color/white"
+          android:gravity="center"
+          android:background="#80000000"
+          android:layout_gravity="bottom" />
+      </FrameLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+  </ScrollView>
+
+  <!-- Next Button -->
+  <Button
+    android:id="@+id/nextButton2"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="선호 순서대로 선택해주세요"
+    android:textSize="16sp"
+    android:textColor="@android:color/white"
+    android:backgroundTint="@color/blue_dark"
+    android:padding="12dp"
+    android:layout_alignParentBottom="true"
+    android:layout_centerHorizontal="true"
+    android:gravity="center"
+    android:enabled="false" />
+</RelativeLayout>
