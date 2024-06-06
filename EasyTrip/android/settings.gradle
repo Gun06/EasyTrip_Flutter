@@ -12,6 +12,8 @@ pluginManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://naver.jfrog.io/artifactory/maven/' }
+        maven{url 'https://devrepo.kakao.com/nexus/content/groups/public/' }  // 추가
         gradlePluginPortal()
     }
 }

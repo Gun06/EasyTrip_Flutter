@@ -15,6 +15,17 @@ dependencies:
   motion_tab_bar: ^2.0.4
   image_picker: ^0.8.4+4
   anim_search_bar: ^2.0.0
+  scrollable_positioned_list: ^0.3.8
+  timeline_tile: ^2.0.0
+
+  #커스텀 주간 달력
+  intl: ^0.19.0
+  table_calendar: ^3.0.0
+  flutter_localizations:
+    sdk: flutter
+
+
+
 
 
 dev_dependencies:

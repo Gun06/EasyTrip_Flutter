@@ -1,3 +1,16 @@
+buildscript {
+    ext.kotlin_version = '1.7.0'
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.1.4'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        // 다른 필요한 플러그인 추가
+    }
+}
+
 allprojects {
     repositories {
         google()

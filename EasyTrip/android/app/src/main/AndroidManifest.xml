@@ -1,52 +1,50 @@
 <manifest xmlns:tools="http://schemas.android.com/tools"
-  xmlns:android="http://schemas.android.com/apk/res/android">
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  package="com.example.easytrip">
 
     <uses-feature
       android:name="android.hardware.camera"
       android:required="false" />
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.CAMERA" tools:ignore="ManifestOrder"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
     <application
-        android:label="easytrip"
-        android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+      android:label="easytrip"
+      android:icon="@mipmap/ic_launcher"
+      android:networkSecurityConfig="@xml/network_security_config"> <!-- 추가된 부분 -->
+        <meta-data
+          android:name="com.kakao.sdk.AppKey"
+          android:value="5d2bc59246a7ef930e925c3535a64fb7"/> <!-- YOUR_KAKAO_API_KEY를 실제 카카오맵 API 키로 바꾸세요 -->
         <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:launchMode="singleTop"
-            android:taskAffinity=""
-            android:theme="@style/LaunchTheme"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
-            android:hardwareAccelerated="true"
-            android:windowSoftInputMode="adjustResize">
-            <!-- Specifies an Android theme to apply to this Activity as soon as
-                 the Android process has started. This theme is visible to the user
-                 while the Flutter UI initializes. After that, this theme continues
-                 to determine the Window background behind the Flutter UI. -->
+          android:name=".MainActivity"
+          android:exported="true"
+          android:launchMode="singleTop"
+          android:taskAffinity=""
+          android:theme="@style/CustomLaunchTheme"
+          android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+          android:hardwareAccelerated="true"
+          android:windowSoftInputMode="adjustResize">
             <meta-data
               android:name="io.flutter.embedding.android.NormalTheme"
-              android:resource="@style/NormalTheme"
-              />
+              android:resource="@style/CustomLaunchTheme"/>
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
-            android:name="flutterEmbedding"
-            android:value="2" />
+          android:name="flutterEmbedding"
+          android:value="2"/>
     </application>
 
-    <!-- 카메라와 외부 저장소 접근 권한 추가 -->
-    <uses-permission android:name="android.permission.CAMERA"
-      tools:ignore="ManifestOrder" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <!-- Required to query activities that can process text, see:
-         https://developer.android.com/training/package-visibility and
-         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
-
-         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
