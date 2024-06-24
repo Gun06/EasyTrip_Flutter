@@ -11,54 +11,62 @@ class CustomWeeklyCalendar extends StatefulWidget {
 class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
   DateTime _selectedDate = DateTime.now();
   late ScrollController _scrollController;
-  late PageController _pageController;
-  final double _dateWidth = 50.0;
+  final double _dateWidth = 45.0;
 
   Map<DateTime, List<String>> _events = {
-    DateTime(2024, 6, 5): ['Event 1'],
-    DateTime(2024, 6, 6): ['Event 2'],
-    DateTime(2024, 6, 7): ['Event 3'],
+    DateTime(2024, 6, 24): ['Event 1'],
+    DateTime(2024, 6, 25): ['Event 2'],
+    DateTime(2024, 6, 26): ['Event 3'],
   };
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    _pageController = PageController(initialPage: 1000);
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      _scrollToSelectedDate();
+    });
   }
 
   double _calculateInitialScrollOffset(BuildContext context, DateTime date) {
-    int targetIndex = date.difference(DateTime(2024, 1, 1)).inDays;
-    return targetIndex * _dateWidth - (MediaQuery.of(context).size.width / 2 - _dateWidth / 2);
+    DateTime baseDate = DateTime(2024, 1, 1); // 기준 날짜
+    int targetIndex = date.difference(baseDate).inDays;
+    double offset = targetIndex * _dateWidth;
+
+    double additionalOffset = 740.0;
+    double centeredOffset = offset - (MediaQuery.of(context).size.width / 2 - _dateWidth / 3.5) + additionalOffset;
+
+    // 디버깅 로그 출력
+    /*print('Selected Date: $date');
+    print('Target Index: $targetIndex');
+    print('Offset: $offset');
+    print('Centered Offset: $centeredOffset');*/
+
+    return centeredOffset;
   }
+
+  void _scrollToSelectedDate() {
+    double targetOffset = _calculateInitialScrollOffset(context, _selectedDate);
+    _scrollController.animateTo(
+      targetOffset,
+      duration: Duration(milliseconds: 300), // 애니메이션 시간 조절 가능
+      curve: Curves.easeInOut, // 애니메이션 곡선
+    );
+  }
+
 
   void _selectDate(DateTime date) {
     setState(() {
       _selectedDate = date;
     });
     WidgetsBinding.instance?.addPostFrameCallback((_) {
-      double targetOffset = _calculateInitialScrollOffset(context, date);
-      _scrollController.animateTo(
-        targetOffset,
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+      _scrollToSelectedDate();
     });
   }
 
   void _goToToday() {
     DateTime today = DateTime.now();
-    setState(() {
-      _selectedDate = today;
-    });
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      double targetOffset = _calculateInitialScrollOffset(context, today);
-      _scrollController.animateTo(
-        targetOffset,
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    });
+    _selectDate(today);
   }
 
   void _showMonthlyCalendar(BuildContext context) {
@@ -81,12 +89,7 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
               });
               Navigator.pop(context);
               WidgetsBinding.instance?.addPostFrameCallback((_) {
-                double targetOffset = _calculateInitialScrollOffset(context, selectedDay);
-                _scrollController.animateTo(
-                  targetOffset,
-                  duration: Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                );
+                _scrollToSelectedDate();
               });
             },
             headerStyle: HeaderStyle(
@@ -113,34 +116,24 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
     );
   }
 
+  void _scrollByWeek(int weeks) {
+    double currentOffset = _scrollController.offset;
+    double weekOffset = weeks * _dateWidth * 7;
+    double targetOffset = currentOffset + weekOffset;
+
+    _scrollController.animateTo(
+      targetOffset,
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
   void _previousWeek() {
-    DateTime newDate = _selectedDate.subtract(Duration(days: 7));
-    setState(() {
-      _selectedDate = newDate;
-    });
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      double targetOffset = _calculateInitialScrollOffset(context, newDate);
-      _scrollController.animateTo(
-        targetOffset,
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    });
+    _scrollByWeek(-1);
   }
 
   void _nextWeek() {
-    DateTime newDate = _selectedDate.add(Duration(days: 7));
-    setState(() {
-      _selectedDate = newDate;
-    });
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      double targetOffset = _calculateInitialScrollOffset(context, newDate);
-      _scrollController.animateTo(
-        targetOffset,
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    });
+    _scrollByWeek(1);
   }
 
   String _getDayLetter(DateTime date) {
@@ -273,10 +266,12 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
 
   Widget _buildRecommendedItem(BuildContext context) {
     return Container(
+      color: Colors.white,
       width: double.infinity,
+      height: 180.0, // 적절한 높이로 설정
       child: Card(
         color: Colors.white,
-        margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+        margin: EdgeInsets.symmetric(vertical: 0.0, horizontal: 0.0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.0),
         ),
@@ -295,14 +290,13 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      double targetOffset = _calculateInitialScrollOffset(context, _selectedDate);
-      _scrollController.jumpTo(targetOffset);
-    });
-
     return Scaffold(
-      body: Center(
-        child: _buildRecommendedItem(context),
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          _buildRecommendedItem(context), // 주간 달력을 상단에 배치
+          Expanded(child: Container()), // 나머지 공간을 채우기 위한 빈 컨테이너
+        ],
       ),
     );
   }
