@@ -36,12 +36,6 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
     double additionalOffset = 740.0;
     double centeredOffset = offset - (MediaQuery.of(context).size.width / 2 - _dateWidth / 3.5) + additionalOffset;
 
-    // 디버깅 로그 출력
-    /*print('Selected Date: $date');
-    print('Target Index: $targetIndex');
-    print('Offset: $offset');
-    print('Centered Offset: $centeredOffset');*/
-
     return centeredOffset;
   }
 
@@ -53,7 +47,6 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
       curve: Curves.easeInOut, // 애니메이션 곡선
     );
   }
-
 
   void _selectDate(DateTime date) {
     setState(() {
@@ -70,7 +63,7 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
   }
 
   void _showMonthlyCalendar(BuildContext context) {
-    DateTime tempSelectedDate = _selectedDate; // 선택된 날짜를 일시적으로 저장
+    DateTime tempSelectedDate = _selectedDate; // 선택된 날짜를 임시 저장
 
     showModalBottomSheet(
       context: context,
@@ -103,39 +96,39 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
               ),
               Expanded(
                 child: StatefulBuilder(
-                    builder: (context, setState) {
-                      return TableCalendar(
-                        firstDay: DateTime.utc(2020, 1, 1),
-                        lastDay: DateTime.utc(2030, 12, 31),
-                        focusedDay: _selectedDate,
-                        selectedDayPredicate: (day) {
-                          return isSameDay(tempSelectedDate, day);
-                        },
-                        onDaySelected: (selectedDay, focusedDay) {
-                          setState(() {
-                            tempSelectedDate = selectedDay;
-                          });
-                        },
-                        headerStyle: HeaderStyle(
-                          formatButtonVisible: false,
-                          titleCentered: true,
-                          decoration: BoxDecoration(color: Colors.white),
+                  builder: (context, setState) {
+                    return TableCalendar(
+                      firstDay: DateTime.utc(2020, 1, 1),
+                      lastDay: DateTime.utc(2030, 12, 31),
+                      focusedDay: _selectedDate,
+                      selectedDayPredicate: (day) {
+                        return isSameDay(tempSelectedDate, day);
+                      },
+                      onDaySelected: (selectedDay, focusedDay) {
+                        setState(() {
+                          tempSelectedDate = selectedDay;
+                        });
+                      },
+                      headerStyle: HeaderStyle(
+                        formatButtonVisible: false,
+                        titleCentered: true,
+                        decoration: BoxDecoration(color: Colors.white),
+                      ),
+                      calendarStyle: CalendarStyle(
+                        todayDecoration: BoxDecoration(
+                          color: Colors.blue,
+                          shape: BoxShape.circle,
                         ),
-                        calendarStyle: CalendarStyle(
-                          todayDecoration: BoxDecoration(
-                            color: Colors.blue,
-                            shape: BoxShape.circle,
-                          ),
-                          selectedDecoration: BoxDecoration(
-                            color: Colors.blueAccent,
-                            shape: BoxShape.circle,
-                          ),
-                          outsideDaysVisible: false,
+                        selectedDecoration: BoxDecoration(
+                          color: Colors.blueAccent,
+                          shape: BoxShape.circle,
                         ),
-                        calendarFormat: CalendarFormat.month,
-                        availableCalendarFormats: const {CalendarFormat.month: 'Month'},
-                      );
-                    }
+                        outsideDaysVisible: false,
+                      ),
+                      calendarFormat: CalendarFormat.month,
+                      availableCalendarFormats: const {CalendarFormat.month: 'Month'},
+                    );
+                  },
                 ),
               ),
             ],
@@ -321,12 +314,7 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          _buildRecommendedItem(context), // 주간 달력을 상단에 배치
-          Expanded(child: Container()), // 나머지 공간을 채우기 위한 빈 컨테이너
-        ],
-      ),
+      body: _buildRecommendedItem(context), // 주간 달력을 상단에 배치
     );
   }
 
