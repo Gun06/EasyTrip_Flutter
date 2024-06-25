@@ -69,11 +69,140 @@ class ScheduleFragment extends StatelessWidget {
               height: 200, // 원하는 높이로 고정
               child: CustomWeeklyCalendar(), // CustomWeeklyCalendar 위젯 사용
             ),
+            SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0), // 왼쪽 여유값 추가
+                  child: Text(
+                    '내 일정',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0), // 오른쪽 여유값 추가
+                  child: Text(
+                    '전체보기',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.blue,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8),
             Expanded(
-              child: Container(
-                color: Colors.grey[200], // 예시로 배경색을 지정
-                child: Center(
-                  child: Text('추가 내용 여기에 표시'),
+              child: ListView(
+                children: [
+                  _buildRecommendedItem(
+                    context,
+                    '북한산',
+                    'Panjer, South Denpasar',
+                    '3.3 km',
+                    'https://via.placeholder.com/150',
+                  ),
+                  _buildRecommendedItem(
+                    context,
+                    '정동진 해변',
+                    'Sanur, South Denpasar',
+                    '10.4 km',
+                    'https://via.placeholder.com/150',
+                  ),
+                  _buildRecommendedItem(
+                    context,
+                    '정동진 해변',
+                    'Sanur, South Denpasar',
+                    '10.4 km',
+                    'https://via.placeholder.com/150',
+                  ),
+                  _buildRecommendedItem(
+                    context,
+                    '정동진 해변',
+                    'Sanur, South Denpasar',
+                    '10.4 km',
+                    'https://via.placeholder.com/150',
+                  ),
+                  _buildRecommendedItem(
+                    context,
+                    '정동진 해변',
+                    'Sanur, South Denpasar',
+                    '10.4 km',
+                    'https://via.placeholder.com/150',
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecommendedItem(BuildContext context, String title, String location,
+      String distance, String imageUrl) {
+    return Card(
+      color: Colors.white,
+      // 배경을 흰색으로 설정
+      margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      elevation: 8.0,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8.0),
+              child: Image.network(
+                imageUrl,
+                height: 60,
+                width: 60,
+                fit: BoxFit.cover,
+              ),
+            ),
+            SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  location,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                ),
+                Text(
+                  distance,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+            Spacer(),
+            TextButton(
+              onPressed: () {
+                // 자세히 버튼 클릭 시 동작
+              },
+              child: Text(
+                '자세히',
+                style: TextStyle(
+                  color: Colors.blue,
+                  fontSize: 14,
                 ),
               ),
             ),
