@@ -70,46 +70,75 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
   }
 
   void _showMonthlyCalendar(BuildContext context) {
+    DateTime tempSelectedDate = _selectedDate; // 선택된 날짜를 일시적으로 저장
+
     showModalBottomSheet(
       context: context,
       builder: (context) {
         return Container(
           color: Colors.white,
-          height: MediaQuery.of(context).size.height * 0.6,
-          child: TableCalendar(
-            firstDay: DateTime.utc(2020, 1, 1),
-            lastDay: DateTime.utc(2030, 12, 31),
-            focusedDay: _selectedDate,
-            selectedDayPredicate: (day) {
-              return isSameDay(_selectedDate, day);
-            },
-            onDaySelected: (selectedDay, focusedDay) {
-              setState(() {
-                _selectedDate = selectedDay;
-              });
-              Navigator.pop(context);
-              WidgetsBinding.instance?.addPostFrameCallback((_) {
-                _scrollToSelectedDate();
-              });
-            },
-            headerStyle: HeaderStyle(
-              formatButtonVisible: false,
-              titleCentered: true,
-              decoration: BoxDecoration(color: Colors.white),
-            ),
-            calendarStyle: CalendarStyle(
-              todayDecoration: BoxDecoration(
-                color: Colors.blue,
-                shape: BoxShape.circle,
+          height: MediaQuery.of(context).size.height * 0.53,
+          child: Column(
+            children: [
+              Align(
+                alignment: Alignment.topRight,
+                child: TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _selectedDate = tempSelectedDate;
+                    });
+                    Navigator.pop(context);
+                    WidgetsBinding.instance?.addPostFrameCallback((_) {
+                      _scrollToSelectedDate();
+                    });
+                  },
+                  child: Text(
+                    '완료',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.blue,
+                    ),
+                  ),
+                ),
               ),
-              selectedDecoration: BoxDecoration(
-                color: Colors.blueAccent,
-                shape: BoxShape.circle,
+              Expanded(
+                child: StatefulBuilder(
+                    builder: (context, setState) {
+                      return TableCalendar(
+                        firstDay: DateTime.utc(2020, 1, 1),
+                        lastDay: DateTime.utc(2030, 12, 31),
+                        focusedDay: _selectedDate,
+                        selectedDayPredicate: (day) {
+                          return isSameDay(tempSelectedDate, day);
+                        },
+                        onDaySelected: (selectedDay, focusedDay) {
+                          setState(() {
+                            tempSelectedDate = selectedDay;
+                          });
+                        },
+                        headerStyle: HeaderStyle(
+                          formatButtonVisible: false,
+                          titleCentered: true,
+                          decoration: BoxDecoration(color: Colors.white),
+                        ),
+                        calendarStyle: CalendarStyle(
+                          todayDecoration: BoxDecoration(
+                            color: Colors.blue,
+                            shape: BoxShape.circle,
+                          ),
+                          selectedDecoration: BoxDecoration(
+                            color: Colors.blueAccent,
+                            shape: BoxShape.circle,
+                          ),
+                          outsideDaysVisible: false,
+                        ),
+                        calendarFormat: CalendarFormat.month,
+                        availableCalendarFormats: const {CalendarFormat.month: 'Month'},
+                      );
+                    }
+                ),
               ),
-              outsideDaysVisible: false,
-            ),
-            calendarFormat: CalendarFormat.month,
-            availableCalendarFormats: const {CalendarFormat.month: 'Month'},
+            ],
           ),
         );
       },
