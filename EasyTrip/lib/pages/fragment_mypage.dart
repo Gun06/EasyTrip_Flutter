@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'activity_mypage_edit.dart'; // 프로필 편집 페이지 import
+import 'activity_shopping_cart.dart'; // 장바구니 페이지 import
 
 class MyPageFragment extends StatefulWidget {
   final Map<String, String> userData;
@@ -60,6 +61,13 @@ class _MyPageFragmentState extends State<MyPageFragment> {
   void _logout() {
     Fluttertoast.showToast(msg: '${widget.userData['name']}님 안녕히가세요.');
     Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+  }
+
+  void _navigateToShoppingCart() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ShoppingCartPage()),
+    );
   }
 
   @override
@@ -207,7 +215,10 @@ class _MyPageFragmentState extends State<MyPageFragment> {
                   icon: _menuItems[index]['icon'],
                   text: _menuItems[index]['text'],
                   onTap: () {
-                    // 각 항목 클릭 시
+                    if (_menuItems[index]['text'] == "장바구니") {
+                      _navigateToShoppingCart();
+                    }
+                    // 다른 항목 클릭 시 추가 동작
                   },
                   animation: animation,
                 );
