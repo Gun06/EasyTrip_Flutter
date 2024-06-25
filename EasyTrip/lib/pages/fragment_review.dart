@@ -189,6 +189,7 @@ class _ReviewFragmentState extends State<ReviewFragment> {
                     '10.4 km',
                     'https://via.placeholder.com/150',
                   ),
+
                 ],
               ),
             ),
