@@ -2,9 +2,98 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import '../Custom_WeeklyCalendar.dart';
 
-class ScheduleFragment extends StatelessWidget {
+class ScheduleFragment extends StatefulWidget {
+  @override
+  _ScheduleFragmentState createState() => _ScheduleFragmentState();
+}
+
+class _ScheduleFragmentState extends State<ScheduleFragment> {
+  final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
+  final List<Map<String, String>> recommendedItems = [
+    {
+      'date': '2023-06-25',
+      'title': '북한산',
+      'location': 'Panjer, South Denpasar',
+      'imageUrl': 'https://via.placeholder.com/150'
+    },
+    {
+      'date': '2023-06-26',
+      'title': '정동진 해변',
+      'location': 'Sanur, South Denpasar',
+      'imageUrl': 'https://via.placeholder.com/150'
+    },
+    {
+      'date': '2023-06-27',
+      'title': '정동진 해변',
+      'location': 'Sanur, South Denpasar',
+      'imageUrl': 'https://via.placeholder.com/150'
+    },
+    {
+      'date': '2023-06-28',
+      'title': '정동진 해변',
+      'location': 'Sanur, South Denpasar',
+      'imageUrl': 'https://via.placeholder.com/150'
+    },
+    {
+      'date': '2023-06-29',
+      'title': '정동진 해변',
+      'location': 'Sanur, South Denpasar',
+      'imageUrl': 'https://via.placeholder.com/150'
+    },
+  ];
+
+  List<Map<String, String>> displayedItems = [];
+  bool showAll = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeDisplayedItems();
+  }
+
+  void _initializeDisplayedItems() {
+    setState(() {
+      displayedItems = List.from(recommendedItems.take(3));
+    });
+  }
+
+  void _toggleShowAll() {
+    setState(() {
+      if (showAll) {
+        for (int i = displayedItems.length - 1; i >= 3; i--) {
+          final removedItem = displayedItems.removeAt(i);
+          _listKey.currentState?.removeItem(
+            i,
+                (context, animation) => _buildRecommendedItem(
+              context,
+              removedItem['date']!,
+              removedItem['title']!,
+              removedItem['location']!,
+              removedItem['imageUrl']!,
+              animation,
+            ),
+          );
+        }
+      } else {
+        for (int i = 3; i < recommendedItems.length; i++) {
+          displayedItems.add(recommendedItems[i]);
+          _listKey.currentState?.insertItem(i);
+        }
+      }
+      showAll = !showAll;
+    });
+  }
+
+  void _addSchedule() {
+    // 일정 추가 로직을 여기에 구현합니다.
+    print('일정 추가 버튼 클릭됨');
+  }
+
   @override
   Widget build(BuildContext context) {
+    // 전체보기 버튼 활성화 여부 결정
+    bool isSeeAllEnabled = recommendedItems.length > 4;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -21,10 +110,8 @@ class ScheduleFragment extends StatelessWidget {
           ),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
+          icon: Icon(Icons.add, color: Colors.black),
+          onPressed: _addSchedule,
         ),
         actions: [
           IconButton(
@@ -83,13 +170,16 @@ class ScheduleFragment extends StatelessWidget {
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(right: 8.0), // 오른쪽 여유값 추가
-                  child: Text(
-                    '전체보기',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.blue,
+                GestureDetector(
+                  onTap: isSeeAllEnabled ? _toggleShowAll : null,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8.0), // 오른쪽 여유값 추가
+                    child: Text(
+                      showAll ? '간편보기' : '전체보기',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isSeeAllEnabled ? Colors.blue : Colors.grey,
+                      ),
                     ),
                   ),
                 ),
@@ -97,116 +187,117 @@ class ScheduleFragment extends StatelessWidget {
             ),
             SizedBox(height: 8),
             Expanded(
-              child: ListView(
-                children: [
-                  _buildRecommendedItem(
+              child: AnimatedList(
+                key: _listKey,
+                initialItemCount: displayedItems.length,
+                itemBuilder: (context, index, animation) {
+                  return _buildRecommendedItem(
                     context,
-                    '북한산',
-                    'Panjer, South Denpasar',
-                    '3.3 km',
-                    'https://via.placeholder.com/150',
-                  ),
-                  _buildRecommendedItem(
-                    context,
-                    '정동진 해변',
-                    'Sanur, South Denpasar',
-                    '10.4 km',
-                    'https://via.placeholder.com/150',
-                  ),
-                  _buildRecommendedItem(
-                    context,
-                    '정동진 해변',
-                    'Sanur, South Denpasar',
-                    '10.4 km',
-                    'https://via.placeholder.com/150',
-                  ),
-                  _buildRecommendedItem(
-                    context,
-                    '정동진 해변',
-                    'Sanur, South Denpasar',
-                    '10.4 km',
-                    'https://via.placeholder.com/150',
-                  ),
-                  _buildRecommendedItem(
-                    context,
-                    '정동진 해변',
-                    'Sanur, South Denpasar',
-                    '10.4 km',
-                    'https://via.placeholder.com/150',
-                  ),
-                ],
+                    displayedItems[index]['date']!,
+                    displayedItems[index]['title']!,
+                    displayedItems[index]['location']!,
+                    displayedItems[index]['imageUrl']!,
+                    animation,
+                  );
+                },
               ),
             ),
+            if (!showAll && recommendedItems.length > 3)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 60.0),
+                child: Text(
+                  '더보기Ⅴ',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildRecommendedItem(BuildContext context, String title, String location,
-      String distance, String imageUrl) {
-    return Card(
-      color: Colors.white,
-      // 배경을 흰색으로 설정
-      margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.0),
-      ),
-      elevation: 8.0,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
-              child: Image.network(
-                imageUrl,
-                height: 60,
-                width: 60,
-                fit: BoxFit.cover,
-              ),
-            ),
-            SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  location,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                ),
-                Text(
-                  distance,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
-            ),
-            Spacer(),
-            TextButton(
-              onPressed: () {
-                // 자세히 버튼 클릭 시 동작
-              },
-              child: Text(
-                '자세히',
-                style: TextStyle(
-                  color: Colors.blue,
-                  fontSize: 14,
+  Widget _buildRecommendedItem(
+      BuildContext context, String date, String title, String location, String imageUrl, Animation<double> animation) {
+    return SizeTransition(
+      sizeFactor: animation,
+      child: Card(
+        color: Colors.white,
+        // 배경을 흰색으로 설정
+        margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        elevation: 8.0,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8.0),
+                child: Image.network(
+                  imageUrl,
+                  height: 70,
+                  width: 70,
+                  fit: BoxFit.cover,
                 ),
               ),
-            ),
-          ],
+              SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today, size: 14, color: Colors.grey),
+                      SizedBox(width: 4),
+                      Text(
+                        date,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Icon(Icons.place, size: 14, color: Colors.grey),
+                      SizedBox(width: 4),
+                      Text(
+                        location,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Spacer(),
+              TextButton(
+                onPressed: () {
+                  // 자세히 버튼 클릭 시 동작
+                },
+                child: Text(
+                  '자세히',
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
