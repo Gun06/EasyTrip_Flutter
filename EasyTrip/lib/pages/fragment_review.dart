@@ -1,7 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:anim_search_bar/anim_search_bar.dart';
 
-class ReviewFragment extends StatelessWidget {
+class ReviewFragment extends StatefulWidget {
+  @override
+  _ReviewFragmentState createState() => _ReviewFragmentState();
+}
+
+class _ReviewFragmentState extends State<ReviewFragment> {
+  final ScrollController _scrollController = ScrollController();
+  bool _showScrollToTopButton = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_scrollListener);
+  }
+
+  void _scrollListener() {
+    if (_scrollController.offset >= 50) {
+      setState(() {
+        _showScrollToTopButton = true;
+      });
+    } else {
+      setState(() {
+        _showScrollToTopButton = false;
+      });
+    }
+  }
+
+  void _scrollToTop() {
+    _scrollController.animateTo(
+      0,
+      duration: Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -9,7 +50,11 @@ class ReviewFragment extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'Find your Happiness with Us!',
-          style: TextStyle(color: Colors.black),
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -27,135 +72,153 @@ class ReviewFragment extends StatelessWidget {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          // 새로고침 시 동작
-          print('Page refreshed');
-        },
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 15),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Stack(
+        children: [
+          RefreshIndicator(
+            onRefresh: () async {
+              // 새로고침 시 동작
+              print('Page refreshed');
+            },
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Popular',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                  SizedBox(height: 15),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Popular',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '전체보기',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildPopularItem(
+                          context,
+                          '해운대',
+                          '9 해운대, South Korea',
+                          '16.5 km',
+                          'https://via.placeholder.com/150',
+                        ),
+                        _buildPopularItem(
+                          context,
+                          '광안리',
+                          '8 광안리, South Korea',
+                          '16.5 km',
+                          'https://via.placeholder.com/150',
+                        ),
+                        _buildPopularItem(
+                          context,
+                          'Jimburan',
+                          '7 Jimburan, Indonesia',
+                          '10.5 km',
+                          'https://via.placeholder.com/150',
+                        ),
+                      ],
                     ),
                   ),
-                  Text(
-                    '전체보기',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.blue,
-                    ),
+                  SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '추천',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '전체보기',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ],
+                  ),
+                  _buildRecommendedItem(
+                    context,
+                    '북한산',
+                    'Panjer, South Denpasar',
+                    '3.3 km',
+                    'https://via.placeholder.com/150',
+                  ),
+                  _buildRecommendedItem(
+                    context,
+                    '정동진 해변',
+                    'Sanur, South Denpasar',
+                    '10.4 km',
+                    'https://via.placeholder.com/150',
+                  ),
+                  _buildRecommendedItem(
+                    context,
+                    '정동진 해변',
+                    'Sanur, South Denpasar',
+                    '10.4 km',
+                    'https://via.placeholder.com/150',
+                  ),
+                  _buildRecommendedItem(
+                    context,
+                    '정동진 해변',
+                    'Sanur, South Denpasar',
+                    '10.4 km',
+                    'https://via.placeholder.com/150',
+                  ),
+                  _buildRecommendedItem(
+                    context,
+                    '정동진 해변',
+                    'Sanur, South Denpasar',
+                    '10.4 km',
+                    'https://via.placeholder.com/150',
                   ),
                 ],
               ),
-              SizedBox(height: 8),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildPopularItem(
-                      context,
-                      '해운대',
-                      '9 해운대, South Korea',
-                      '16.5 km',
-                      'https://via.placeholder.com/150',
-                    ),
-                    _buildPopularItem(
-                      context,
-                      '광안리',
-                      '8 광안리, South Korea',
-                      '16.5 km',
-                      'https://via.placeholder.com/150',
-                    ),
-                    _buildPopularItem(
-                      context,
-                      'Jimburan',
-                      '7 Jimburan, Indonesia',
-                      '10.5 km',
-                      'https://via.placeholder.com/150',
-                    ),
-                  ],
+            ),
+          ),
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: AnimatedOpacity(
+              opacity: _showScrollToTopButton ? 1.0 : 0.0,
+              duration: Duration(milliseconds: 300),
+              child: Visibility(
+                visible: _showScrollToTopButton,
+                child: FloatingActionButton(
+                  onPressed: _scrollToTop,
+                  backgroundColor: Colors.white70, // 버튼 배경색 변경
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30), // 모서리를 둥글게
+                  ),
+                  child: Icon(Icons.arrow_upward, color: Colors.black), // 아이콘 색상 변경
                 ),
               ),
-              SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '추천',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    '전체보기',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.blue,
-                    ),
-                  ),
-                ],
-              ),
-              _buildRecommendedItem(
-                context,
-                '북한산',
-                'Panjer, South Denpasar',
-                '3.3 km',
-                'https://via.placeholder.com/150',
-              ),
-              _buildRecommendedItem(
-                context,
-                '정동진 해변',
-                'Sanur, South Denpasar',
-                '10.4 km',
-                'https://via.placeholder.com/150',
-              ),
-              _buildRecommendedItem(
-                context,
-                '정동진 해변',
-                'Sanur, South Denpasar',
-                '10.4 km',
-                'https://via.placeholder.com/150',
-              ),
-              _buildRecommendedItem(
-                context,
-                '정동진 해변',
-                'Sanur, South Denpasar',
-                '10.4 km',
-                'https://via.placeholder.com/150',
-              ),
-              _buildRecommendedItem(
-                context,
-                '정동진 해변',
-                'Sanur, South Denpasar',
-                '10.4 km',
-                'https://via.placeholder.com/150',
-              ),
-              _buildRecommendedItem(
-                context,
-                '울왕리 해변',
-                'Sanur, South Denpasar',
-                '5.6 km',
-                'https://via.placeholder.com/150',
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildPopularItem(BuildContext context, String title, String location, String distance, String imageUrl) {
+  Widget _buildPopularItem(BuildContext context, String title, String location,
+      String distance, String imageUrl) {
     return Container(
       margin: EdgeInsets.only(right: 16.0),
       width: 200,
@@ -178,7 +241,8 @@ class ReviewFragment extends StatelessWidget {
               padding: EdgeInsets.all(8.0),
               decoration: BoxDecoration(
                 color: Colors.black.withOpacity(0.5),
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(10.0)),
+                borderRadius:
+                BorderRadius.vertical(bottom: Radius.circular(10.0)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -229,9 +293,11 @@ class ReviewFragment extends StatelessWidget {
     );
   }
 
-  Widget _buildRecommendedItem(BuildContext context, String title, String location, String distance, String imageUrl) {
+  Widget _buildRecommendedItem(BuildContext context, String title,
+      String location, String distance, String imageUrl) {
     return Card(
-      color: Colors.white, // 배경을 흰색으로 설정
+      color: Colors.white,
+      // 배경을 흰색으로 설정
       margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.0),
