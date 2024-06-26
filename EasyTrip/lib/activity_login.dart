@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // 자동 로그인 기능에 필요한 패키지
+import 'package:shared_preferences/shared_preferences.dart';
 import 'activity_main.dart';
+import 'admin_pages/admin.dart';
 import 'pages/activity_preference_1.dart';
 import 'activity_search.dart';
 
@@ -72,6 +73,13 @@ class _LoginActivityState extends State<LoginActivity> {
           'gender': '남성',
           'age': '18',
         },
+      );
+    } else if (id == '000626' && pw == 'admin1234') {
+      Fluttertoast.showToast(msg: '관리자님 환영합니다.');
+      _saveAutoLogin(_isAutoLoginChecked);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => AdminPage()),
       );
     } else {
       Fluttertoast.showToast(msg: '아이디 또는 비밀번호가 잘못되었습니다!');
