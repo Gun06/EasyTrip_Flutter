@@ -5,7 +5,16 @@ import 'activity_admin_written_reviews.dart';
 import 'activity_amdin_member_info.dart';
 
 class AdminHomePage extends StatelessWidget {
-  const AdminHomePage({Key? key}) : super(key: key);
+  final String searchQuery;
+  final String sortOption;
+  final void Function(String) onSort;
+
+  const AdminHomePage({
+    Key? key,
+    required this.searchQuery,
+    required this.sortOption,
+    required this.onSort,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +32,7 @@ class AdminHomePage extends StatelessWidget {
         body: Column(
           children: [
             Container(
-              color: Colors.white,  // TabBar의 배경색을 흰색으로 설정
+              color: Colors.white, // TabBar의 배경색을 흰색으로 설정
               child: TabBar(
                 labelColor: Colors.black,
                 indicatorColor: Colors.blue,
@@ -38,10 +47,22 @@ class AdminHomePage extends StatelessWidget {
             Expanded(
               child: TabBarView(
                 children: [
-                  MemberInfoPage(),
-                  WrittenReviewsPage(),
-                  ReportedReviewsPage(),
-                  BlockedAccountsPage(),
+                  MemberInfoPage(
+                    searchQuery: searchQuery,
+                    sortOption: sortOption,
+                  ),
+                  WrittenReviewsPage(
+                    searchQuery: searchQuery,
+                    sortOption: sortOption,
+                  ),
+                  ReportedReviewsPage(
+                    searchQuery: searchQuery,
+                    sortOption: sortOption,
+                  ),
+                  BlockedAccountsPage(
+                    searchQuery: searchQuery,
+                    sortOption: sortOption,
+                  ),
                 ],
               ),
             ),

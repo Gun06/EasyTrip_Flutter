@@ -2,25 +2,43 @@ import 'package:flutter/material.dart';
 import 'activity_admin_blocked_account_detail.dart';
 
 class BlockedAccountsPage extends StatelessWidget {
-  const BlockedAccountsPage({Key? key}) : super(key: key);
+  final String searchQuery;
+  final String sortOption;
+
+  const BlockedAccountsPage({
+    Key? key,
+    required this.searchQuery,
+    required this.sortOption,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    List<String> accounts = List.generate(10, (index) => '차단 계정 ${index + 1}');
+    List<String> filteredAccounts = accounts.where((account) => account.contains(searchQuery)).toList();
+
+    if (filteredAccounts.isEmpty) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Text('검색결과 없음', style: TextStyle(fontSize: 16, color: Colors.black)),
+        ),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: Colors.white.withOpacity(0.8),
+      backgroundColor: Colors.white,
       body: ListView.builder(
-        itemCount: 10,
+        itemCount: filteredAccounts.length,
         itemBuilder: (context, index) {
           return Card(
             color: Colors.white,
             margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             elevation: 4,
-            shadowColor: Colors.grey.withOpacity(0.5),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: ListTile(
-              title: Text('아이디: user${index + 1}'),
+              title: Text(filteredAccounts[index]),
               subtitle: Text('차단 사유: 불법 활동'),
               trailing: ElevatedButton(
                 onPressed: () {
