@@ -43,6 +43,7 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
   ];
 
   List<Map<String, String>> displayedItems = [];
+  List<bool> _expanded = [];
   bool showAll = false;
 
   @override
@@ -54,6 +55,7 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
   void _initializeDisplayedItems() {
     setState(() {
       displayedItems = List.from(recommendedItems.take(3));
+      _expanded = List.generate(displayedItems.length, (index) => false);
     });
   }
 
@@ -62,6 +64,7 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
       if (showAll) {
         for (int i = displayedItems.length - 1; i >= 3; i--) {
           final removedItem = displayedItems.removeAt(i);
+          _expanded.removeAt(i);
           _listKey.currentState?.removeItem(
             i,
                 (context, animation) => _buildRecommendedItem(
@@ -71,16 +74,25 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
               removedItem['location']!,
               removedItem['imageUrl']!,
               animation,
+              false,
+              i,
             ),
           );
         }
       } else {
         for (int i = 3; i < recommendedItems.length; i++) {
           displayedItems.add(recommendedItems[i]);
+          _expanded.add(false);
           _listKey.currentState?.insertItem(i);
         }
       }
       showAll = !showAll;
+    });
+  }
+
+  void _toggleExpanded(int index) {
+    setState(() {
+      _expanded[index] = !_expanded[index];
     });
   }
 
@@ -198,6 +210,8 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
                     displayedItems[index]['location']!,
                     displayedItems[index]['imageUrl']!,
                     animation,
+                    _expanded[index],
+                    index,
                   );
                 },
               ),
@@ -220,85 +234,143 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
   }
 
   Widget _buildRecommendedItem(
-      BuildContext context, String date, String title, String location, String imageUrl, Animation<double> animation) {
+      BuildContext context, String date, String title, String location, String imageUrl, Animation<double> animation, bool isExpanded, int index) {
     return SizeTransition(
       sizeFactor: animation,
-      child: Card(
-        color: Colors.white,
-        // 배경을 흰색으로 설정
-        margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
-        ),
-        elevation: 8.0,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8.0),
-                child: Image.network(
-                  imageUrl,
-                  height: 70,
-                  width: 70,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.calendar_today, size: 14, color: Colors.grey),
-                      SizedBox(width: 4),
-                      Text(
-                        date,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
+      child: GestureDetector(
+        onTap: () => _toggleExpanded(index),
+        child: Card(
+          color: Colors.white,
+          margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          elevation: 8.0,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8.0),
+                      child: Image.network(
+                        imageUrl,
+                        height: 70,
+                        width: 70,
+                        fit: BoxFit.cover,
                       ),
-                    ],
-                  ),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
                     ),
-                  ),
-                  Row(
-                    children: [
-                      Icon(Icons.place, size: 14, color: Colors.grey),
-                      SizedBox(width: 4),
-                      Text(
-                        location,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.calendar_today, size: 14, color: Colors.grey),
+                              SizedBox(width: 4),
+                              Text(
+                                date,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              Icon(Icons.place, size: 14, color: Colors.grey),
+                              SizedBox(width: 4),
+                              Text(
+                                location,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    Icon(
+                      isExpanded ? Icons.expand_less : Icons.expand_more,
+                      color: Colors.grey,
+                    ),
+                  ],
+                ),
+                if (isExpanded) ...[
+                  SizedBox(height: 16),
+                  _buildSubItem(context, '홍대 벽화거리', location),
+                  Icon(Icons.expand_more, color: Colors.grey),
+                  _buildSubItem(context, '어글리 베이커리', location),
+                  Icon(Icons.expand_more, color: Colors.grey),
+                  _buildSubItem(context, 'DDP', location),
                 ],
-              ),
-              Spacer(),
-              TextButton(
-                onPressed: () {
-                  // 자세히 버튼 클릭 시 동작
-                },
-                child: Text(
-                  '자세히',
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubItem(BuildContext context, String title, String location) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundImage: NetworkImage('https://via.placeholder.com/50'),
+            radius: 20,
+          ),
+          SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
                   style: TextStyle(
-                    color: Colors.blue,
-                    fontSize: 14,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
+                Row(
+                  children: [
+                    Icon(Icons.place, size: 14, color: Colors.grey),
+                    SizedBox(width: 4),
+                    Text(
+                      location,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Column(
+            children: [
+              Icon(Icons.favorite_border, color: Colors.grey),
+              Text(
+                '1.2K',
+                style: TextStyle(color: Colors.grey),
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
