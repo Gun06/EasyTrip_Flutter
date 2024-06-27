@@ -14,16 +14,16 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
   final double _dateWidth = 45.0;
 
   Map<DateTime, List<String>> _events = {
-    DateTime(2024, 6, 24): ['Event 1'],
-    DateTime(2024, 6, 25): ['Event 2'],
-    DateTime(2024, 6, 26): ['Event 3'],
+    DateTime(2024, 6, 26): ['Event 1'],
+    DateTime(2024, 6, 27): ['Event 2'],
+    DateTime(2024, 6, 28): ['Event 3'],
   };
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToSelectedDate();
     });
   }
@@ -52,7 +52,7 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
     setState(() {
       _selectedDate = date;
     });
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToSelectedDate();
     });
   }
@@ -70,7 +70,7 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
       builder: (context) {
         return Container(
           color: Colors.white,
-          height: MediaQuery.of(context).size.height * 0.53,
+          height: MediaQuery.of(context).size.height * 0.7,
           child: Column(
             children: [
               Align(
@@ -81,7 +81,7 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
                       _selectedDate = tempSelectedDate;
                     });
                     Navigator.pop(context);
-                    WidgetsBinding.instance?.addPostFrameCallback((_) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
                       _scrollToSelectedDate();
                     });
                   },
