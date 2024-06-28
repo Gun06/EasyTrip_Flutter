@@ -13,10 +13,12 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
   late ScrollController _scrollController;
   final double _dateWidth = 45.0;
 
-  Map<DateTime, List<String>> _events = {
-    DateTime(2024, 6, 26): ['Event 1'],
-    DateTime(2024, 6, 27): ['Event 2'],
-    DateTime(2024, 6, 28): ['Event 3'],
+  Map<DateTime, List<Map<String, String>>> _events = {
+    DateTime(2024, 6, 26): [
+      {'time': '10:00', 'title': '프로그래밍 공부하기', 'color': 'red'},
+      {'time': '12:00', 'title': '점심식사', 'color': 'orange'},
+      {'time': '13:00', 'title': 'GitHub 이슈관리 및 커뮤니티 활동', 'color': 'purple'},
+    ],
   };
 
   @override
@@ -63,79 +65,130 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
   }
 
   void _showMonthlyCalendar(BuildContext context) {
-    DateTime tempSelectedDate = _selectedDate; // 선택된 날짜를 임시 저장
-
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true, // 스크롤 가능하도록 설정
       builder: (context) {
-        return Container(
-          color: Colors.white,
-          height: MediaQuery.of(context).size.height * 0.7,
-          child: Column(
-            children: [
-              Align(
-                alignment: Alignment.topRight,
-                child: TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _selectedDate = tempSelectedDate;
-                    });
-                    Navigator.pop(context);
-                    WidgetsBinding.instance?.addPostFrameCallback((_) {
-                      _scrollToSelectedDate();
-                    });
-                  },
-                  child: Text(
-                    '완료',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.blue,
+        return FractionallySizedBox(
+          heightFactor: 0.9, // 모달 높이 조절
+          child: StatefulBuilder(
+            builder: (context, StateSetter setState) {
+              void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
+                setState(() {
+                  _selectedDate = selectedDay;
+                });
+                _selectDate(selectedDay);
+              }
+
+              return Container(
+                color: Colors.white,
+                child: Column(
+                  children: [
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: Text(
+                          '완료',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.blue,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: StatefulBuilder(
-                  builder: (context, setState) {
-                    return TableCalendar(
-                      firstDay: DateTime.utc(2020, 1, 1),
-                      lastDay: DateTime.utc(2030, 12, 31),
-                      focusedDay: _selectedDate,
-                      selectedDayPredicate: (day) {
-                        return isSameDay(tempSelectedDate, day);
-                      },
-                      onDaySelected: (selectedDay, focusedDay) {
-                        setState(() {
-                          tempSelectedDate = selectedDay;
-                        });
-                      },
-                      headerStyle: HeaderStyle(
-                        formatButtonVisible: false,
-                        titleCentered: true,
-                        decoration: BoxDecoration(color: Colors.white),
-                      ),
-                      calendarStyle: CalendarStyle(
-                        todayDecoration: BoxDecoration(
-                          color: Colors.blue,
-                          shape: BoxShape.circle,
+                    Expanded(
+                      child: TableCalendar(
+                        firstDay: DateTime.utc(2020, 1, 1),
+                        lastDay: DateTime.utc(2030, 12, 31),
+                        focusedDay: _selectedDate,
+                        selectedDayPredicate: (day) {
+                          return isSameDay(_selectedDate, day);
+                        },
+                        onDaySelected: _onDaySelected,
+                        headerStyle: HeaderStyle(
+                          formatButtonVisible: false,
+                          titleCentered: true,
+                          decoration: BoxDecoration(color: Colors.white),
                         ),
-                        selectedDecoration: BoxDecoration(
-                          color: Colors.blueAccent,
-                          shape: BoxShape.circle,
+                        calendarStyle: CalendarStyle(
+                          todayDecoration: BoxDecoration(
+                            color: Colors.blue,
+                            shape: BoxShape.circle,
+                          ),
+                          selectedDecoration: BoxDecoration(
+                            color: Colors.blueAccent,
+                            shape: BoxShape.circle,
+                          ),
+                          outsideDaysVisible: false,
                         ),
-                        outsideDaysVisible: false,
+                        calendarFormat: CalendarFormat.month,
+                        availableCalendarFormats: const {CalendarFormat.month: 'Month'},
                       ),
-                      calendarFormat: CalendarFormat.month,
-                      availableCalendarFormats: const {CalendarFormat.month: 'Month'},
-                    );
-                  },
+                    ),
+                    // 선택된 날짜의 이벤트를 표시하는 영역
+                    Container(
+                      height: 320, // 적절한 높이로 설정
+                      color: Colors.grey[200], // 배경색 설정
+                      child: ListView.builder(
+                        itemCount: _events[_selectedDate]?.length ?? 0,
+                        itemBuilder: (context, index) {
+                          final event = _events[_selectedDate]?[index];
+                          return Card(
+                            margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                            child: ListTile(
+                              leading: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    event?['time'] ?? '',
+                                    style: TextStyle(fontSize: 16, color: Colors.blue),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    DateFormat('HH:mm').format(_selectedDate),
+                                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                              title: Text(
+                                event?['title'] ?? '',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              trailing: Icon(
+                                Icons.circle,
+                                color: _getEventColor(event?['color'] ?? 'grey'),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              );
+            },
           ),
         );
       },
-    );
+    ).whenComplete(() {
+      setState(() {}); // 모달이 닫힌 후 부모 상태를 업데이트합니다.
+    });
+  }
+
+  Color _getEventColor(String color) {
+    switch (color) {
+      case 'red':
+        return Colors.red;
+      case 'orange':
+        return Colors.orange;
+      case 'purple':
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
   }
 
   void _scrollByWeek(int weeks) {
@@ -336,3 +389,7 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
     );
   }
 }
+
+void main() => runApp(MaterialApp(
+  home: CustomWeeklyCalendar(),
+));
