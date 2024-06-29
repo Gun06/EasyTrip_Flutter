@@ -133,6 +133,7 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
                       height: 320, // 적절한 높이로 설정
                       color: Colors.grey[200], // 배경색 설정
                       child: ListView.builder(
+                        key: ValueKey(_selectedDate),
                         itemCount: _events[_selectedDate]?.length ?? 0,
                         itemBuilder: (context, index) {
                           final event = _events[_selectedDate]?[index];
@@ -145,11 +146,6 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
                                   Text(
                                     event?['time'] ?? '',
                                     style: TextStyle(fontSize: 16, color: Colors.blue),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    DateFormat('HH:mm').format(_selectedDate),
-                                    style: TextStyle(fontSize: 12, color: Colors.grey),
                                   ),
                                 ],
                               ),
@@ -173,9 +169,7 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
           ),
         );
       },
-    ).whenComplete(() {
-      setState(() {}); // 모달이 닫힌 후 부모 상태를 업데이트합니다.
-    });
+    );
   }
 
   Color _getEventColor(String color) {
