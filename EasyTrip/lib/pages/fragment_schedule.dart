@@ -218,7 +218,7 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
             ),
             if (!showAll && recommendedItems.length > 3)
               Padding(
-                padding: const EdgeInsets.only(bottom: 60.0),
+                padding: const EdgeInsets.only(bottom: 45.0),
                 child: Text(
                   '더보기Ⅴ',
                   style: TextStyle(
