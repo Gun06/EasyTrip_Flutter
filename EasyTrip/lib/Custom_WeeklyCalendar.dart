@@ -14,7 +14,7 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
   final double _dateWidth = 45.0;
 
   Map<DateTime, List<Map<String, String>>> _events = {
-    DateTime(2024, 6, 26): [
+    DateTime(2024, 7, 2): [
       {'time': '10:00', 'title': '프로그래밍 공부하기', 'color': 'red'},
       {'time': '12:00', 'title': '점심식사', 'color': 'orange'},
       {'time': '13:00', 'title': 'GitHub 이슈관리 및 커뮤니티 활동', 'color': 'purple'},
@@ -73,11 +73,12 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
           heightFactor: 0.9, // 모달 높이 조절
           child: StatefulBuilder(
             builder: (context, StateSetter setState) {
+              DateTime _localSelectedDate = _selectedDate;
+
               void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
                 setState(() {
-                  _selectedDate = selectedDay;
+                  _localSelectedDate = selectedDay;
                 });
-                _selectDate(selectedDay);
               }
 
               return Container(
@@ -89,6 +90,9 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
                       child: TextButton(
                         onPressed: () {
                           Navigator.pop(context);
+                          setState(() {
+                            _selectDate(_localSelectedDate);
+                          });
                         },
                         child: Text(
                           '완료',
@@ -103,11 +107,13 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
                       child: TableCalendar(
                         firstDay: DateTime.utc(2020, 1, 1),
                         lastDay: DateTime.utc(2030, 12, 31),
-                        focusedDay: _selectedDate,
+                        focusedDay: _localSelectedDate,
                         selectedDayPredicate: (day) {
-                          return isSameDay(_selectedDate, day);
+                          return isSameDay(_localSelectedDate, day);
                         },
-                        onDaySelected: _onDaySelected,
+                        onDaySelected: (selectedDay, focusedDay) {
+                          _onDaySelected(selectedDay, focusedDay);
+                        },
                         headerStyle: HeaderStyle(
                           formatButtonVisible: false,
                           titleCentered: true,
@@ -132,34 +138,57 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
                     Container(
                       height: 320, // 적절한 높이로 설정
                       color: Colors.grey[200], // 배경색 설정
-                      child: ListView.builder(
-                        key: ValueKey(_selectedDate),
-                        itemCount: _events[_selectedDate]?.length ?? 0,
-                        itemBuilder: (context, index) {
-                          final event = _events[_selectedDate]?[index];
-                          return Card(
-                            margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                            child: ListTile(
-                              leading: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    event?['time'] ?? '',
-                                    style: TextStyle(fontSize: 16, color: Colors.blue),
-                                  ),
-                                ],
-                              ),
-                              title: Text(
-                                event?['title'] ?? '',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                              trailing: Icon(
-                                Icons.circle,
-                                color: _getEventColor(event?['color'] ?? 'grey'),
-                              ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  DateFormat('yyyy년 MM월 dd일').format(_localSelectedDate),
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  '${_events[_localSelectedDate]?.length ?? 0}개',
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                              ],
                             ),
-                          );
-                        },
+                          ),
+                          Expanded(
+                            child: ListView.builder(
+                              key: ValueKey(_localSelectedDate),
+                              itemCount: _events[_localSelectedDate]?.length ?? 0,
+                              itemBuilder: (context, index) {
+                                final event = _events[_localSelectedDate]?[index];
+                                return Card(
+                                  margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                                  child: ListTile(
+                                    leading: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          event?['time'] ?? '',
+                                          style: TextStyle(fontSize: 16, color: Colors.blue),
+                                        ),
+                                      ],
+                                    ),
+                                    title: Text(
+                                      event?['title'] ?? '',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                    trailing: Icon(
+                                      Icons.circle,
+                                      color: _getEventColor(event?['color'] ?? 'grey'),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
