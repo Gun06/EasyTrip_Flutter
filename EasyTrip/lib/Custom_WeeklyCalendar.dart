@@ -36,7 +36,9 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
     double offset = targetIndex * _dateWidth;
 
     double additionalOffset = 740.0;
-    double centeredOffset = offset - (MediaQuery.of(context).size.width / 2 - _dateWidth / 3.5) + additionalOffset;
+    double centeredOffset = offset -
+        (MediaQuery.of(context).size.width / 2 - _dateWidth / 3.5) +
+        additionalOffset;
 
     return centeredOffset;
   }
@@ -68,134 +70,192 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true, // 스크롤 가능하도록 설정
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
       builder: (context) {
-        return FractionallySizedBox(
-          heightFactor: 0.9, // 모달 높이 조절
-          child: StatefulBuilder(
-            builder: (context, StateSetter setState) {
-              DateTime _localSelectedDate = _selectedDate;
+        return Stack(
+          children: [
+            FractionallySizedBox(
+              heightFactor: 0.9, // 모달 높이 조절
+              child: ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+                child: StatefulBuilder(
+                  builder: (context, StateSetter setState) {
+                    DateTime _localSelectedDate = _selectedDate;
 
-              void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-                setState(() {
-                  _localSelectedDate = selectedDay;
-                });
-              }
+                    void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
+                      setState(() {
+                        _localSelectedDate = selectedDay;
+                      });
+                    }
 
-              return Container(
-                color: Colors.white,
-                child: Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          setState(() {
-                            _selectDate(_localSelectedDate);
-                          });
-                        },
-                        child: Text(
-                          '완료',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.blue,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: TableCalendar(
-                        firstDay: DateTime.utc(2020, 1, 1),
-                        lastDay: DateTime.utc(2030, 12, 31),
-                        focusedDay: _localSelectedDate,
-                        selectedDayPredicate: (day) {
-                          return isSameDay(_localSelectedDate, day);
-                        },
-                        onDaySelected: (selectedDay, focusedDay) {
-                          _onDaySelected(selectedDay, focusedDay);
-                        },
-                        headerStyle: HeaderStyle(
-                          formatButtonVisible: false,
-                          titleCentered: true,
-                          decoration: BoxDecoration(color: Colors.white),
-                        ),
-                        calendarStyle: CalendarStyle(
-                          todayDecoration: BoxDecoration(
-                            color: Colors.blue,
-                            shape: BoxShape.circle,
-                          ),
-                          selectedDecoration: BoxDecoration(
-                            color: Colors.blueAccent,
-                            shape: BoxShape.circle,
-                          ),
-                          outsideDaysVisible: false,
-                        ),
-                        calendarFormat: CalendarFormat.month,
-                        availableCalendarFormats: const {CalendarFormat.month: 'Month'},
-                      ),
-                    ),
-                    // 선택된 날짜의 이벤트를 표시하는 영역
-                    Container(
-                      height: 320, // 적절한 높이로 설정
-                      color: Colors.grey[200], // 배경색 설정
+                    return Container(
+                      color: Colors.white,
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  DateFormat('yyyy년 MM월 dd일').format(_localSelectedDate),
-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          Align(
+                            alignment: Alignment.topRight,
+                            child: TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _selectedDate = _localSelectedDate;
+                                });
+                                Navigator.pop(context);
+                              },
+                              child: Text(
+                                '완료',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.blue,
                                 ),
-                                Text(
-                                  '${_events[_localSelectedDate]?.length ?? 0}개',
-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: TableCalendar(
+                              firstDay: DateTime.utc(2020, 1, 1),
+                              lastDay: DateTime.utc(2030, 12, 31),
+                              focusedDay: _localSelectedDate,
+                              selectedDayPredicate: (day) {
+                                return isSameDay(_localSelectedDate, day);
+                              },
+                              onDaySelected: (selectedDay, focusedDay) {
+                                _onDaySelected(selectedDay, focusedDay);
+                              },
+                              headerStyle: HeaderStyle(
+                                formatButtonVisible: false,
+                                titleCentered: true,
+                                decoration: BoxDecoration(color: Colors.white),
+                              ),
+                              calendarStyle: CalendarStyle(
+                                todayDecoration: BoxDecoration(
+                                  color: Colors.blue,
+                                  shape: BoxShape.circle,
+                                ),
+                                selectedDecoration: BoxDecoration(
+                                  color: Colors.blueAccent,
+                                  shape: BoxShape.circle,
+                                ),
+                                outsideDaysVisible: false,
+                              ),
+                              calendarFormat: CalendarFormat.month,
+                              availableCalendarFormats: const {
+                                CalendarFormat.month: 'Month'
+                              },
+                            ),
+                          ),
+                          // 선택된 날짜의 이벤트를 표시하는 영역
+                          Container(
+                            height: 320, // 적절한 높이로 설정
+                            color: Colors.white, // 배경색 설정
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  color: Colors.blue.withOpacity(0.85), // 배경색 설정
+                                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        DateFormat('yyyy년 MM월 dd일')
+                                            .format(_localSelectedDate),
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      Text(
+                                        '${_events[_localSelectedDate]?.length ?? 0}개',
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(height: 10),
+                                Expanded(
+                                  child: ListView.builder(
+                                    key: ValueKey(_localSelectedDate),
+                                    itemCount:
+                                    _events[_localSelectedDate]?.length ?? 0,
+                                    itemBuilder: (context, index) {
+                                      final event =
+                                      _events[_localSelectedDate]?[index];
+                                      return Card(
+                                        margin: EdgeInsets.symmetric(
+                                            vertical: 8.0, horizontal: 10.0),
+                                        elevation: 4.0, // 이 부분에서 elevation을 설정합니다.
+                                        child: ListTile(
+                                          tileColor: Colors.white,
+                                          // 배경색 설정
+                                          shape: RoundedRectangleBorder(
+                                            side: BorderSide(
+                                                color: Colors.blue, width: 1),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          leading: Column(
+                                            mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                event?['time'] ?? '',
+                                                style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: Colors.blue),
+                                              ),
+                                            ],
+                                          ),
+                                          title: Text(
+                                            event?['title'] ?? '',
+                                            style: TextStyle(fontSize: 16),
+                                          ),
+                                          trailing: Icon(
+                                            Icons.circle,
+                                            color: _getEventColor(
+                                                event?['color'] ?? 'grey'),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                          Expanded(
-                            child: ListView.builder(
-                              key: ValueKey(_localSelectedDate),
-                              itemCount: _events[_localSelectedDate]?.length ?? 0,
-                              itemBuilder: (context, index) {
-                                final event = _events[_localSelectedDate]?[index];
-                                return Card(
-                                  margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                                  child: ListTile(
-                                    leading: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          event?['time'] ?? '',
-                                          style: TextStyle(fontSize: 16, color: Colors.blue),
-                                        ),
-                                      ],
-                                    ),
-                                    title: Text(
-                                      event?['title'] ?? '',
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                    trailing: Icon(
-                                      Icons.circle,
-                                      color: _getEventColor(event?['color'] ?? 'grey'),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
                         ],
                       ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              );
-            },
-          ),
+              ),
+            ),
+            Positioned(
+              bottom: 40,
+              right: 16,
+              child: FloatingActionButton(
+                onPressed: () {
+                  // 플로팅 액션 버튼의 기능을 여기에 추가하세요.
+                },
+                backgroundColor: Colors.blue.withOpacity(0.8), // 버튼의 배경색 설정
+                foregroundColor: Colors.white, // 버튼 아이콘의 색상 설정
+                child: Icon(Icons.add),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(100.0), // 둥근 정도 설정
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -286,8 +346,10 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
                 scrollDirection: Axis.horizontal,
                 itemCount: 365,
                 itemBuilder: (context, index) {
-                  DateTime date = DateTime(2024, 1, 1).add(Duration(days: index));
-                  bool isSelected = DateFormat('yyyy-MM-dd').format(date) == DateFormat('yyyy-MM-dd').format(_selectedDate);
+                  DateTime date =
+                  DateTime(2024, 1, 1).add(Duration(days: index));
+                  bool isSelected = DateFormat('yyyy-MM-dd').format(date) ==
+                      DateFormat('yyyy-MM-dd').format(_selectedDate);
                   bool hasEvent = _events[date]?.isNotEmpty ?? false;
                   return GestureDetector(
                     onTap: () {
@@ -306,7 +368,8 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
                         )
                             : null,
                         color: isSelected ? null : Colors.white,
-                        border: Border.all(color: isSelected ? Colors.blue : Colors.grey),
+                        border: Border.all(
+                            color: isSelected ? Colors.blue : Colors.grey),
                         borderRadius: BorderRadius.circular(8.0),
                       ),
                       child: Column(
@@ -316,14 +379,18 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
                             _getDayLetter(date),
                             style: TextStyle(
                               color: isSelected ? Colors.white : Colors.black,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
                           ),
                           Text(
                             DateFormat('d').format(date),
                             style: TextStyle(
                               color: isSelected ? Colors.white : Colors.black,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
                           ),
                           if (hasEvent)
@@ -348,9 +415,11 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
                 child: IgnorePointer(
                   child: Row(
                     children: [
-                      _buildBlurredEdge(Alignment.centerLeft, Alignment.centerRight),
+                      _buildBlurredEdge(
+                          Alignment.centerLeft, Alignment.centerRight),
                       Expanded(child: Container()),
-                      _buildBlurredEdge(Alignment.centerRight, Alignment.centerLeft),
+                      _buildBlurredEdge(
+                          Alignment.centerRight, Alignment.centerLeft),
                     ],
                   ),
                 ),
