@@ -25,7 +25,6 @@ class _HomeFragmentState extends State<HomeFragment> {
                 child: Text('OK'),
                 onPressed: () {
                   Navigator.of(context).pop();
-                  _addMarker(result); // 마커 추가
                 },
               ),
             ],
@@ -58,14 +57,6 @@ class _HomeFragmentState extends State<HomeFragment> {
       await platform.invokeMethod('moveToCurrentLocation');
     } on PlatformException catch (e) {
       print('Failed to move to current location: ${e.message}');
-    }
-  }
-
-  void _addMarker(String location) async {
-    try {
-      await platform.invokeMethod('addMarker', {"location": location});
-    } on PlatformException catch (e) {
-      print('Failed to add marker: ${e.message}');
     }
   }
 
