@@ -34,7 +34,6 @@ class _AdminMemberInfoPageState extends State<AdminMemberInfoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white.withOpacity(0.5), // 전체 배경색 흰색으로 설정
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : ListView.builder(

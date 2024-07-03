@@ -97,8 +97,10 @@ class AdminMemberDetailPage extends StatelessWidget {
                   SizedBox(width: 10),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
-                        // 차단하기 버튼에 대한 동작 추가
+                      onPressed: () async {
+                        print('차단하기 버튼 클릭됨: 사용자 ID ${user.id}');
+                        await DatabaseHelper.instance.blockUser(user.id!);
+                        Navigator.pop(context, true);  // 차단 후 true를 반환하여 업데이트 신호 전달
                       },
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.all(15.0),
