@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:easytrip/models/user.dart';
-import 'package:easytrip/helpers/database_helper.dart';
+import 'helpers/database_helper.dart';
+import 'models/user.dart';
 
 class SignUpActivity extends StatefulWidget {
   @override
@@ -11,8 +11,7 @@ class SignUpActivity extends StatefulWidget {
 class _SignUpActivityState extends State<SignUpActivity> {
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-  TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _nicknameController = TextEditingController();
   final TextEditingController _birthController = TextEditingController();
@@ -199,12 +198,17 @@ class _SignUpActivityState extends State<SignUpActivity> {
   Future<void> _checkDuplicate(
       String type, TextEditingController controller) async {
     String? message;
+    bool isUnique = false;
+    final dbHelper = DatabaseHelper.instance;
+    final users = await dbHelper.getUsers();
+
     if (type == 'id') {
       if (!_isNumeric(controller.text)) {
         message = '아이디는 숫자로만 이루어져야 합니다.';
       } else {
-        _isIdValid = true;
-        message = null;
+        isUnique = !users.any((user) => user.id.toString() == controller.text);
+        message = isUnique ? null : '아이디가 이미 사용 중입니다.';
+        _isIdValid = isUnique;
       }
       setState(() {
         _idCheckMessage = message;
@@ -213,8 +217,9 @@ class _SignUpActivityState extends State<SignUpActivity> {
       if (!_isValidNickname(controller.text)) {
         message = '영어 대문자, 특수문자, 한글(자음,모음) 분리는 불가합니다.';
       } else {
-        _isNicknameValid = true;
-        message = null;
+        isUnique = !users.any((user) => user.nickname == controller.text);
+        message = isUnique ? null : '닉네임이 이미 사용 중입니다.';
+        _isNicknameValid = isUnique;
       }
       setState(() {
         _nicknameCheckMessage = message;
@@ -262,6 +267,40 @@ class _SignUpActivityState extends State<SignUpActivity> {
   void _removeTooltip() {
     _tooltip?.remove();
     _tooltip = null;
+  }
+
+  Future<void> _saveUser() async {
+    if (_isIdValid &&
+        _isPasswordValid &&
+        _isPasswordConfirmValid &&
+        _isNameValid &&
+        _isNicknameValid &&
+        _isBirthDateValid &&
+        _isPhoneNumberValid) {
+      User newUser = User(
+        id: int.parse(_idController.text),
+        password: _passwordController.text,
+        name: _nameController.text,
+        nickname: _nicknameController.text,
+        birthDate: _birthController.text,
+        phoneNumber: _phoneController.text,
+        profileImage: 'assets/ph_profile_img_01.jpg', // 기본 프로필 이미지 설정
+        isBlocked: 0, // 차단 상태 초기화
+      );
+
+      DatabaseHelper dbHelper = DatabaseHelper.instance;
+      await dbHelper.insertUser(newUser);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('회원가입이 완료되었습니다.')),
+      );
+
+      Navigator.pushNamed(context, '/login');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('모든 필드를 올바르게 입력해주세요.')),
+      );
+    }
   }
 
   @override
@@ -542,7 +581,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
           child: ElevatedButton(
             onPressed: _isInformChecked
                 ? () {
-              _handleSignUp(context);
+              _saveUser();
             }
                 : null,
             style: ElevatedButton.styleFrom(
@@ -832,14 +871,13 @@ class _SignUpActivityState extends State<SignUpActivity> {
     );
   }
 
-  void _handleSignUp(BuildContext context) async {
+  void _handleSignUp(BuildContext context) {
     final String tid = _idController.text.trim();
     final String tpw = _passwordController.text.trim();
     final String tpwConfirm = _confirmPasswordController.text.trim();
     final String tname = _nameController.text.trim();
     final String tnickname = _nicknameController.text.trim();
     final String tbirth = _birthController.text.trim();
-    final String tphone = _phoneController.text.trim();
     final bool pwCheck =
     RegExp(r'^(?=.*\d)(?=.*[~`!@#$%^&*()-])(?=.*[a-zA-Z]).{8,16}$')
         .hasMatch(tpw);
@@ -849,8 +887,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
         tpwConfirm.isEmpty ||
         tname.isEmpty ||
         tnickname.isEmpty ||
-        tbirth.isEmpty ||
-        tphone.isEmpty) {
+        tbirth.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('빈칸 없이 모두 입력하세요!')),
       );
@@ -885,19 +922,8 @@ class _SignUpActivityState extends State<SignUpActivity> {
       return;
     }
 
-    // DB에 사용자 정보 저장
-    final user = User(
-      userId: tid,
-      password: tpw,
-      name: tname,
-      nickname: tnickname,
-      birthDate: tbirth,
-      phoneNumber: tphone,
-    );
-
-    await DatabaseHelper.instance.createUser(user);
+    // 회원가입 처리 로직 추가
 
     Navigator.pushNamed(context, '/main', arguments: tid);
   }
 }
-
