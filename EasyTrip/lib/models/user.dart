@@ -1,54 +1,41 @@
-// lib/models/user.dart
 class User {
   final int? id;
-  final String userId;
   final String password;
   final String name;
   final String nickname;
   final String birthDate;
   final String phoneNumber;
+  final String? profileImage; // 프로필 이미지 속성 추가
 
   User({
     this.id,
-    required this.userId,
     required this.password,
     required this.name,
     required this.nickname,
     required this.birthDate,
     required this.phoneNumber,
+    this.profileImage,
   });
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'userId': userId,
-      'password': password,
-      'name': name,
-      'nickname': nickname,
-      'birthDate': birthDate,
-      'phoneNumber': phoneNumber,
-    };
-  }
-
-  factory User.fromMap(Map<String, dynamic> map) {
-    return User(
-      id: map['id'],
-      userId: map['userId'],
-      password: map['password'],
-      name: map['name'],
-      nickname: map['nickname'],
-      birthDate: map['birthDate'],
-      phoneNumber: map['phoneNumber'],
-    );
-  }
-
-  User copy({int? id}) => User(
-    id: id ?? this.id,
-    userId: this.userId,
-    password: this.password,
-    name: this.name,
-    nickname: this.nickname,
-    birthDate: this.birthDate,
-    phoneNumber: this.phoneNumber,
+  // 데이터베이스에서 User 객체를 생성하는 메서드
+  factory User.fromMap(Map<String, dynamic> json) => User(
+    id: json["id"],
+    password: json["password"],
+    name: json["name"],
+    nickname: json["nickname"],
+    birthDate: json["birthDate"],
+    phoneNumber: json["phoneNumber"],
+    profileImage: json["profileImage"],
   );
+
+  // 데이터베이스에 저장할 수 있는 Map 객체를 생성하는 메서드
+  Map<String, dynamic> toMap() => {
+    "id": id,
+    "password": password,
+    "name": name,
+    "nickname": nickname,
+    "birthDate": birthDate,
+    "phoneNumber": phoneNumber,
+    "profileImage": profileImage,
+  };
 }

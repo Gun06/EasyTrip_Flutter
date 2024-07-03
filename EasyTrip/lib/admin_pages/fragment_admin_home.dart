@@ -1,70 +1,49 @@
 import 'package:flutter/material.dart';
-import 'activity_admin_blocked_accounts.dart';
-import 'activity_admin_reported_reviews.dart';
-import 'activity_admin_written_reviews.dart';
 import 'activity_amdin_member_info.dart';
 
-class AdminHomePage extends StatelessWidget {
-  final String searchQuery;
-  final String sortOption;
-  final void Function(String) onSort;
-
-  const AdminHomePage({
-    Key? key,
-    required this.searchQuery,
-    required this.sortOption,
-    required this.onSort,
-  }) : super(key: key);
-
+class FragmentAdminHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 4,
       child: Scaffold(
-        appBar: PreferredSize(
-          preferredSize: Size.fromHeight(0),
-          child: AppBar(
-            backgroundColor: Colors.white,
-            elevation: 0,
-            toolbarHeight: 0,
-          ),
-        ),
-        body: Column(
+        body: Stack(
           children: [
+            // 배경 이미지 추가
             Container(
-              color: Colors.white, // TabBar의 배경색을 흰색으로 설정
-              child: TabBar(
-                labelColor: Colors.black,
-                indicatorColor: Colors.blue,
-                tabs: [
-                  Tab(text: '회원 정보'),
-                  Tab(text: '작성 리뷰'),
-                  Tab(text: '신고 리뷰'),
-                  Tab(text: '차단 계정'),
-                ],
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/background.jpg'), // 배경 이미지 경로
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  MemberInfoPage(
-                    searchQuery: searchQuery,
-                    sortOption: sortOption,
+            Column(
+              children: [
+                Container(
+                  color: Colors.white.withOpacity(0.9), // 색상 변경 및 투명도 추가
+                  child: TabBar(
+                    labelColor: Colors.black,
+                    indicatorColor: Colors.blue,
+                    tabs: [
+                      Tab(text: '회원정보'),
+                      Tab(text: '신고리뷰'),
+                      Tab(text: '신고계정'),
+                      Tab(text: '차단계정'),
+                    ],
                   ),
-                  WrittenReviewsPage(
-                    searchQuery: searchQuery,
-                    sortOption: sortOption,
+                ),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      AdminMemberInfoPage(),
+                      Center(child: Text('신고리뷰 페이지 구현')),
+                      Center(child: Text('신고계정 페이지 구현')),
+                      Center(child: Text('차단계정 페이지 구현')),
+                    ],
                   ),
-                  ReportedReviewsPage(
-                    searchQuery: searchQuery,
-                    sortOption: sortOption,
-                  ),
-                  BlockedAccountsPage(
-                    searchQuery: searchQuery,
-                    sortOption: sortOption,
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),

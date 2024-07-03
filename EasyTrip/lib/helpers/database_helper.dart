@@ -1,111 +1,64 @@
-// lib/helpers/database_helper.dart
-import 'package:sqflite/sqflite.dart';
+import 'dart:async';
 import 'package:path/path.dart';
-import 'package:easytrip/models/user.dart'; // 경로는 프로젝트 구조에 따라 조정
+import 'package:sqflite/sqflite.dart';
+import '../models/user.dart';
 
 class DatabaseHelper {
-  static final DatabaseHelper instance = DatabaseHelper._init();
-
+  static final DatabaseHelper instance = DatabaseHelper._internal();
+  factory DatabaseHelper() => instance;
   static Database? _database;
 
-  DatabaseHelper._init();
+  DatabaseHelper._internal();
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-
-    _database = await _initDB('users.db');
+    _database = await _initDatabase();
     return _database!;
   }
 
-  Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
-
-    return await openDatabase(path, version: 1, onCreate: _createDB);
-  }
-
-  Future _createDB(Database db, int version) async {
-    const idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
-    const textType = 'TEXT NOT NULL';
-
-    await db.execute('''
-CREATE TABLE users ( 
-  id $idType, 
-  userId $textType,
-  password $textType,
-  name $textType,
-  nickname $textType,
-  birthDate $textType,
-  phoneNumber $textType
-  )
-''');
-  }
-
-  Future<User> createUser(User user) async {
-    final db = await instance.database;
-
-    final id = await db.insert('users', user.toMap());
-    return user.copy(id: id);
-  }
-
-  Future<User> readUser(int id) async {
-    final db = await instance.database;
-
-    final maps = await db.query(
-      'users',
-      columns: [
-        'id',
-        'userId',
-        'password',
-        'name',
-        'nickname',
-        'birthDate',
-        'phoneNumber'
-      ],
-      where: 'id = ?',
-      whereArgs: [id],
+  Future<Database> _initDatabase() async {
+    String path = join(await getDatabasesPath(), 'user_database.db');
+    return openDatabase(
+      path,
+      onCreate: (db, version) {
+        return db.execute(
+          'CREATE TABLE users(id INTEGER PRIMARY KEY, password TEXT, name TEXT, nickname TEXT, birthDate TEXT, phoneNumber TEXT)',
+        );
+      },
+      version: 1,
     );
-
-    if (maps.isNotEmpty) {
-      return User.fromMap(maps.first);
-    } else {
-      throw Exception('ID $id not found');
-    }
   }
 
-  Future<List<User>> readAllUsers() async {
-    final db = await instance.database;
-
-    final orderBy = 'name ASC';
-    final result = await db.query('users', orderBy: orderBy);
-
-    return result.map((json) => User.fromMap(json)).toList();
-  }
-
-  Future<int> updateUser(User user) async {
-    final db = await instance.database;
-
-    return db.update(
+  Future<void> insertUser(User user) async {
+    final db = await database;
+    await db.insert(
       'users',
       user.toMap(),
-      where: 'id = ?',
-      whereArgs: [user.id],
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
-  Future<int> deleteUser(int id) async {
-    final db = await instance.database;
+  Future<List<User>> getUsers() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('users');
+    return List.generate(maps.length, (i) {
+      return User(
+        id: maps[i]['id'],
+        password: maps[i]['password'],
+        name: maps[i]['name'],
+        nickname: maps[i]['nickname'],
+        birthDate: maps[i]['birthDate'],
+        phoneNumber: maps[i]['phoneNumber'],
+      );
+    });
+  }
 
-    return await db.delete(
+  Future<void> deleteUser(int id) async {
+    final db = await database;
+    await db.delete(
       'users',
       where: 'id = ?',
       whereArgs: [id],
     );
-  }
-
-  Future close() async {
-    final db = await instance.database;
-
-    db.close();
   }
 }

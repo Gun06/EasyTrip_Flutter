@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class AdminProfilePage extends StatelessWidget {
-  const AdminProfilePage({Key? key}) : super(key: key);
+class FragmentAdminProfile extends StatelessWidget {
+  const FragmentAdminProfile({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +13,7 @@ class AdminProfilePage extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 50,
-              backgroundImage: NetworkImage('https://via.placeholder.com/150'),
+                backgroundImage: NetworkImage('https://via.placeholder.com/150'),
             ),
             SizedBox(height: 16),
             Text(
