@@ -104,125 +104,126 @@ class _LoginActivityState extends State<LoginActivity> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.only(top: 140.0, bottom: 20.0),
-              child: Center(
-                child: Column(
-                  children: <Widget>[
-                    Text(
-                      '로그인',
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.only(top: 140.0, bottom: 20.0),
+                child: Center(
+                  child: Column(
+                    children: <Widget>[
+                      Text(
+                        '로그인',
+                        style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Please sign in to continue our app',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Color(0xFF7D848D),
+                      SizedBox(height: 8),
+                      Text(
+                        'Please sign in to continue our app',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Color(0xFF7D848D),
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            TextField(
-              controller: _loginIdController,
-              decoration: InputDecoration(
-                hintText: '아이디',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                contentPadding: EdgeInsets.all(20.0),
-              ),
-              keyboardType: TextInputType.number,
-              maxLength: 10,
-            ),
-            SizedBox(height: 8.0),
-            TextField(
-              controller: _loginPwController,
-              decoration: InputDecoration(
-                hintText: '비밀번호',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                contentPadding: EdgeInsets.all(20.0),
-              ),
-              obscureText: true,
-              maxLength: 16,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: <Widget>[
-                Checkbox(
-                  value: _isAutoLoginChecked,
-                  onChanged: (bool? value) {
-                    setState(() {
-                      _isAutoLoginChecked = value ?? false;
-                    });
-                  },
-                ),
-                Text('자동 로그인'),
-              ],
-            ),
-            SizedBox(height: 20.0),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _handleLogin,
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.all(15.0),
-                  backgroundColor: Colors.blue, // primary 대신 backgroundColor 사용
-                ),
-                child: Text(
-                  '로그인',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
-            SizedBox(height: 10.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                GestureDetector(
-                  onTap: _navigateToSearchActivity,
-                  child: Text(
-                    '아이디 • 비밀번호 찾기',
-                    style: TextStyle(color: Colors.orange, fontSize: 16),
+                    ],
                   ),
                 ),
-                Text(
-                  '   /   ',
-                  style: TextStyle(color: Colors.black, fontSize: 15),
+              ),
+              TextField(
+                controller: _loginIdController,
+                decoration: InputDecoration(
+                  hintText: '아이디',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  contentPadding: EdgeInsets.all(20.0),
                 ),
-                GestureDetector(
-                  onTap: _navigateToPreferenceActivity,
+                keyboardType: TextInputType.number,
+                maxLength: 10,
+              ),
+              SizedBox(height: 8.0),
+              TextField(
+                controller: _loginPwController,
+                decoration: InputDecoration(
+                  hintText: '비밀번호',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  contentPadding: EdgeInsets.all(20.0),
+                ),
+                obscureText: true,
+                maxLength: 16,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: <Widget>[
+                  Checkbox(
+                    value: _isAutoLoginChecked,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        _isAutoLoginChecked = value ?? false;
+                      });
+                    },
+                  ),
+                  Text('자동 로그인'),
+                ],
+              ),
+              SizedBox(height: 20.0),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _handleLogin,
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.all(15.0),
+                    backgroundColor: Colors.blue, // primary 대신 backgroundColor 사용
+                  ),
                   child: Text(
-                    '회원가입',
-                    style: TextStyle(color: Colors.orange, fontSize: 15),
+                    '로그인',
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
-              ],
-            ),
-            Expanded(
-              child: Align(
+              ),
+              SizedBox(height: 10.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  GestureDetector(
+                    onTap: _navigateToSearchActivity,
+                    child: Text(
+                      '아이디 • 비밀번호 찾기',
+                      style: TextStyle(color: Colors.orange, fontSize: 16),
+                    ),
+                  ),
+                  Text(
+                    '   /   ',
+                    style: TextStyle(color: Colors.black, fontSize: 15),
+                  ),
+                  GestureDetector(
+                    onTap: _navigateToPreferenceActivity,
+                    child: Text(
+                      '회원가입',
+                      style: TextStyle(color: Colors.orange, fontSize: 15),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 210.0),
+              Align(
                 alignment: Alignment.bottomCenter,
                 child: Text(
                   'Ver 1.0',
                   style: TextStyle(fontSize: 16, color: Colors.black),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
