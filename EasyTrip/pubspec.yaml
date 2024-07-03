@@ -24,9 +24,9 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
-
-
-
+  # 추가된 dependencies
+  sqflite: ^2.0.0+3
+  path_provider: ^2.0.1
 
 dev_dependencies:
   flutter_test:
@@ -50,3 +50,4 @@ flutter:
     - assets/ph_dessert.jpeg
     - assets/text_1.txt
     - assets/text_2.txt
+    - assets/150.png
