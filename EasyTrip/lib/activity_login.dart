@@ -66,14 +66,7 @@ class _LoginActivityState extends State<LoginActivity> {
       Navigator.pushReplacementNamed(
         context,
         '/main',
-        arguments: {
-          'name': user.name,
-          'studentId': user.id.toString(),
-          'birth': user.birthDate,
-          'phone': user.phoneNumber,
-          'gender': '알 수 없음', // 필요 시 user 모델에 gender 필드를 추가하세요
-          'age': '알 수 없음', // 필요 시 user 모델에 age 필드를 추가하세요
-        },
+        arguments: user.id, // userData 대신 user.id 전달
       );
     } else if (id == '000626' && pw == 'admin1234') {
       Fluttertoast.showToast(msg: '관리자님 환영합니다.');

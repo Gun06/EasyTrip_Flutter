@@ -30,9 +30,9 @@ class MyApp extends StatelessWidget {
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/main') {
-          final userData = settings.arguments as Map<String, String>;
+          final userId = settings.arguments as int;
           return MaterialPageRoute(
-            builder: (context) => MainActivity(userData: userData),
+            builder: (context) => MainActivity(userId: userId),
           );
         }
         return null;

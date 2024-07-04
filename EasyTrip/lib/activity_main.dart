@@ -7,9 +7,9 @@ import 'pages/fragment_schedule.dart';
 import 'pages/fragment_traffic.dart';
 
 class MainActivity extends StatefulWidget {
-  final Map<String, String> userData;
+  final int userId;
 
-  MainActivity({required this.userData});
+  MainActivity({required this.userId});
 
   @override
   _MainActivityState createState() => _MainActivityState();
@@ -40,7 +40,7 @@ class _MainActivityState extends State<MainActivity> with SingleTickerProviderSt
           ScheduleFragment(),
           HomeFragment(),
           TrafficFragment(),
-          MyPageFragment(userData: widget.userData),
+          MyPageFragment(userId: widget.userId),
         ],
       ),
       bottomNavigationBar: MotionTabBar(
