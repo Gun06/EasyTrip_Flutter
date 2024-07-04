@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'admin_pages/admin.dart';
 import 'pages/activity_start_page.dart';
 import 'activity_login.dart';
 import 'pages/activity_preference_1.dart';
@@ -20,6 +21,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => StartPageActivity(),
         '/login': (context) => LoginActivity(),
+        '/admin': (context) => AdminPage(),
         '/step1': (context) => PreferencePage1(),
         '/step2': (context) => PreferencePage2(),
         '/step3': (context) => PreferencePage3(),
