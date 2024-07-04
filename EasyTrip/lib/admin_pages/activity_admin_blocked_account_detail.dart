@@ -13,6 +13,13 @@ class AdminBlockedAccountDetailPage extends StatelessWidget {
     final String defaultProfileImage = 'assets/ph_profile_img_01.jpg';
     final String? profileImage = user.profileImage;
 
+    // 나이 계산
+    int _calculateAge(String birthDate) {
+      final now = DateTime.now();
+      final birthYear = int.parse(birthDate.substring(0, 2)) + 2000;
+      return now.year - birthYear;
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -75,6 +82,10 @@ class AdminBlockedAccountDetailPage extends StatelessWidget {
               _buildDetailRow('생년월일', user.birthDate),
               SizedBox(height: 20),
               _buildDetailRow('전화번호', user.phoneNumber),
+              SizedBox(height: 20),
+              _buildDetailRow('나이', _calculateAge(user.birthDate).toString()), // 추가된 부분
+              SizedBox(height: 20),
+              _buildDetailRow('성별', user.gender), // 추가된 부분
               SizedBox(height: 40), // 간격 조정
               SizedBox(
                 width: double.infinity,

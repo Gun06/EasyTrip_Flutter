@@ -7,6 +7,8 @@ class User {
   final String phoneNumber;
   final String? profileImage;
   final int isBlocked;
+  final int age;       // 추가
+  final String gender; // 추가
 
   User({
     this.id,
@@ -17,6 +19,8 @@ class User {
     required this.phoneNumber,
     this.profileImage,
     this.isBlocked = 0,
+    required this.age,       // 추가
+    required this.gender,    // 추가
   });
 
   Map<String, dynamic> toMap() {
@@ -29,6 +33,8 @@ class User {
       'phoneNumber': phoneNumber,
       'profileImage': profileImage,
       'isBlocked': isBlocked,
+      'age': age,       // 추가
+      'gender': gender, // 추가
     };
   }
 
@@ -42,6 +48,8 @@ class User {
       phoneNumber: map['phoneNumber'],
       profileImage: map['profileImage'],
       isBlocked: map['isBlocked'],
+      age: map['age'],       // 추가
+      gender: map['gender'], // 추가
     );
   }
 }

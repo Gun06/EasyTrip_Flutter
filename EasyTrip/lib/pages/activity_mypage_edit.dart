@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import '../helpers/database_helper.dart';
+import '../models/user.dart';
 
 class EditProfilePage extends StatefulWidget {
-  final Map<String, String> userData;
+  final int userId;
 
-  EditProfilePage({required this.userData});
+  EditProfilePage({required this.userId});
 
   @override
   _EditProfilePageState createState() => _EditProfilePageState();
@@ -18,18 +20,38 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController _passwordController;
   late TextEditingController _phoneController;
   late String _selectedGender;
-  late String _selectedAge;
+  late int _selectedAge;
   File? _profileImage;
+  User? _user;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.userData['name']);
-    _studentIdController = TextEditingController(text: widget.userData['studentId']);
-    _passwordController = TextEditingController(text: widget.userData['password']);
-    _phoneController = TextEditingController(text: widget.userData['phone']);
-    _selectedGender = widget.userData['gender'] ?? '남성';
-    _selectedAge = widget.userData['age'] ?? '18';
+    _nameController = TextEditingController();
+    _studentIdController = TextEditingController();
+    _passwordController = TextEditingController();
+    _phoneController = TextEditingController();
+    _selectedGender = '남성'; // Default value
+    _selectedAge = 18; // Default value
+    _initializeUserData();
+  }
+
+  Future<void> _initializeUserData() async {
+    final dbHelper = DatabaseHelper.instance;
+    _user = await dbHelper.getUser(widget.userId);
+
+    if (_user != null) {
+      setState(() {
+        _nameController.text = _user!.name;
+        _studentIdController.text = _user!.id.toString();
+        _passwordController.text = _user!.password;
+        _phoneController.text = _user!.phoneNumber;
+        _selectedGender = _user!.gender;
+        _selectedAge = _user!.age;
+      });
+    } else {
+      Fluttertoast.showToast(msg: '사용자 정보를 불러오는데 실패했습니다.');
+    }
   }
 
   @override
@@ -56,25 +78,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
   }
 
-  void _saveProfile() {
+  void _saveProfile() async {
     final String name = _nameController.text.trim();
     final String studentId = _studentIdController.text.trim();
     final String password = _passwordController.text.trim();
     final String phone = _phoneController.text.trim();
+    final String gender = _selectedGender;
+    final int age = _selectedAge;
+
     final bool pwCheck = RegExp(r'^(?=.*\d)(?=.*[~`!@#$%^&*()-])(?=.*[a-zA-Z]).{8,16}$').hasMatch(password);
 
     if (name.isEmpty || studentId.isEmpty || password.isEmpty || phone.isEmpty) {
-      Fluttertoast.showToast(msg: '빈칸 없이 모두 입력하세요!');
-      return;
-    }
-
-    if (_selectedGender.isEmpty) {
-      Fluttertoast.showToast(msg: '성별을 선택해주세요!');
-      return;
-    }
-
-    if (_selectedAge.isEmpty) {
-      Fluttertoast.showToast(msg: '나이를 선택해주세요!');
+      Fluttertoast.showToast(msg: '모든 필드를 입력하세요.');
       return;
     }
 
@@ -83,19 +98,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
       return;
     }
 
-    setState(() {
-      widget.userData['name'] = name;
-      widget.userData['studentId'] = studentId;
-      widget.userData['password'] = password;
-      widget.userData['phone'] = phone;
-      widget.userData['gender'] = _selectedGender;
-      widget.userData['age'] = _selectedAge;
-      if (_profileImage != null) {
-        widget.userData['profileImage'] = _profileImage!.path; // 이미지 경로를 저장
-      }
-    });
+    final dbHelper = DatabaseHelper.instance;
+    final updatedUser = User(
+      id: int.parse(studentId),
+      password: password,
+      name: name,
+      nickname: _user!.nickname, // 유지
+      birthDate: _user!.birthDate, // 유지
+      phoneNumber: phone,
+      profileImage: _profileImage?.path ?? _user!.profileImage,
+      isBlocked: _user!.isBlocked,
+      age: age,
+      gender: gender,
+    );
 
-    Navigator.pop(context, widget.userData);
+    await dbHelper.updateUser(updatedUser);
+
+    Fluttertoast.showToast(msg: '프로필이 업데이트되었습니다.');
+    Navigator.pop(context, updatedUser);
   }
 
   @override
@@ -121,7 +141,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: _user == null
+          ? Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -130,20 +152,23 @@ class _EditProfilePageState extends State<EditProfilePage> {
               Center(
                 child: Column(
                   children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundImage: _profileImage != null
-                          ? FileImage(_profileImage!)
-                          : NetworkImage(widget.userData['profileImage'] ?? 'https://via.placeholder.com/150') as ImageProvider,
+                    GestureDetector(
+                      onTap: _pickImage,
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundImage: _profileImage != null
+                            ? FileImage(_profileImage!)
+                            : NetworkImage(_user!.profileImage ?? 'https://via.placeholder.com/150') as ImageProvider,
+                      ),
                     ),
                     SizedBox(height: 10),
                     Text(
-                      widget.userData['name']!,
+                      _user!.nickname,
                       style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 4),
                     Text(
-                      widget.userData['studentId']!,
+                      _user!.id.toString(),
                       style: TextStyle(fontSize: 15, color: Colors.grey),
                     ),
                     SizedBox(height: 10),
@@ -181,6 +206,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 ),
                 keyboardType: TextInputType.number,
+                readOnly: true,
               ),
               SizedBox(height: 20),
               Text('비밀번호', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -232,7 +258,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('나이', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        DropdownButtonFormField<String>(
+                        DropdownButtonFormField<int>(
                           value: _selectedAge,
                           decoration: InputDecoration(
                             border: OutlineInputBorder(
@@ -240,10 +266,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             ),
                             contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                           ),
-                          items: List.generate(100, (index) => (index + 1).toString()).map((String value) {
-                            return DropdownMenuItem<String>(
+                          items: List.generate(100, (index) => (index + 1)).map((int value) {
+                            return DropdownMenuItem<int>(
                               value: value,
-                              child: Text(value),
+                              child: Text(value.toString()),
                             );
                           }).toList(),
                           onChanged: (newValue) {

@@ -1,13 +1,17 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'activity_mypage_edit.dart'; // 프로필 편집 페이지 import
-import 'activity_shopping_cart.dart'; // 장바구니 페이지 import
+import '../helpers/database_helper.dart';
+import '../models/user.dart';
+import 'activity_mypage_edit.dart';
+import 'activity_shopping_cart.dart';
 
 class MyPageFragment extends StatefulWidget {
-  final Map<String, String> userData;
+  final int userId;
 
-  MyPageFragment({required this.userData});
+  MyPageFragment({required this.userId});
 
   @override
   _MyPageFragmentState createState() => _MyPageFragmentState();
@@ -16,20 +20,27 @@ class MyPageFragment extends StatefulWidget {
 class _MyPageFragmentState extends State<MyPageFragment> {
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
   final List<Map<String, dynamic>> _menuItems = [];
+  User? _user;
 
   @override
   void initState() {
     super.initState();
+    _loadUserData();
     _addMenuItems();
+  }
+
+  Future<void> _loadUserData() async {
+    final dbHelper = DatabaseHelper.instance;
+    _user = await dbHelper.getUser(widget.userId);
+    setState(() {});
   }
 
   void _addMenuItems() {
     final items = [
-      {"icon": Icons.person, "text": "마이페이지"},
-      {"icon": Icons.shopping_cart, "text": "장바구니"},
-      {"icon": Icons.people, "text": "친구관리"},
+      {"icon": Icons.person, "text": "선호도 수정"},
+      {"icon": Icons.shopping_cart, "text": "위시리스트"},
+      {"icon": Icons.people, "text": "게시글"},
       {"icon": Icons.settings, "text": "문의하기"},
-      {"icon": Icons.share, "text": "SNS 공유하기"},
     ];
 
     Future ft = Future(() {});
@@ -44,22 +55,22 @@ class _MyPageFragmentState extends State<MyPageFragment> {
   }
 
   Future<void> _navigateToEditProfile() async {
-    final updatedUserData = await Navigator.push(
+    final updatedUser = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EditProfilePage(userData: Map<String, String>.from(widget.userData)),
+        builder: (context) => EditProfilePage(userId: widget.userId),
       ),
     );
 
-    if (updatedUserData != null) {
+    if (updatedUser != null) {
       setState(() {
-        widget.userData.addAll(updatedUserData);
+        _user = updatedUser;
       });
     }
   }
 
   void _logout() {
-    Fluttertoast.showToast(msg: '${widget.userData['name']}님 안녕히가세요.');
+    Fluttertoast.showToast(msg: '${_user?.nickname ?? '사용자'}님 안녕히가세요.');
     Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
   }
 
@@ -98,7 +109,9 @@ class _MyPageFragmentState extends State<MyPageFragment> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: _user == null
+          ? Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         child: Column(
           children: [
             // 프로필 섹션
@@ -108,18 +121,20 @@ class _MyPageFragmentState extends State<MyPageFragment> {
                 children: [
                   CircleAvatar(
                     radius: 50,
-                    backgroundImage: CachedNetworkImageProvider(
+                    backgroundImage: _user?.profileImage != null
+                        ? FileImage(File(_user!.profileImage!)) as ImageProvider
+                        : CachedNetworkImageProvider(
                       'https://via.placeholder.com/150', // 이미지 URL
                     ),
                   ),
                   SizedBox(height: 10),
                   Text(
-                    widget.userData['name']!,
+                    _user!.nickname,
                     style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 4),
                   Text(
-                    widget.userData['studentId']!, // 회원가입 시 입력한 학번을 표시
+                    _user!.id.toString(), // 회원가입 시 입력한 학번을 표시
                     style: TextStyle(fontSize: 15, color: Colors.grey),
                   ),
                   SizedBox(height: 10),
@@ -132,7 +147,7 @@ class _MyPageFragmentState extends State<MyPageFragment> {
                       boxShadow: [
                         BoxShadow(
                           color: Colors.grey.withOpacity(0.5),
-                          spreadRadius: 5,
+                          spreadRadius: 1,
                           blurRadius: 7,
                           offset: Offset(0, 3),
                         ),
@@ -215,7 +230,7 @@ class _MyPageFragmentState extends State<MyPageFragment> {
                   icon: _menuItems[index]['icon'],
                   text: _menuItems[index]['text'],
                   onTap: () {
-                    if (_menuItems[index]['text'] == "장바구니") {
+                    if (_menuItems[index]['text'] == "위시리스트") {
                       _navigateToShoppingCart();
                     }
                     // 다른 항목 클릭 시 추가 동작
@@ -246,8 +261,8 @@ class _MyPageFragmentState extends State<MyPageFragment> {
           boxShadow: [
             BoxShadow(
               color: Colors.grey.withOpacity(0.5),
-              spreadRadius: 5,
-              blurRadius: 7,
+              spreadRadius: 1,
+              blurRadius: 2,
               offset: Offset(0, 3),
             ),
           ],

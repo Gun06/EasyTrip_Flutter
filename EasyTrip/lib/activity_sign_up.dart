@@ -16,11 +16,12 @@ class _SignUpActivityState extends State<SignUpActivity> {
   final TextEditingController _nicknameController = TextEditingController();
   final TextEditingController _birthController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _ageController = TextEditingController();
   bool _isPushChecked = false;
   bool _isInformChecked = false;
 
   String _gender = '';
-  String _age = '';
+  int _age = 0;
 
   bool _isIdValid = false;
   bool _isNicknameValid = false;
@@ -65,6 +66,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
     });
     _birthController.addListener(() {
       _checkBirthDate(_birthController.text);
+      _calculateAge(_birthController.text);
     });
     _nameController.addListener(() {
       _checkName(_nameController.text);
@@ -195,6 +197,22 @@ class _SignUpActivityState extends State<SignUpActivity> {
     });
   }
 
+  void _calculateAge(String birthDate) {
+    if (_isValidDate(birthDate)) {
+      final now = DateTime.now();
+      final birthYear = int.parse(birthDate.substring(0, 2)) + 2000;
+      setState(() {
+        _age = now.year - birthYear;
+        _ageController.text = _age.toString();
+      });
+    } else {
+      setState(() {
+        _age = 0;
+        _ageController.text = '';
+      });
+    }
+  }
+
   Future<void> _checkDuplicate(
       String type, TextEditingController controller) async {
     String? message;
@@ -286,6 +304,8 @@ class _SignUpActivityState extends State<SignUpActivity> {
         phoneNumber: _phoneController.text,
         profileImage: 'assets/ph_profile_img_01.jpg', // 기본 프로필 이미지 설정
         isBlocked: 0, // 차단 상태 초기화
+        age: _age,
+        gender: _gender,
       );
 
       DatabaseHelper dbHelper = DatabaseHelper.instance;
@@ -494,6 +514,59 @@ class _SignUpActivityState extends State<SignUpActivity> {
               SizedBox(height: 15),
               _buildBirthDateField(),
               SizedBox(height: 15),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      enabled: false,
+                      controller: _ageController,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: '나이',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        contentPadding: EdgeInsets.all(20.0),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                      hint: Text('성별'),
+                      value: _gender.isNotEmpty ? _gender : null,
+                      items: ['남자', '여자'].map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value, style: TextStyle(color: Colors.black)),
+                        );
+                      }).toList(),
+                      onChanged: (newValue) {
+                        setState(() {
+                          _gender = newValue!;
+                        });
+                      },
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      dropdownColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+
+              SizedBox(height: 15),
               _buildPhoneNumberField(),
               SizedBox(height: 30),
               CheckboxListTile(
@@ -652,7 +725,10 @@ class _SignUpActivityState extends State<SignUpActivity> {
             contentPadding: EdgeInsets.all(20.0),
           ),
           keyboardType: TextInputType.number,
-          onChanged: _checkBirthDate,
+          onChanged: (value) {
+            _checkBirthDate(value);
+            _calculateAge(value);
+          },
         ),
         if (!_isBirthDateValid)
           Positioned(
@@ -684,7 +760,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
         TextField(
           controller: _phoneController,
           decoration: InputDecoration(
-            hintText: '010-0000-0000',
+            hintText: '전화번호 (ex.010-1234-5678)',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.0),
             ),
@@ -757,11 +833,11 @@ class _SignUpActivityState extends State<SignUpActivity> {
     _ageOverlayEntry = _createDropdownOverlay(
       context,
       _ageLink,
-      List<String>.generate(83, (index) => (index + 18).toString()),
-      // 18세부터 100세까지 나이로 설정
+      List<String>.generate(83, (index) => (index + 1).toString()),
+      // 1세부터 100세까지 나이로 설정
           (value) {
         setState(() {
-          _age = value;
+          _age = value as int;
         });
         _removeOverlay();
       },
@@ -897,13 +973,6 @@ class _SignUpActivityState extends State<SignUpActivity> {
     if (_gender.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('성별을 선택해주세요!')),
-      );
-      return;
-    }
-
-    if (_age.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('나이를 선택해주세요!')),
       );
       return;
     }

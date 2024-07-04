@@ -21,7 +21,7 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 2, onCreate: _createDB, onUpgrade: _upgradeDB);
+    return await openDatabase(path, version: 3, onCreate: _createDB, onUpgrade: _upgradeDB);
   }
 
   Future _createDB(Database db, int version) async {
@@ -34,7 +34,9 @@ class DatabaseHelper {
       birthDate TEXT NOT NULL,
       phoneNumber TEXT NOT NULL,
       profileImage TEXT,
-      isBlocked INTEGER NOT NULL DEFAULT 0
+      isBlocked INTEGER NOT NULL DEFAULT 0,
+      age INTEGER NOT NULL,
+      gender TEXT NOT NULL
     )
     ''');
   }
@@ -46,6 +48,14 @@ class DatabaseHelper {
       ''');
       await db.execute('''
       ALTER TABLE users ADD COLUMN isBlocked INTEGER NOT NULL DEFAULT 0;
+      ''');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+      ALTER TABLE users ADD COLUMN age INTEGER NOT NULL DEFAULT 0;
+      ''');
+      await db.execute('''
+      ALTER TABLE users ADD COLUMN gender TEXT NOT NULL DEFAULT '';
       ''');
     }
   }
@@ -136,7 +146,9 @@ class DatabaseHelper {
         'birthDate',
         'phoneNumber',
         'profileImage',
-        'isBlocked'
+        'isBlocked',
+        'age',
+        'gender'
       ],
       where: 'id = ?',
       whereArgs: [id],
@@ -154,7 +166,7 @@ class DatabaseHelper {
 
     final maps = await db.query(
       'users',
-      columns: ['id', 'password', 'name', 'nickname', 'birthDate', 'phoneNumber', 'profileImage', 'isBlocked'],
+      columns: ['id', 'password', 'name', 'nickname', 'birthDate', 'phoneNumber', 'profileImage', 'isBlocked', 'age', 'gender'],
       where: 'id = ?',
       whereArgs: [id],
     );

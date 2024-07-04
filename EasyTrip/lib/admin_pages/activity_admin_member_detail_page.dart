@@ -76,6 +76,10 @@ class AdminMemberDetailPage extends StatelessWidget {
               SizedBox(height: 20),
               _buildDetailRow('전화번호', user.phoneNumber),
               SizedBox(height: 20),
+              _buildDetailRow('나이', user.age.toString()), // 추가된 부분
+              SizedBox(height: 20),
+              _buildDetailRow('성별', user.gender), // 추가된 부분
+              SizedBox(height: 20),
               Row(
                 children: [
                   Expanded(
