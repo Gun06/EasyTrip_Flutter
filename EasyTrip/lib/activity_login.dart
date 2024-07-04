@@ -3,8 +3,10 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'activity_main.dart';
 import 'admin_pages/admin.dart';
+import 'helpers/database_helper.dart';
 import 'pages/activity_preference_1.dart';
 import 'activity_search.dart';
+import 'models/user.dart';
 
 class LoginActivity extends StatefulWidget {
   @override
@@ -46,32 +48,31 @@ class _LoginActivityState extends State<LoginActivity> {
     }
   }
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
     final String id = _loginIdController.text;
     final String pw = _loginPwController.text;
-
-    final String validId = '20202300';
-    final String validPw = 'admin';
-    final String userName = '고재건';
 
     if (id.isEmpty || pw.isEmpty) {
       Fluttertoast.showToast(msg: '아이디 또는 비밀번호를 입력하세요!');
       return;
     }
 
-    if (id == validId && pw == validPw) {
-      Fluttertoast.showToast(msg: '$userName님 환영합니다.');
+    final DatabaseHelper dbHelper = DatabaseHelper.instance;
+    final User? user = await dbHelper.getUserById(id);
+
+    if (user != null && user.password == pw) {
+      Fluttertoast.showToast(msg: '${user.name}님 환영합니다.');
       _saveAutoLogin(_isAutoLoginChecked);
       Navigator.pushReplacementNamed(
         context,
         '/main',
         arguments: {
-          'name': userName,
-          'studentId': '20202300',
-          'birth': '000626',
-          'phone': '010-9465-6269',
-          'gender': '남성',
-          'age': '18',
+          'name': user.name,
+          'studentId': user.id.toString(),
+          'birth': user.birthDate,
+          'phone': user.phoneNumber,
+          'gender': '알 수 없음', // 필요 시 user 모델에 gender 필드를 추가하세요
+          'age': '알 수 없음', // 필요 시 user 모델에 age 필드를 추가하세요
         },
       );
     } else if (id == '000626' && pw == 'admin1234') {
@@ -214,7 +215,7 @@ class _LoginActivityState extends State<LoginActivity> {
                   ),
                 ],
               ),
-              SizedBox(height: 210.0),
+              SizedBox(height: 220.0),
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Text(

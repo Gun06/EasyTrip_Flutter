@@ -148,4 +148,21 @@ class DatabaseHelper {
       return null;
     }
   }
+
+  Future<User?> getUserById(String id) async {
+    final db = await instance.database;
+
+    final maps = await db.query(
+      'users',
+      columns: ['id', 'password', 'name', 'nickname', 'birthDate', 'phoneNumber', 'profileImage', 'isBlocked'],
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (maps.isNotEmpty) {
+      return User.fromMap(maps.first);
+    } else {
+      return null;
+    }
+  }
 }
