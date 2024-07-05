@@ -147,7 +147,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     await dbHelper.updateUser(updatedUser);
 
     Fluttertoast.showToast(msg: '프로필이 업데이트되었습니다.');
-    Navigator.pop(context, updatedUser);
+    Navigator.pop(context, updatedUser); // 업데이트된 사용자 정보를 반환하며 팝
   }
 
   Future<void> _checkDuplicate(String type, TextEditingController controller) async {
@@ -157,14 +157,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final users = await dbHelper.getUsers();
 
     if (type == 'nickname') {
-      isUnique = !users.any((user) => user.nickname == controller.text);
+      isUnique = !users.any((user) => user.nickname == controller.text && user.id != widget.userId);
       message = isUnique ? null : '닉네임이 이미 사용 중입니다.';
       setState(() {
         _nicknameCheckMessage = message;
         _isNicknameValid = isUnique;
       });
     } else if (type == 'id') {
-      isUnique = !users.any((user) => user.id.toString() == controller.text);
+      isUnique = !users.any((user) => user.id.toString() == controller.text && user.id != widget.userId);
       message = isUnique ? null : '아이디가 이미 사용 중입니다.';
       setState(() {
         _idCheckMessage = message;
@@ -188,7 +188,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
         actions: [
           TextButton(
-            onPressed: _saveProfile,
+            onPressed: _isFormValid() ? _saveProfile : null,
             child: Text(
               '완료',
               style: TextStyle(color: Colors.orange, fontSize: 16),
@@ -389,7 +389,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         fillColor: Colors.white,
                       ),
                       hint: Text('성별'),
-                      value: _selectedGender.isNotEmpty ? _selectedGender : null,
+                      value: _selectedGender.isNotEmpty && ['남성', '여성'].contains(_selectedGender) ? _selectedGender : null,
                       items: ['남성', '여성'].map((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
@@ -412,14 +412,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ),
               SizedBox(height: 20),
               _buildTextField(_phoneController, '전화번호 (ex.010-1234-5678)', '전화번호', isValid: _isPhoneNumberValid),
-              SizedBox(height: 20), // 추가된 부분
+              SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _saveProfile,
+                  onPressed: _isFormValid() ? _saveProfile : null,
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.all(15.0),
-                    backgroundColor: Colors.blue,
+                    backgroundColor: _isFormValid() ? Colors.blue : Colors.grey,
                   ),
                   child: Text(
                     '완료',
@@ -432,6 +432,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
       ),
     );
+  }
+
+  bool _isFormValid() {
+    return _isNameValid &&
+        _isNicknameValid &&
+        _isIdValid &&
+        _isPasswordValid &&
+        _isPasswordConfirmValid &&
+        _isPhoneNumberValid &&
+        _isBirthDateValid;
   }
 
   Widget _buildTextField(TextEditingController controller, String hintText, String labelText,
