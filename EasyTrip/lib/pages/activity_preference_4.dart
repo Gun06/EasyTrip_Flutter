@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import '../activity_sign_up.dart';
 
 class PreferencePage4 extends StatefulWidget {
+  final List<String> activityPreferences;
+  final List<String> foodPreferences;
+
+  PreferencePage4({required this.activityPreferences, required this.foodPreferences});
+
   @override
   _PreferencePage4State createState() => _PreferencePage4State();
 }
@@ -111,7 +117,16 @@ class _PreferencePage4State extends State<PreferencePage4> {
               child: ElevatedButton(
                 onPressed: selectedOptions.length >= 3
                     ? () {
-                  Navigator.pushNamed(context, '/signup');
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SignUpActivity(
+                        activityPreferences: widget.activityPreferences,
+                        foodPreferences: widget.foodPreferences,
+                        accommodationPreferences: selectedOptions.map((index) => preferenceLabels[index]).toList(),
+                      ),
+                    ),
+                  );
                 }
                     : null,
                 style: ElevatedButton.styleFrom(

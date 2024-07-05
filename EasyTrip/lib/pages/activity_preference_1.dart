@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'activity_preference_2.dart';
 
 class PreferencePage1 extends StatelessWidget {

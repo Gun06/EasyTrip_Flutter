@@ -21,7 +21,7 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 3, onCreate: _createDB, onUpgrade: _upgradeDB);
+    return await openDatabase(path, version: 4, onCreate: _createDB, onUpgrade: _upgradeDB);
   }
 
   Future _createDB(Database db, int version) async {
@@ -36,26 +36,24 @@ class DatabaseHelper {
       profileImage TEXT,
       isBlocked INTEGER NOT NULL DEFAULT 0,
       age INTEGER NOT NULL,
-      gender TEXT NOT NULL
+      gender TEXT NOT NULL,
+      activityPreferences TEXT,
+      foodPreferences TEXT,
+      accommodationPreferences TEXT
     )
     ''');
   }
 
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
+    if (oldVersion < 4) {
       await db.execute('''
-      ALTER TABLE users ADD COLUMN profileImage TEXT;
+      ALTER TABLE users ADD COLUMN activityPreferences TEXT;
       ''');
       await db.execute('''
-      ALTER TABLE users ADD COLUMN isBlocked INTEGER NOT NULL DEFAULT 0;
-      ''');
-    }
-    if (oldVersion < 3) {
-      await db.execute('''
-      ALTER TABLE users ADD COLUMN age INTEGER NOT NULL DEFAULT 0;
+      ALTER TABLE users ADD COLUMN foodPreferences TEXT;
       ''');
       await db.execute('''
-      ALTER TABLE users ADD COLUMN gender TEXT NOT NULL DEFAULT '';
+      ALTER TABLE users ADD COLUMN accommodationPreferences TEXT;
       ''');
     }
   }
@@ -148,7 +146,10 @@ class DatabaseHelper {
         'profileImage',
         'isBlocked',
         'age',
-        'gender'
+        'gender',
+        'activityPreferences',
+        'foodPreferences',
+        'accommodationPreferences'
       ],
       where: 'id = ?',
       whereArgs: [id],
@@ -166,7 +167,7 @@ class DatabaseHelper {
 
     final maps = await db.query(
       'users',
-      columns: ['id', 'password', 'name', 'nickname', 'birthDate', 'phoneNumber', 'profileImage', 'isBlocked', 'age', 'gender'],
+      columns: ['id', 'password', 'name', 'nickname', 'birthDate', 'phoneNumber', 'profileImage', 'isBlocked', 'age', 'gender', 'activityPreferences', 'foodPreferences', 'accommodationPreferences'],
       where: 'id = ?',
       whereArgs: [id],
     );

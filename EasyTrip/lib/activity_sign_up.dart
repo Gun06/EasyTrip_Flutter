@@ -4,6 +4,12 @@ import 'helpers/database_helper.dart';
 import 'models/user.dart';
 
 class SignUpActivity extends StatefulWidget {
+  final List<String> activityPreferences;
+  final List<String> foodPreferences;
+  final List<String> accommodationPreferences;
+
+  SignUpActivity({required this.activityPreferences, required this.foodPreferences, required this.accommodationPreferences});
+
   @override
   _SignUpActivityState createState() => _SignUpActivityState();
 }
@@ -306,6 +312,9 @@ class _SignUpActivityState extends State<SignUpActivity> {
         isBlocked: 0, // 차단 상태 초기화
         age: _age,
         gender: _gender,
+        activityPreferences: widget.activityPreferences,
+        foodPreferences: widget.foodPreferences,
+        accommodationPreferences: widget.accommodationPreferences,
       );
 
       DatabaseHelper dbHelper = DatabaseHelper.instance;

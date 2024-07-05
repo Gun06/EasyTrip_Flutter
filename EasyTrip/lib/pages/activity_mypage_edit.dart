@@ -109,7 +109,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       profileImage: _profileImage?.path ?? _user!.profileImage,
       isBlocked: _user!.isBlocked,
       age: age,
-      gender: gender,
+      gender: gender, activityPreferences: [], foodPreferences: [], accommodationPreferences: [],
     );
 
     await dbHelper.updateUser(updatedUser);

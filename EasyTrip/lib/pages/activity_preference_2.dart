@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'activity_preference_3.dart';
 
 class PreferencePage2 extends StatefulWidget {
@@ -134,7 +133,9 @@ class _PreferencePage2State extends State<PreferencePage2> {
                   Navigator.push(
                     context,
                     PageRouteBuilder(
-                      pageBuilder: (context, animation, secondaryAnimation) => PreferencePage3(),
+                      pageBuilder: (context, animation, secondaryAnimation) => PreferencePage3(
+                        activityPreferences: selectedImages.map((index) => preferenceLabels[index]).toList(),
+                      ),
                       transitionsBuilder: (context, animation, secondaryAnimation, child) {
                         return FadeTransition(
                           opacity: animation,

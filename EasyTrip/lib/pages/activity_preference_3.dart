@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-
 import 'activity_preference_4.dart';
 
 class PreferencePage3 extends StatefulWidget {
+  final List<String> activityPreferences;
+
+  PreferencePage3({required this.activityPreferences});
+
   @override
   _PreferencePage3State createState() => _PreferencePage3State();
 }
@@ -138,7 +141,10 @@ class _PreferencePage3State extends State<PreferencePage3> {
                   Navigator.push(
                     context,
                     PageRouteBuilder(
-                      pageBuilder: (context, animation, secondaryAnimation) => PreferencePage4(),
+                      pageBuilder: (context, animation, secondaryAnimation) => PreferencePage4(
+                        activityPreferences: widget.activityPreferences,
+                        foodPreferences: selectedImages.map((index) => preferenceLabels[index]).toList(),
+                      ),
                       transitionsBuilder: (context, animation, secondaryAnimation, child) {
                         return FadeTransition(
                           opacity: animation,

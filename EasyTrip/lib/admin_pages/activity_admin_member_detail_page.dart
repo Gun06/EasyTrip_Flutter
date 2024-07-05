@@ -76,9 +76,15 @@ class AdminMemberDetailPage extends StatelessWidget {
               SizedBox(height: 20),
               _buildDetailRow('전화번호', user.phoneNumber),
               SizedBox(height: 20),
-              _buildDetailRow('나이', user.age.toString()), // 추가된 부분
+              _buildDetailRow('나이', user.age.toString()),
               SizedBox(height: 20),
-              _buildDetailRow('성별', user.gender), // 추가된 부분
+              _buildDetailRow('성별', user.gender),
+              SizedBox(height: 20),
+              _buildPreferenceSection('활동 선호도', user.activityPreferences),
+              SizedBox(height: 20),
+              _buildPreferenceSection('음식 선호도', user.foodPreferences),
+              SizedBox(height: 20),
+              _buildPreferenceSection('숙박 선호도', user.accommodationPreferences),
               SizedBox(height: 20),
               Row(
                 children: [
@@ -150,6 +156,31 @@ class AdminMemberDetailPage extends StatelessWidget {
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildPreferenceSection(String title, List<String> preferences) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 10),
+        ...preferences.map((preference) {
+          return Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            margin: EdgeInsets.symmetric(vertical: 5),
+            child: ListTile(
+              leading: Icon(Icons.check_circle, color: Colors.blue),
+              title: Text(preference, style: TextStyle(fontSize: 18)),
+            ),
+          );
+        }).toList(),
       ],
     );
   }

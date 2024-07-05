@@ -7,8 +7,11 @@ class User {
   final String phoneNumber;
   final String? profileImage;
   final int isBlocked;
-  final int age;       // 추가
-  final String gender; // 추가
+  final int age;
+  final String gender;
+  final List<String> activityPreferences;
+  final List<String> foodPreferences;
+  final List<String> accommodationPreferences;
 
   User({
     this.id,
@@ -19,8 +22,11 @@ class User {
     required this.phoneNumber,
     this.profileImage,
     this.isBlocked = 0,
-    required this.age,       // 추가
-    required this.gender,    // 추가
+    required this.age,
+    required this.gender,
+    required this.activityPreferences,
+    required this.foodPreferences,
+    required this.accommodationPreferences,
   });
 
   Map<String, dynamic> toMap() {
@@ -33,8 +39,11 @@ class User {
       'phoneNumber': phoneNumber,
       'profileImage': profileImage,
       'isBlocked': isBlocked,
-      'age': age,       // 추가
-      'gender': gender, // 추가
+      'age': age,
+      'gender': gender,
+      'activityPreferences': activityPreferences.join(','),
+      'foodPreferences': foodPreferences.join(','),
+      'accommodationPreferences': accommodationPreferences.join(','),
     };
   }
 
@@ -48,8 +57,11 @@ class User {
       phoneNumber: map['phoneNumber'],
       profileImage: map['profileImage'],
       isBlocked: map['isBlocked'],
-      age: map['age'],       // 추가
-      gender: map['gender'], // 추가
+      age: map['age'],
+      gender: map['gender'],
+      activityPreferences: map['activityPreferences']?.split(',') ?? [],
+      foodPreferences: map['foodPreferences']?.split(',') ?? [],
+      accommodationPreferences: map['accommodationPreferences']?.split(',') ?? [],
     );
   }
 }

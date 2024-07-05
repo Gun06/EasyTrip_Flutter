@@ -24,9 +24,9 @@ class MyApp extends StatelessWidget {
         '/admin': (context) => AdminPage(),
         '/step1': (context) => PreferencePage1(),
         '/step2': (context) => PreferencePage2(),
-        '/step3': (context) => PreferencePage3(),
-        '/step4': (context) => PreferencePage4(),
-        '/signup': (context) => SignUpActivity(),
+        '/step3': (context) => PreferencePage3(activityPreferences: [],),
+        '/step4': (context) => PreferencePage4(activityPreferences: [], foodPreferences: [],),
+        '/signup': (context) => SignUpActivity(activityPreferences: [], foodPreferences: [], accommodationPreferences: [],),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/main') {
