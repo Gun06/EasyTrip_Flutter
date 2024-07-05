@@ -68,7 +68,7 @@ class _LoginActivityState extends State<LoginActivity> {
         '/main',
         arguments: user.id, // userData 대신 user.id 전달
       );
-    } else if (id == '000626' && pw == 'admin1234') {
+    } else if (id == 'admin' && pw == '1234') {
       Fluttertoast.showToast(msg: '관리자님 환영합니다.');
       _saveAutoLogin(_isAutoLoginChecked);
       Navigator.pushReplacement(
