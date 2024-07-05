@@ -104,6 +104,15 @@ class DatabaseHelper {
     });
   }
 
+  Future<List<User>> getAllUsers() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('users');
+
+    return List.generate(maps.length, (i) {
+      return User.fromMap(maps[i]);
+    });
+  }
+
   Future<void> deleteUser(int userId) async {
     final db = await database;
     await db.delete(

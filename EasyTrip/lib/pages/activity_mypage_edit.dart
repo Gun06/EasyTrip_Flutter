@@ -144,17 +144,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
       accommodationPreferences: _user!.accommodationPreferences,
     );
 
-    await dbHelper.updateUser(updatedUser);
+    print('Updating user: $updatedUser'); // 디버깅용 로그 추가
 
-    Fluttertoast.showToast(msg: '프로필이 업데이트되었습니다.');
-    Navigator.pop(context, updatedUser); // 업데이트된 사용자 정보를 반환하며 팝
+    try {
+      await dbHelper.updateUser(updatedUser);
+      Fluttertoast.showToast(msg: '프로필이 업데이트되었습니다.');
+      print('User updated successfully'); // 성공 로그 추가
+      Navigator.pop(context, updatedUser); // 업데이트된 사용자 정보를 반환하며 팝
+    } catch (e) {
+      print('Error updating user: $e'); // 에러 로그 추가
+      Fluttertoast.showToast(msg: '프로필 업데이트에 실패했습니다.');
+    }
   }
 
   Future<void> _checkDuplicate(String type, TextEditingController controller) async {
     String? message;
     bool isUnique = false;
     final dbHelper = DatabaseHelper.instance;
-    final users = await dbHelper.getUsers();
+    final users = await dbHelper.getAllUsers(); // 모든 사용자 포함
 
     if (type == 'nickname') {
       isUnique = !users.any((user) => user.nickname == controller.text && user.id != widget.userId);
@@ -459,6 +466,37 @@ class _EditProfilePageState extends State<EditProfilePage> {
             contentPadding: EdgeInsets.all(20.0),
           ),
           obscureText: obscureText,
+          onChanged: (value) {
+            if (labelText == '이름') {
+              setState(() {
+                _isNameValid = value.isNotEmpty;
+              });
+            } else if (labelText == '닉네임') {
+              setState(() {
+                _isNicknameValid = value.isNotEmpty;
+              });
+            } else if (labelText == '아이디(학번)') {
+              setState(() {
+                _isIdValid = value.isNotEmpty;
+              });
+            } else if (labelText == '비밀번호') {
+              setState(() {
+                _isPasswordValid = value.isNotEmpty;
+              });
+            } else if (labelText == '비밀번호 확인') {
+              setState(() {
+                _isPasswordConfirmValid = value.isNotEmpty;
+              });
+            } else if (labelText == '전화번호') {
+              setState(() {
+                _isPhoneNumberValid = value.isNotEmpty;
+              });
+            } else if (labelText == '생년월일') {
+              setState(() {
+                _isBirthDateValid = value.isNotEmpty;
+              });
+            }
+          },
         ),
         if (!isValid)
           Positioned(
