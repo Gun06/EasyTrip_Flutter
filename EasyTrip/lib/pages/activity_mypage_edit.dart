@@ -129,7 +129,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     final dbHelper = DatabaseHelper.instance;
     final updatedUser = User(
-      id: int.parse(studentId),
+      id: widget.userId, // 여기가 수정되어야 합니다.
       password: password,
       name: name,
       nickname: _nicknameController.text.trim(),
@@ -150,6 +150,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
       await dbHelper.updateUser(updatedUser);
       Fluttertoast.showToast(msg: '프로필이 업데이트되었습니다.');
       print('User updated successfully'); // 성공 로그 추가
+      setState(() {
+        _user = updatedUser; // 업데이트된 사용자 정보를 상태에 반영
+      });
       Navigator.pop(context, updatedUser); // 업데이트된 사용자 정보를 반환하며 팝
     } catch (e) {
       print('Error updating user: $e'); // 에러 로그 추가
