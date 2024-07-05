@@ -28,7 +28,7 @@ class AdminMemberDetailPage extends StatelessWidget {
           TextButton(
             onPressed: () async {
               await DatabaseHelper.instance.deleteUser(user.id!);
-              Navigator.pop(context, true);  // 삭제 후 true를 반환하여 업데이트 신호 전달
+              Navigator.pop(context, true); // 삭제 후 true를 반환하여 업데이트 신호 전달
             },
             child: Text(
               '삭제하기',
@@ -79,7 +79,7 @@ class AdminMemberDetailPage extends StatelessWidget {
               _buildDetailRow('나이', user.age.toString()),
               SizedBox(height: 20),
               _buildDetailRow('성별', user.gender),
-              SizedBox(height: 20),
+              Divider(height: 40, thickness: 1), // 경계선 추가
               _buildPreferenceSection('활동 선호도', user.activityPreferences),
               SizedBox(height: 20),
               _buildPreferenceSection('음식 선호도', user.foodPreferences),
@@ -92,7 +92,7 @@ class AdminMemberDetailPage extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: () async {
                         await DatabaseHelper.instance.deleteUser(user.id!);
-                        Navigator.pop(context, true);  // 삭제 후 true를 반환하여 업데이트 신호 전달
+                        Navigator.pop(context, true); // 삭제 후 true를 반환하여 업데이트 신호 전달
                       },
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.all(15.0),
@@ -110,7 +110,7 @@ class AdminMemberDetailPage extends StatelessWidget {
                       onPressed: () async {
                         print('차단하기 버튼 클릭됨: 사용자 ID ${user.id}');
                         await DatabaseHelper.instance.blockUser(user.id!);
-                        Navigator.pop(context, true);  // 차단 후 true를 반환하여 업데이트 신호 전달
+                        Navigator.pop(context, true); // 차단 후 true를 반환하여 업데이트 신호 전달
                       },
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.all(15.0),
@@ -169,18 +169,46 @@ class AdminMemberDetailPage extends StatelessWidget {
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         SizedBox(height: 10),
-        ...preferences.map((preference) {
-          return Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            margin: EdgeInsets.symmetric(vertical: 5),
-            child: ListTile(
-              leading: Icon(Icons.check_circle, color: Colors.blue),
-              title: Text(preference, style: TextStyle(fontSize: 18)),
-            ),
-          );
-        }).toList(),
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.grey[100],
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Wrap(
+            spacing: 2.0,
+            runSpacing: 2.0,
+            children: preferences.asMap().entries.map((entry) {
+              int index = entry.key;
+              String preference = entry.value;
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Chip(
+                    label: Text(
+                      preference,
+                      style: TextStyle(fontSize: 12,color: Colors.black),
+                    ),
+                    backgroundColor: Colors.grey[100],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                      side: BorderSide(color: Colors.grey),
+                    ),
+                  ),
+                  if (index < preferences.length - 1)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 3.0),
+                      child: Text(
+                        '>',
+                        style: TextStyle(fontSize: 15, color: Colors.black),
+                      ),
+                    ),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
       ],
     );
   }
