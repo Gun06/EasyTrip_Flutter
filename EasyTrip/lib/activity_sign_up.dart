@@ -134,10 +134,10 @@ class _SignUpActivityState extends State<SignUpActivity> {
   }
 
   bool _isValidDate(String value) {
-    if (value.length != 6) return false;
-    final year = int.tryParse(value.substring(0, 2));
-    final month = int.tryParse(value.substring(2, 4));
-    final day = int.tryParse(value.substring(4, 6));
+    if (value.length != 8) return false;
+    final year = int.tryParse(value.substring(0, 4));
+    final month = int.tryParse(value.substring(4, 6));
+    final day = int.tryParse(value.substring(6, 8));
 
     if (year == null || month == null || day == null) return false;
 
@@ -158,8 +158,8 @@ class _SignUpActivityState extends State<SignUpActivity> {
       12: 31
     };
 
-    if ((year + 2000) % 4 == 0 &&
-        ((year + 2000) % 100 != 0 || (year + 2000) % 400 == 0)) {
+    if ((year) % 4 == 0 &&
+        ((year) % 100 != 0 || (year) % 400 == 0)) {
       daysInMonth[2] = 29; // 윤년 처리
     }
 
@@ -206,11 +206,21 @@ class _SignUpActivityState extends State<SignUpActivity> {
   void _calculateAge(String birthDate) {
     if (_isValidDate(birthDate)) {
       final now = DateTime.now();
-      final birthYear = int.parse(birthDate.substring(0, 2)) + 2000;
-      setState(() {
-        _age = now.year - birthYear;
-        _ageController.text = _age.toString();
-      });
+      final birthYear = int.parse(birthDate.substring(0, 4));
+      final birthMonth = int.parse(birthDate.substring(4, 6));
+      final birthDay = int.parse(birthDate.substring(6, 8));
+      DateTime birthdayThisYear = DateTime(now.year, birthMonth, birthDay);
+
+      if (birthdayThisYear.isBefore(now) || birthdayThisYear.isAtSameMomentAs(now)) {
+        setState(() {
+          _age = now.year - birthYear;
+        });
+      } else {
+        setState(() {
+          _age = now.year - birthYear - 1;
+        });
+      }
+      _ageController.text = _age.toString();
     } else {
       setState(() {
         _age = 0;
@@ -727,7 +737,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
         TextField(
           controller: _birthController,
           decoration: InputDecoration(
-            hintText: '생년월일 (ex.931104)',
+            hintText: '생년월일 (ex.20000515)',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.0),
             ),
@@ -747,6 +757,15 @@ class _SignUpActivityState extends State<SignUpActivity> {
               Icons.info_outline,
               color: Colors.red,
               size: 24.0,
+            ),
+          ),
+        if (_isBirthDateValid && _birthController.text.isNotEmpty)
+          Positioned(
+            right: 120,
+            top: 21.5,
+            child: Text(
+              _birthController.text.substring(2, 8),
+              style: TextStyle(color: Colors.grey, fontSize: 16),
             ),
           ),
         if (_isBirthDateValid && _birthController.text.isNotEmpty)
