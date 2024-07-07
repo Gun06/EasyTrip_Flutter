@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../helpers/database_helper.dart';
 import '../models/user.dart';
+import 'package:intl/intl.dart';
 
 class EditProfilePage extends StatefulWidget {
   final int userId;
@@ -26,6 +27,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late String _selectedGender;
   File? _profileImage;
   User? _user;
+  String _formattedBirthDate = '';
+  bool _isBirthDateValid = true;
 
   bool _isNameValid = true;
   bool _isNicknameValid = true;
@@ -33,7 +36,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
   bool _isPasswordValid = true;
   bool _isPasswordConfirmValid = true;
   bool _isPhoneNumberValid = true;
-  bool _isBirthDateValid = true;
   String? _nicknameCheckMessage;
   String? _idCheckMessage;
 
@@ -67,10 +69,50 @@ class _EditProfilePageState extends State<EditProfilePage> {
         _birthController.text = _user!.birthDate;
         _selectedGender = _user!.gender;
         _selectedAge = _user!.age;
+        _formattedBirthDate = _formatBirthDate(_user!.birthDate);
       });
     } else {
       Fluttertoast.showToast(msg: '사용자 정보를 불러오는데 실패했습니다.');
     }
+  }
+
+  String _formatBirthDate(String birthDate) {
+    if (birthDate.length == 8) {
+      return birthDate.substring(2, 8);
+    }
+    return '';
+  }
+
+  int _calculateAge(String birthDate) {
+    final DateTime today = DateTime.now();
+    final DateTime dob = DateTime.parse(birthDate);
+    int age = today.year - dob.year;
+    if (today.month < dob.month ||
+        (today.month == dob.month && today.day < dob.day)) {
+      age--;
+    }
+    return age;
+  }
+
+  bool _validateBirthDate(String birthDate) {
+    if (birthDate.length != 8) return false;
+    final year = int.tryParse(birthDate.substring(0, 4));
+    final month = int.tryParse(birthDate.substring(4, 6));
+    final day = int.tryParse(birthDate.substring(6, 8));
+
+    if (year == null || month == null || day == null) return false;
+    if (year < 1900 || year > 2100) return false;
+    if (month < 1 || month > 12) return false;
+    if (day < 1 || day > 31) return false;
+
+    try {
+      final date = DateTime(year, month, day);
+      if (date.year != year || date.month != month || date.day != day)
+        return false;
+    } catch (e) {
+      return false;
+    }
+    return true;
   }
 
   @override
@@ -108,11 +150,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final String phone = _phoneController.text.trim();
     final String birthDate = _birthController.text.trim();
     final String gender = _selectedGender;
-    final int age = _selectedAge;
+    final int age = _calculateAge(birthDate);
 
-    final bool pwCheck = RegExp(r'^(?=.*\d)(?=.*[~`!@#$%^&*()-])(?=.*[a-zA-Z]).{8,16}$').hasMatch(password);
+    final bool pwCheck =
+    RegExp(r'^(?=.*\d)(?=.*[~!@#$%^&*()-])(?=.*[a-zA-Z]).{8,16}$')
+        .hasMatch(password);
 
-    if (name.isEmpty || studentId.isEmpty || password.isEmpty || confirmPassword.isEmpty || phone.isEmpty || birthDate.isEmpty) {
+    if (name.isEmpty ||
+        studentId.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty ||
+        phone.isEmpty ||
+        birthDate.isEmpty) {
       Fluttertoast.showToast(msg: '모든 필드를 입력하세요.');
       return;
     }
@@ -127,9 +176,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
       return;
     }
 
+    if (!_validateBirthDate(birthDate)) {
+      Fluttertoast.showToast(msg: '유효한 생년월일을 입력하세요.');
+      return;
+    }
+
     final dbHelper = DatabaseHelper.instance;
     final updatedUser = User(
-      id: widget.userId, // 여기가 수정되어야 합니다.
+      id: widget.userId,
       password: password,
       name: name,
       nickname: _nicknameController.text.trim(),
@@ -150,9 +204,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
       await dbHelper.updateUser(updatedUser);
       Fluttertoast.showToast(msg: '프로필이 업데이트되었습니다.');
       print('User updated successfully'); // 성공 로그 추가
-      setState(() {
-        _user = updatedUser; // 업데이트된 사용자 정보를 상태에 반영
-      });
       Navigator.pop(context, updatedUser); // 업데이트된 사용자 정보를 반환하며 팝
     } catch (e) {
       print('Error updating user: $e'); // 에러 로그 추가
@@ -160,27 +211,38 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
   }
 
-  Future<void> _checkDuplicate(String type, TextEditingController controller) async {
+  Future<void> _checkDuplicate(
+      String type, TextEditingController controller) async {
     String? message;
     bool isUnique = false;
     final dbHelper = DatabaseHelper.instance;
     final users = await dbHelper.getAllUsers(); // 모든 사용자 포함
 
     if (type == 'nickname') {
-      isUnique = !users.any((user) => user.nickname == controller.text && user.id != widget.userId);
+      isUnique = !users.any((user) =>
+      user.nickname == controller.text && user.id != widget.userId);
       message = isUnique ? null : '닉네임이 이미 사용 중입니다.';
       setState(() {
         _nicknameCheckMessage = message;
         _isNicknameValid = isUnique;
       });
     } else if (type == 'id') {
-      isUnique = !users.any((user) => user.id.toString() == controller.text && user.id != widget.userId);
+      isUnique = !users.any((user) =>
+      user.id.toString() == controller.text && user.id != widget.userId);
       message = isUnique ? null : '아이디가 이미 사용 중입니다.';
       setState(() {
         _idCheckMessage = message;
         _isIdValid = isUnique;
       });
     }
+  }
+
+  void _onBirthDateChanged(String value) {
+    setState(() {
+      _formattedBirthDate = _formatBirthDate(value);
+      _selectedAge = _calculateAge(value);
+      _isBirthDateValid = _validateBirthDate(value);
+    });
   }
 
   @override
@@ -223,13 +285,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         radius: 50,
                         backgroundImage: _profileImage != null
                             ? FileImage(_profileImage!)
-                            : NetworkImage(_user!.profileImage ?? 'https://via.placeholder.com/150') as ImageProvider,
+                            : NetworkImage(_user!.profileImage ??
+                            'https://via.placeholder.com/150')
+                        as ImageProvider,
                       ),
                     ),
                     SizedBox(height: 10),
                     Text(
                       _user!.nickname,
-                      style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          fontSize: 25, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 4),
                     Text(
@@ -241,14 +306,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       onPressed: _pickImage,
                       child: Text(
                         '프로필 사진 바꾸기',
-                        style: TextStyle(color: Colors.orange, fontSize: 15),
+                        style:
+                        TextStyle(color: Colors.orange, fontSize: 15),
                       ),
                     ),
                   ],
                 ),
               ),
               SizedBox(height: 20),
-              _buildTextField(_nameController, '이름', '이름', isValid: _isNameValid),
+              _buildTextField(_nameController, '이름', '이름',
+                  isValid: _isNameValid),
               SizedBox(height: 20),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,7 +326,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       Expanded(
                         child: Stack(
                           children: [
-                            _buildTextField(_nicknameController, '닉네임', '닉네임', isValid: _isNicknameValid),
+                            _buildTextField(
+                                _nicknameController, '닉네임', '닉네임',
+                                isValid: _isNicknameValid),
                             if (_isNicknameValid)
                               Positioned(
                                 right: 10,
@@ -277,7 +346,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       Column(
                         children: [
                           _buildDuplicateCheckButton('중복검사', () {
-                            _checkDuplicate('nickname', _nicknameController);
+                            _checkDuplicate(
+                                'nickname', _nicknameController);
                           }),
                         ],
                       ),
@@ -309,7 +379,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       Expanded(
                         child: Stack(
                           children: [
-                            _buildTextField(_studentIdController, '아이디(학번)', '아이디(학번)', isValid: _isIdValid),
+                            _buildTextField(_studentIdController,
+                                '아이디(학번)', '아이디(학번)',
+                                isValid: _isIdValid),
                             if (_isIdValid)
                               Positioned(
                                 right: 10,
@@ -350,7 +422,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 ],
               ),
               SizedBox(height: 20),
-              _buildTextField(_passwordController, '비밀번호', '비밀번호', obscureText: true, isValid: _isPasswordValid),
+              _buildTextField(_passwordController, '비밀번호', '비밀번호',
+                  obscureText: true, isValid: _isPasswordValid),
               if (!_isPasswordValid)
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0, left: 8.0),
@@ -360,68 +433,35 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ),
                 ),
               SizedBox(height: 20),
-              _buildTextField(_confirmPasswordController, '비밀번호 확인', '비밀번호 확인', obscureText: true, isValid: _isPasswordConfirmValid),
+              _buildTextField(
+                  _confirmPasswordController, '비밀번호 확인', '비밀번호 확인',
+                  obscureText: true, isValid: _isPasswordConfirmValid),
               SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.only(left: 8.0),
                 child: Text('8자 이상의 숫자와 영문, 특수문자 조합'),
               ),
               SizedBox(height: 20),
-              _buildTextField(_birthController, '생년월일 (ex.931104)', '생년월일', isValid: _isBirthDateValid),
+              _buildTextField(
+                  _birthController, '생년월일 (YYYYMMDD)', '생년월일',
+                  isValid: _isBirthDateValid, onChanged: (value) {
+                _onBirthDateChanged(value);
+                if (!_validateBirthDate(value)) {
+                  setState(() {
+                    _isBirthDateValid = false;
+                  });
+                } else {
+                  setState(() {
+                    _isBirthDateValid = true;
+                  });
+                }
+              }, formattedText: _formattedBirthDate),
               SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      enabled: false,
-                      controller: TextEditingController(text: _selectedAge.toString()),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: '나이',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        contentPadding: EdgeInsets.all(20.0),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
-                        filled: true,
-                        fillColor: Colors.white,
-                      ),
-                      hint: Text('성별'),
-                      value: _selectedGender.isNotEmpty && ['남성', '여성'].contains(_selectedGender) ? _selectedGender : null,
-                      items: ['남성', '여성'].map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value, style: TextStyle(color: Colors.black)),
-                        );
-                      }).toList(),
-                      onChanged: (newValue) {
-                        setState(() {
-                          _selectedGender = newValue!;
-                        });
-                      },
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      dropdownColor: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
+              _buildAgeGenderField(),
               SizedBox(height: 20),
-              _buildTextField(_phoneController, '전화번호 (ex.010-1234-5678)', '전화번호', isValid: _isPhoneNumberValid),
+              _buildTextField(
+                  _phoneController, '전화번호 (ex.010-1234-5678)', '전화번호',
+                  isValid: _isPhoneNumberValid),
               SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
@@ -429,7 +469,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   onPressed: _isFormValid() ? _saveProfile : null,
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.all(15.0),
-                    backgroundColor: _isFormValid() ? Colors.blue : Colors.grey,
+                    backgroundColor:
+                    _isFormValid() ? Colors.blue : Colors.grey,
                   ),
                   child: Text(
                     '완료',
@@ -454,8 +495,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
         _isBirthDateValid;
   }
 
-  Widget _buildTextField(TextEditingController controller, String hintText, String labelText,
-      {bool obscureText = false, bool isValid = true}) {
+  Widget _buildTextField(
+      TextEditingController controller, String hintText, String labelText,
+      {bool obscureText = false,
+        bool isValid = true,
+        Function(String)? onChanged,
+        String? formattedText}) {
     return Stack(
       children: [
         TextField(
@@ -469,38 +514,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
             contentPadding: EdgeInsets.all(20.0),
           ),
           obscureText: obscureText,
-          onChanged: (value) {
-            if (labelText == '이름') {
-              setState(() {
-                _isNameValid = value.isNotEmpty;
-              });
-            } else if (labelText == '닉네임') {
-              setState(() {
-                _isNicknameValid = value.isNotEmpty;
-              });
-            } else if (labelText == '아이디(학번)') {
-              setState(() {
-                _isIdValid = value.isNotEmpty;
-              });
-            } else if (labelText == '비밀번호') {
-              setState(() {
-                _isPasswordValid = value.isNotEmpty;
-              });
-            } else if (labelText == '비밀번호 확인') {
-              setState(() {
-                _isPasswordConfirmValid = value.isNotEmpty;
-              });
-            } else if (labelText == '전화번호') {
-              setState(() {
-                _isPhoneNumberValid = value.isNotEmpty;
-              });
-            } else if (labelText == '생년월일') {
-              setState(() {
-                _isBirthDateValid = value.isNotEmpty;
-              });
-            }
-          },
+          onChanged: onChanged,
         ),
+        if (formattedText != null && formattedText.isNotEmpty)
+          Positioned(
+            right: 120,
+            top: 21.5,
+            child: Text(
+              formattedText,
+              style: TextStyle(color: Colors.grey, fontSize: 16),
+            ),
+          ),
         if (!isValid)
           Positioned(
             right: 10,
@@ -544,4 +568,69 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ),
     );
   }
+
+  Widget _buildAgeGenderField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                enabled: false,
+                controller:
+                TextEditingController(text: _selectedAge.toString()),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+                decoration: InputDecoration(
+                  hintText: '나이',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  contentPadding: EdgeInsets.all(20.0),
+                ),
+              ),
+            ),
+            SizedBox(width: 10),
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  contentPadding:
+                  EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+                  filled: true,
+                  fillColor: Colors.white,
+                ),
+                hint: Text('성별'),
+                value: _selectedGender.isNotEmpty &&
+                    ['남성', '여성'].contains(_selectedGender)
+                    ? _selectedGender
+                    : null,
+                items: ['남성', '여성'].map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value, style: TextStyle(color: Colors.black)),
+                  );
+                }).toList(),
+                onChanged: (newValue) {
+                  setState(() {
+                    _selectedGender = newValue!;
+                  });
+                },
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+                dropdownColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 }
+
