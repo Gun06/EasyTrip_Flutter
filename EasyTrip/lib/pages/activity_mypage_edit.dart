@@ -381,7 +381,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           children: [
                             _buildTextField(_studentIdController,
                                 '아이디(학번)', '아이디(학번)',
-                                isValid: _isIdValid),
+                                isValid: _isIdValid, enabled: false), // Disabled
                             if (_isIdValid)
                               Positioned(
                                 right: 10,
@@ -395,47 +395,43 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           ],
                         ),
                       ),
-                      SizedBox(width: 10),
-                      Column(
-                        children: [
-                          _buildDuplicateCheckButton('중복검사', () {
-                            _checkDuplicate('id', _studentIdController);
-                          }),
-                        ],
-                      ),
                     ],
                   ),
-                  if (_idCheckMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0, left: 8.0),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              _idCheckMessage!,
-                              style: TextStyle(color: Colors.red),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                 ],
               ),
               SizedBox(height: 20),
-              _buildTextField(_passwordController, '비밀번호', '비밀번호',
-                  obscureText: true, isValid: _isPasswordValid),
-              if (!_isPasswordValid)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0, left: 8.0),
-                  child: Text(
-                    '비밀번호는 8자 이상의 숫자와 영문, 특수문자 조합이어야 합니다.',
-                    style: TextStyle(color: Colors.red),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Stack(
+                          children: [
+                            _buildTextField(_passwordController, '비밀번호', '비밀번호',
+                                obscureText: true, isValid: _isPasswordValid, enabled: false), // Disabled
+                            if (!_isPasswordValid)
+                              Positioned(
+                                right: 10,
+                                top: 20,
+                                child: Icon(
+                                  Icons.info_outline,
+                                  color: Colors.red,
+                                  size: 24.0,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ),
+                ],
+              ),
               SizedBox(height: 20),
               _buildTextField(
                   _confirmPasswordController, '비밀번호 확인', '비밀번호 확인',
-                  obscureText: true, isValid: _isPasswordConfirmValid),
+                  obscureText: true, isValid: _isPasswordConfirmValid, enabled: false), // Disabled
               SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.only(left: 8.0),
@@ -500,7 +496,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       {bool obscureText = false,
         bool isValid = true,
         Function(String)? onChanged,
-        String? formattedText}) {
+        String? formattedText,
+        bool enabled = true}) {
     return Stack(
       children: [
         TextField(
@@ -515,6 +512,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
           obscureText: obscureText,
           onChanged: onChanged,
+          enabled: enabled,
         ),
         if (formattedText != null && formattedText.isNotEmpty)
           Positioned(
@@ -633,4 +631,3 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 }
-
