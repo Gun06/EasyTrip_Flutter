@@ -8,7 +8,11 @@ class SignUpActivity extends StatefulWidget {
   final List<String> foodPreferences;
   final List<String> accommodationPreferences;
 
-  SignUpActivity({required this.activityPreferences, required this.foodPreferences, required this.accommodationPreferences});
+  SignUpActivity({
+    required this.activityPreferences,
+    required this.foodPreferences,
+    required this.accommodationPreferences,
+  });
 
   @override
   _SignUpActivityState createState() => _SignUpActivityState();
@@ -234,7 +238,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
     String? message;
     bool isUnique = false;
     final dbHelper = DatabaseHelper.instance;
-    final users = await dbHelper.getUsers();
+    final users = await dbHelper.getAllUsers(); // 모든 사용자 포함
 
     if (type == 'id') {
       if (!_isNumeric(controller.text)) {
