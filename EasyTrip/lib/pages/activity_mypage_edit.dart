@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../helpers/database_helper.dart';
 import '../models/user.dart';
+import '../profile_image_selector.dart';
 import 'package:intl/intl.dart';
 
 class EditProfilePage extends StatefulWidget {
@@ -25,7 +25,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController _birthController;
   late int _selectedAge;
   late String _selectedGender;
-  File? _profileImage;
+  String? _profileImage;
   User? _user;
   String _formattedBirthDate = '';
   bool _isBirthDateValid = true;
@@ -69,6 +69,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         _birthController.text = _user!.birthDate;
         _selectedGender = _user!.gender;
         _selectedAge = _user!.age;
+        _profileImage = _user!.profileImage;
         _formattedBirthDate = _formatBirthDate(_user!.birthDate);
       });
     } else {
@@ -127,18 +128,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    try {
-      final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+  Future<void> _selectProfileImage() async {
+    final selectedImage = await showModalBottomSheet<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return ProfileImageSelector();
+      },
+    );
 
-      if (pickedFile != null) {
-        setState(() {
-          _profileImage = File(pickedFile.path);
-        });
-      }
-    } catch (e) {
-      print('Image picker error: $e');
+    if (selectedImage != null) {
+      setState(() {
+        _profileImage = selectedImage;
+      });
     }
   }
 
@@ -189,7 +190,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       nickname: _nicknameController.text.trim(),
       birthDate: birthDate,
       phoneNumber: phone,
-      profileImage: _profileImage?.path ?? _user!.profileImage,
+      profileImage: _profileImage ?? _user!.profileImage,
       isBlocked: _user!.isBlocked,
       age: age,
       gender: gender,
@@ -280,11 +281,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 child: Column(
                   children: [
                     GestureDetector(
-                      onTap: _pickImage,
+                      onTap: _selectProfileImage,
                       child: CircleAvatar(
                         radius: 50,
                         backgroundImage: _profileImage != null
-                            ? FileImage(_profileImage!)
+                            ? AssetImage(_profileImage!)
                             : NetworkImage(_user!.profileImage ??
                             'https://via.placeholder.com/150')
                         as ImageProvider,
@@ -303,7 +304,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ),
                     SizedBox(height: 10),
                     TextButton(
-                      onPressed: _pickImage,
+                      onPressed: _selectProfileImage,
                       child: Text(
                         '프로필 사진 바꾸기',
                         style:
