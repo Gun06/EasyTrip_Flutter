@@ -10,6 +10,7 @@ class AdminUserListPage extends StatefulWidget {
 
 class _AdminUserListPageState extends State<AdminUserListPage> {
   List<User> _users = [];
+  Map<int, int> _unreadMessageCounts = {};
 
   @override
   void initState() {
@@ -20,18 +21,25 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
   Future<void> _loadUsers() async {
     final dbHelper = DatabaseHelper.instance;
     final users = await dbHelper.getAllUsers();
+    Map<int, int> unreadCounts = {};
+    for (var user in users) {
+      int count = await dbHelper.getUnreadMessagesCount(user.id!, 'user');
+      unreadCounts[user.id!] = count;
+    }
     setState(() {
       _users = users;
+      _unreadMessageCounts = unreadCounts;
     });
   }
 
-  void _navigateToChat(User user) {
-    Navigator.push(
+  void _navigateToChat(User user) async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => AdminChatPage(user: user),
       ),
     );
+    _loadUsers(); // Refresh the user list and unread message counts after returning from chat
   }
 
   @override
@@ -48,6 +56,16 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
           return ListTile(
             title: Text(user.nickname),
             subtitle: Text('ID: ${user.id}'),
+            trailing: _unreadMessageCounts[user.id!]! > 0
+                ? CircleAvatar(
+              radius: 10,
+              backgroundColor: Colors.red,
+              child: Text(
+                _unreadMessageCounts[user.id!].toString(),
+                style: TextStyle(color: Colors.white, fontSize: 12),
+              ),
+            )
+                : null,
             onTap: () => _navigateToChat(user),
           );
         },

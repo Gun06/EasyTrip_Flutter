@@ -28,6 +28,7 @@ class _ContactAdminPageState extends State<ContactAdminPage> {
     setState(() {
       _messages.addAll(messages);
     });
+    await dbHelper.markMessagesAsRead(widget.userId, 'admin');
   }
 
   void _sendMessage() async {
@@ -56,6 +57,7 @@ class _ContactAdminPageState extends State<ContactAdminPage> {
 
   Widget _buildMessage(Map<String, dynamic> message) {
     bool isUser = message["sender"] == "user";
+    bool isRead = message["isRead"] == 1;
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -65,9 +67,17 @@ class _ContactAdminPageState extends State<ContactAdminPage> {
           color: isUser ? Colors.blue : Colors.grey[300],
           borderRadius: BorderRadius.circular(10.0),
         ),
-        child: Text(
-          message["message"],
-          style: TextStyle(color: isUser ? Colors.white : Colors.black),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isUser && !isRead) Icon(Icons.mark_chat_unread, color: Colors.white, size: 16),
+            if (!isUser && !isRead) Icon(Icons.mark_chat_unread, color: Colors.black, size: 16),
+            SizedBox(width: 5),
+            Text(
+              message["message"],
+              style: TextStyle(color: isUser ? Colors.white : Colors.black),
+            ),
+          ],
         ),
       ),
     );

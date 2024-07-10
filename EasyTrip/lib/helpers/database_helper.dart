@@ -21,7 +21,7 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 5, onCreate: _createDB, onUpgrade: _upgradeDB);
+    return await openDatabase(path, version: 6, onCreate: _createDB, onUpgrade: _upgradeDB);
   }
 
   Future _createDB(Database db, int version) async {
@@ -50,35 +50,15 @@ class DatabaseHelper {
       sender TEXT NOT NULL,
       message TEXT NOT NULL,
       timestamp TEXT NOT NULL,
+      isRead INTEGER NOT NULL DEFAULT 0,
       FOREIGN KEY (userId) REFERENCES users (id)
     )
     ''');
   }
 
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 4) {
-      await db.execute('''
-      ALTER TABLE users ADD COLUMN activityPreferences TEXT;
-      ''');
-      await db.execute('''
-      ALTER TABLE users ADD COLUMN foodPreferences TEXT;
-      ''');
-      await db.execute('''
-      ALTER TABLE users ADD COLUMN accommodationPreferences TEXT;
-      ''');
-    }
-
-    if (oldVersion < 5) {
-      await db.execute('''
-      CREATE TABLE messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userId INTEGER NOT NULL,
-        sender TEXT NOT NULL,
-        message TEXT NOT NULL,
-        timestamp TEXT NOT NULL,
-        FOREIGN KEY (userId) REFERENCES users (id)
-      )
-      ''');
+    if (oldVersion < 6) {
+      await db.execute('ALTER TABLE messages ADD COLUMN isRead INTEGER NOT NULL DEFAULT 0');
     }
   }
 
@@ -221,7 +201,8 @@ class DatabaseHelper {
         'userId': userId,
         'sender': sender,
         'message': message,
-        'timestamp': DateTime.now().toIso8601String()
+        'timestamp': DateTime.now().toIso8601String(),
+        'isRead': 0,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -234,6 +215,23 @@ class DatabaseHelper {
       where: 'userId = ?',
       whereArgs: [userId],
       orderBy: 'timestamp ASC',
+    );
+  }
+
+  Future<int> getUnreadMessagesCount(int userId, String sender) async {
+    final db = await database;
+    return Sqflite.firstIntValue(await db.rawQuery(
+        'SELECT COUNT(*) FROM messages WHERE userId = ? AND sender = ? AND isRead = 0',
+        [userId, sender])) ?? 0;
+  }
+
+  Future<void> markMessagesAsRead(int userId, String sender) async {
+    final db = await database;
+    await db.update(
+      'messages',
+      {'isRead': 1},
+      where: 'userId = ? AND sender = ? AND isRead = 0',
+      whereArgs: [userId, sender],
     );
   }
 }

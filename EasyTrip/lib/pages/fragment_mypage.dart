@@ -22,6 +22,7 @@ class _MyPageFragmentState extends State<MyPageFragment> {
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
   final List<Map<String, dynamic>> _menuItems = [];
   User? _user;
+  int _unreadMessagesCount = 0;
 
   @override
   void initState() {
@@ -33,6 +34,7 @@ class _MyPageFragmentState extends State<MyPageFragment> {
   Future<void> _loadUserData() async {
     final dbHelper = DatabaseHelper.instance;
     _user = await dbHelper.getUser(widget.userId);
+    _unreadMessagesCount = await dbHelper.getUnreadMessagesCount(widget.userId, 'admin');
     setState(() {});
   }
 
@@ -91,13 +93,14 @@ class _MyPageFragmentState extends State<MyPageFragment> {
     );
   }
 
-  void _navigateToContactAdmin() {
-    Navigator.push(
+  void _navigateToContactAdmin() async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ContactAdminPage(userId: widget.userId),
       ),
     );
+    _loadUserData(); // Refresh the unread message count after returning from contact page
   }
 
   @override
@@ -255,6 +258,7 @@ class _MyPageFragmentState extends State<MyPageFragment> {
                     // 다른 항목 클릭 시 추가 동작
                   },
                   animation: animation,
+                  badgeCount: _menuItems[index]['text'] == "문의하기" ? _unreadMessagesCount : 0,
                 );
               },
             ),
@@ -283,6 +287,7 @@ class _MyPageFragmentState extends State<MyPageFragment> {
     required String text,
     required GestureTapCallback onTap,
     required Animation<double> animation,
+    int badgeCount = 0,
   }) {
     return SizeTransition(
       sizeFactor: animation,
@@ -302,7 +307,23 @@ class _MyPageFragmentState extends State<MyPageFragment> {
           ],
         ),
         child: ListTile(
-          leading: Icon(icon, size: 24),
+          leading: Stack(
+            children: [
+              Icon(icon, size: 24),
+              if (badgeCount > 0)
+                Positioned(
+                  right: 0,
+                  child: CircleAvatar(
+                    radius: 8,
+                    backgroundColor: Colors.red,
+                    child: Text(
+                      badgeCount.toString(),
+                      style: TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                  ),
+                ),
+            ],
+          ),
           title: Text(text, style: TextStyle(fontSize: 16)),
           trailing: Icon(Icons.arrow_forward_ios, size: 16),
           onTap: onTap,

@@ -29,6 +29,7 @@ class _AdminChatPageState extends State<AdminChatPage> {
     setState(() {
       _messages.addAll(messages);
     });
+    await dbHelper.markMessagesAsRead(widget.user.id!, 'user');
   }
 
   void _sendMessage() async {
@@ -57,6 +58,7 @@ class _AdminChatPageState extends State<AdminChatPage> {
 
   Widget _buildMessage(Map<String, dynamic> message) {
     bool isAdmin = message["sender"] == "admin";
+    bool isRead = message["isRead"] == 1;
     return Align(
       alignment: isAdmin ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -66,9 +68,17 @@ class _AdminChatPageState extends State<AdminChatPage> {
           color: isAdmin ? Colors.blue : Colors.grey[300],
           borderRadius: BorderRadius.circular(10.0),
         ),
-        child: Text(
-          message["message"],
-          style: TextStyle(color: isAdmin ? Colors.white : Colors.black),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isAdmin && !isRead) Icon(Icons.mark_chat_unread, color: Colors.white, size: 16),
+            if (!isAdmin && !isRead) Icon(Icons.mark_chat_unread, color: Colors.black, size: 16),
+            SizedBox(width: 5),
+            Text(
+              message["message"],
+              style: TextStyle(color: isAdmin ? Colors.white : Colors.black),
+            ),
+          ],
         ),
       ),
     );
