@@ -21,7 +21,7 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 4, onCreate: _createDB, onUpgrade: _upgradeDB);
+    return await openDatabase(path, version: 5, onCreate: _createDB, onUpgrade: _upgradeDB);
   }
 
   Future _createDB(Database db, int version) async {
@@ -42,6 +42,17 @@ class DatabaseHelper {
       accommodationPreferences TEXT
     )
     ''');
+
+    await db.execute('''
+    CREATE TABLE messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      userId INTEGER NOT NULL,
+      sender TEXT NOT NULL,
+      message TEXT NOT NULL,
+      timestamp TEXT NOT NULL,
+      FOREIGN KEY (userId) REFERENCES users (id)
+    )
+    ''');
   }
 
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
@@ -54,6 +65,19 @@ class DatabaseHelper {
       ''');
       await db.execute('''
       ALTER TABLE users ADD COLUMN accommodationPreferences TEXT;
+      ''');
+    }
+
+    if (oldVersion < 5) {
+      await db.execute('''
+      CREATE TABLE messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId INTEGER NOT NULL,
+        sender TEXT NOT NULL,
+        message TEXT NOT NULL,
+        timestamp TEXT NOT NULL,
+        FOREIGN KEY (userId) REFERENCES users (id)
+      )
       ''');
     }
   }
@@ -186,5 +210,30 @@ class DatabaseHelper {
     } else {
       return null;
     }
+  }
+
+  // 메시지 관련 메서드
+  Future<void> insertMessage(int userId, String sender, String message) async {
+    final db = await database;
+    await db.insert(
+      'messages',
+      {
+        'userId': userId,
+        'sender': sender,
+        'message': message,
+        'timestamp': DateTime.now().toIso8601String()
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getMessages(int userId) async {
+    final db = await database;
+    return await db.query(
+      'messages',
+      where: 'userId = ?',
+      whereArgs: [userId],
+      orderBy: 'timestamp ASC',
+    );
   }
 }

@@ -4,9 +4,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../helpers/database_helper.dart';
 import '../models/user.dart';
+import 'activity_contact_admin_page.dart';
 import 'activity_mypage_edit.dart';
 import 'activity_shopping_cart.dart';
-import 'activity_preference_edit.dart'; // 추가
+import 'activity_preference_edit.dart';
 
 class MyPageFragment extends StatefulWidget {
   final int userId;
@@ -86,6 +87,15 @@ class _MyPageFragmentState extends State<MyPageFragment> {
       context,
       MaterialPageRoute(
         builder: (context) => ActivityPreferenceEditPage(userId: widget.userId),
+      ),
+    );
+  }
+
+  void _navigateToContactAdmin() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ContactAdminPage(userId: widget.userId),
       ),
     );
   }
@@ -239,6 +249,8 @@ class _MyPageFragmentState extends State<MyPageFragment> {
                       _navigateToShoppingCart();
                     } else if (_menuItems[index]['text'] == "선호도 수정") {
                       _navigateToActivityPreferenceEdit();
+                    } else if (_menuItems[index]['text'] == "문의하기") {
+                      _navigateToContactAdmin();
                     }
                     // 다른 항목 클릭 시 추가 동작
                   },

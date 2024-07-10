@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'admin_user_list_page.dart';
 
 class FragmentAdminProfile extends StatelessWidget {
   const FragmentAdminProfile({Key? key}) : super(key: key);
@@ -13,23 +14,28 @@ class FragmentAdminProfile extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 50,
-                backgroundImage: NetworkImage('https://via.placeholder.com/150'),
+              backgroundImage: NetworkImage('https://via.placeholder.com/150'),
             ),
             SizedBox(height: 16),
             Text(
-              'user1',
+              '관리자',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             Text(
-              '차단된 계정',
+              'Admin',
               style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
             SizedBox(height: 16),
             ListTile(
-              title: Text('상세정보'),
+              title: Text('문의내용'),
               trailing: Icon(Icons.arrow_forward_ios),
               onTap: () {
-                // 상세정보 페이지로 이동
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AdminUserListPage(),
+                  ),
+                );
               },
             ),
             ListTile(
