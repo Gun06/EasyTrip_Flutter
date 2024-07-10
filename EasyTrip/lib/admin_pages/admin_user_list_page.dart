@@ -11,6 +11,7 @@ class AdminUserListPage extends StatefulWidget {
 class _AdminUserListPageState extends State<AdminUserListPage> {
   List<User> _users = [];
   Map<int, int> _unreadMessageCounts = {};
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -29,6 +30,7 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
     setState(() {
       _users = users;
       _unreadMessageCounts = unreadCounts;
+      _isLoading = false;
     });
   }
 
@@ -47,26 +49,60 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('유저 목록'),
+        backgroundColor: Colors.white,
         centerTitle: true,
       ),
-      body: ListView.builder(
+      backgroundColor: Colors.white,
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : ListView.builder(
         itemCount: _users.length,
         itemBuilder: (context, index) {
           final user = _users[index];
-          return ListTile(
-            title: Text(user.nickname),
-            subtitle: Text('ID: ${user.id}'),
-            trailing: _unreadMessageCounts[user.id!]! > 0
-                ? CircleAvatar(
-              radius: 10,
-              backgroundColor: Colors.red,
-              child: Text(
-                _unreadMessageCounts[user.id!].toString(),
-                style: TextStyle(color: Colors.white, fontSize: 12),
+          return Card(
+            color: Colors.white,
+            margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            elevation: 4, // 그림자 효과 추가
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ListTile(
+              leading: Text(
+                '${index + 1}',
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.grey,
+                ),
               ),
-            )
-                : null,
-            onTap: () => _navigateToChat(user),
+              title: Text(
+                'ID: ${user.id}',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                '이름: ${user.name}\n닉네임: ${user.nickname}',
+                style: TextStyle(color: Colors.grey),
+              ),
+              trailing: _unreadMessageCounts[user.id!]! > 0
+                  ? Stack(
+                alignment: Alignment.center,
+                children: [
+                  Icon(Icons.chat, color: Colors.green),
+                  Positioned(
+                    right: 0,
+                    child: CircleAvatar(
+                      radius: 10,
+                      backgroundColor: Colors.red,
+                      child: Text(
+                        _unreadMessageCounts[user.id!].toString(),
+                        style: TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+                  : Icon(Icons.chat, color: Colors.grey),
+              onTap: () => _navigateToChat(user),
+            ),
           );
         },
       ),

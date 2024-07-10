@@ -97,7 +97,7 @@ class _FragmentAdminProfileState extends State<FragmentAdminProfile> {
                 backgroundColor: Colors.red,
                 minimumSize: Size(double.infinity, 50), // 버튼 크기 설정
               ),
-              child: Text('차단 해제',
+              child: Text('로그 아웃',
                   style: TextStyle(fontSize: 16, color: Colors.white)),
             ),
           ],
