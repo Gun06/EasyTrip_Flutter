@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 
 class ProfileImageSelector extends StatelessWidget {
   final List<String> profileImages = [
-    'assets/profile1.jpg',
-    'assets/profile2.jpg',
-    'assets/profile3.jpg',
-    'assets/profile4.jpg',
-    'assets/profile5.jpg',
-    'assets/profile6.jpg',
-    'assets/profile7.jpg',
-    'assets/profile8.jpg',
-    'assets/profile9.jpg',
-    'assets/profile10.jpg',
+    'assets/ph_profile01.png',
+    'assets/ph_profile02.png',
+    'assets/ph_profile03.png',
+    'assets/ph_profile04.png',
+    'assets/ph_profile05.png',
+    'assets/ph_profile06.png',
+    'assets/ph_profile07.png',
+    'assets/ph_profile08.png',
+    'assets/ph_profile09.png',
+    'assets/ph_profile10.png',
+    'assets/ph_profile11.png',
+    'assets/ph_profile12.png',
   ];
 
   @override
@@ -46,12 +48,12 @@ class ProfileImageSelector extends StatelessWidget {
               ),
               ElevatedButton.icon(
                 onPressed: () {
-                  // 이미지 선택 동작을 정의하세요.
+                  Navigator.pop(context, 'assets/ph_profile_img_01.jpg'); // 기본 이미지로 초기화
                 },
-                icon: Icon(Icons.image),
-                label: Text('이미지 선택'),
+                icon: Icon(Icons.refresh),
+                label: Text('이미지 초기화'),
                 style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white, backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white, backgroundColor: Colors.red,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18.0),
                   ),

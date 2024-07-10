@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -121,11 +120,7 @@ class _MyPageFragmentState extends State<MyPageFragment> {
                 children: [
                   CircleAvatar(
                     radius: 50,
-                    backgroundImage: _user?.profileImage != null
-                        ? FileImage(File(_user!.profileImage!)) as ImageProvider
-                        : CachedNetworkImageProvider(
-                      'https://via.placeholder.com/150', // 이미지 URL
-                    ),
+                    backgroundImage: _getUserProfileImage(),
                   ),
                   SizedBox(height: 10),
                   Text(
@@ -245,11 +240,26 @@ class _MyPageFragmentState extends State<MyPageFragment> {
     );
   }
 
-  Widget _buildMenuItem(
-      {required IconData icon,
-        required String text,
-        required GestureTapCallback onTap,
-        required Animation<double> animation}) {
+  ImageProvider _getUserProfileImage() {
+    if (_user?.profileImage != null) {
+      if (_user!.profileImage!.startsWith('assets/')) {
+        return AssetImage(_user!.profileImage!);
+      } else if (File(_user!.profileImage!).existsSync()) {
+        return FileImage(File(_user!.profileImage!));
+      } else {
+        return NetworkImage(_user!.profileImage!);
+      }
+    } else {
+      return AssetImage('assets/ph_profile_img_01.jpg');
+    }
+  }
+
+  Widget _buildMenuItem({
+    required IconData icon,
+    required String text,
+    required GestureTapCallback onTap,
+    required Animation<double> animation,
+  }) {
     return SizeTransition(
       sizeFactor: animation,
       child: Container(
