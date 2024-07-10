@@ -14,31 +14,31 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
       'date': '2023-06-25',
       'title': '북한산',
       'location': 'Panjer, South Denpasar',
-      'imageUrl': 'https://via.placeholder.com/150'
+      'imageUrl': 'assets/150.png'
     },
     {
       'date': '2023-06-26',
       'title': '정동진 해변',
       'location': 'Sanur, South Denpasar',
-      'imageUrl': 'https://via.placeholder.com/150'
+      'imageUrl': 'assets/150.png'
     },
     {
       'date': '2023-06-27',
       'title': '정동진 해변',
       'location': 'Sanur, South Denpasar',
-      'imageUrl': 'https://via.placeholder.com/150'
+      'imageUrl': 'assets/150.png'
     },
     {
       'date': '2023-06-28',
       'title': '정동진 해변',
       'location': 'Sanur, South Denpasar',
-      'imageUrl': 'https://via.placeholder.com/150'
+      'imageUrl': 'assets/150.png'
     },
     {
       'date': '2023-06-29',
       'title': '정동진 해변',
       'location': 'Sanur, South Denpasar',
-      'imageUrl': 'https://via.placeholder.com/150'
+      'imageUrl': 'assets/150.png'
     },
   ];
 
@@ -254,7 +254,7 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8.0),
-                      child: Image.network(
+                      child: Image.asset(
                         imageUrl,
                         height: 70,
                         width: 70,
@@ -330,7 +330,7 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundImage: NetworkImage('https://via.placeholder.com/50'),
+            backgroundImage: AssetImage('assets/150.png'),
             radius: 20,
           ),
           SizedBox(width: 16),
