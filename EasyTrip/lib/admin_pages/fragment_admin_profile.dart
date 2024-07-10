@@ -1,8 +1,35 @@
 import 'package:flutter/material.dart';
+import '../helpers/database_helper.dart';
 import 'admin_user_list_page.dart';
 
-class FragmentAdminProfile extends StatelessWidget {
+class FragmentAdminProfile extends StatefulWidget {
   const FragmentAdminProfile({Key? key}) : super(key: key);
+
+  @override
+  _FragmentAdminProfileState createState() => _FragmentAdminProfileState();
+}
+
+class _FragmentAdminProfileState extends State<FragmentAdminProfile> {
+  int _totalMessagesCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTotalMessagesCount();
+  }
+
+  Future<void> _loadTotalMessagesCount() async {
+    final dbHelper = DatabaseHelper.instance;
+    final allUsers = await dbHelper.getAllUsers();
+    int totalCount = 0;
+    for (var user in allUsers) {
+      final count = await dbHelper.getUnreadMessagesCount(user.id!, 'user');
+      totalCount += count;
+    }
+    setState(() {
+      _totalMessagesCount = totalCount;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,14 +55,30 @@ class FragmentAdminProfile extends StatelessWidget {
             SizedBox(height: 16),
             ListTile(
               title: Text('문의내용'),
-              trailing: Icon(Icons.arrow_forward_ios),
+              trailing: Stack(
+                children: [
+                  Icon(Icons.arrow_forward_ios),
+                  if (_totalMessagesCount > 0)
+                    Positioned(
+                      right: 0,
+                      child: CircleAvatar(
+                        radius: 8,
+                        backgroundColor: Colors.red,
+                        child: Text(
+                          '$_totalMessagesCount',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => AdminUserListPage(),
                   ),
-                );
+                ).then((_) => _loadTotalMessagesCount()); // Refresh count after returning
               },
             ),
             ListTile(
