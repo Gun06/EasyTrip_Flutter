@@ -6,6 +6,7 @@ import '../helpers/database_helper.dart';
 import '../models/user.dart';
 import 'activity_mypage_edit.dart';
 import 'activity_shopping_cart.dart';
+import 'activity_preference_edit.dart'; // 추가
 
 class MyPageFragment extends StatefulWidget {
   final int userId;
@@ -77,6 +78,15 @@ class _MyPageFragmentState extends State<MyPageFragment> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => ShoppingCartPage()),
+    );
+  }
+
+  void _navigateToActivityPreferenceEdit() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ActivityPreferenceEditPage(userId: widget.userId),
+      ),
     );
   }
 
@@ -227,6 +237,8 @@ class _MyPageFragmentState extends State<MyPageFragment> {
                   onTap: () {
                     if (_menuItems[index]['text'] == "위시리스트") {
                       _navigateToShoppingCart();
+                    } else if (_menuItems[index]['text'] == "선호도 수정") {
+                      _navigateToActivityPreferenceEdit();
                     }
                     // 다른 항목 클릭 시 추가 동작
                   },
