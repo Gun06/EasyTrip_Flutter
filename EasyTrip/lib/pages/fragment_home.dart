@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'dart:io';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart'; // Factory를 사용하기 위해 추가
+import 'package:flutter/gestures.dart';   // OneSequenceGestureRecognizer를 사용하기 위해 추가
 
 class HomeFragment extends StatefulWidget {
   @override
@@ -66,11 +69,29 @@ class _HomeFragmentState extends State<HomeFragment> {
       body: Stack(
         children: [
           Platform.isAndroid
-              ? AndroidView(
+              ? PlatformViewLink(
             viewType: 'KakaoMapView',
-            layoutDirection: TextDirection.ltr,
-            creationParams: <String, dynamic>{},
-            creationParamsCodec: const StandardMessageCodec(),
+            surfaceFactory:
+                (BuildContext context, PlatformViewController controller) {
+              return AndroidViewSurface(
+                controller: controller as AndroidViewController, // 캐스팅 추가
+                gestureRecognizers: const <
+                    Factory<OneSequenceGestureRecognizer>>{},
+                hitTestBehavior: PlatformViewHitTestBehavior.opaque,
+              );
+            },
+            onCreatePlatformView: (PlatformViewCreationParams params) {
+              return PlatformViewsService.initSurfaceAndroidView(
+                id: params.id,
+                viewType: 'KakaoMapView',
+                layoutDirection: TextDirection.ltr,
+                creationParams: {},
+                creationParamsCodec: const StandardMessageCodec(),
+              )
+                ..addOnPlatformViewCreatedListener(
+                    params.onPlatformViewCreated)
+                ..create();
+            },
           )
               : Center(child: Text('KakaoMap is not supported on this platform')),
           Positioned(
@@ -119,17 +140,14 @@ class _HomeFragmentState extends State<HomeFragment> {
           Positioned(
             top: 50,
             right: 10,
-            child: Container(
-              width: 48,
-              height: 48,
-              child: FloatingActionButton(
-                onPressed: () {
-                  // 길찾기 버튼 기능 추가
-                },
-                child: Icon(Icons.directions, color: Colors.white),
-                backgroundColor: Colors.blue,
-                mini: true,
-              ),
+            child: FloatingActionButton(
+              onPressed: () {
+                // 길찾기 버튼 기능 추가
+              },
+              child: Icon(Icons.directions, color: Colors.white),
+              backgroundColor: Colors.blue,
+              mini: true,
+              heroTag: 'directionsHero',
             ),
           ),
           Positioned(
@@ -160,6 +178,7 @@ class _HomeFragmentState extends State<HomeFragment> {
                     child: Icon(Icons.zoom_in, color: Colors.black),
                     backgroundColor: Colors.white,
                     mini: true,
+                    heroTag: 'zoomInHero',
                   ),
                 ),
                 SizedBox(height: 8),
@@ -169,6 +188,7 @@ class _HomeFragmentState extends State<HomeFragment> {
                     child: Icon(Icons.zoom_out, color: Colors.black),
                     backgroundColor: Colors.white,
                     mini: true,
+                    heroTag: 'zoomOutHero',
                   ),
                 ),
               ],
@@ -182,6 +202,7 @@ class _HomeFragmentState extends State<HomeFragment> {
               child: Icon(Icons.my_location, color: Colors.blue),
               backgroundColor: Colors.white,
               shape: CircleBorder(),
+              heroTag: 'locationHero',
             ),
           ),
         ],

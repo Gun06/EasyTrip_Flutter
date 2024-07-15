@@ -47,6 +47,7 @@ class MainActivity : FlutterActivity() {
 
 class KakaoMapFactory(private val activity: Activity) : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
   override fun create(context: Context?, viewId: Int, args: Any?): PlatformView {
+    // 여기서 activity를 직접 전달합니다.
     val mapView = MapView(activity)
     return KakaoMapView(mapView)
   }

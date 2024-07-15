@@ -3,6 +3,7 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://devrepo.kakao.com/nexus/content/groups/public/' } // 카카오 SDK Maven 저장소 추가
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.1.4'
@@ -15,6 +16,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://devrepo.kakao.com/nexus/content/groups/public/' } // 카카오 SDK Maven 저장소 추가
     }
 }
 
