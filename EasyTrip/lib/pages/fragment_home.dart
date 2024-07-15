@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart'; // Factory를 사용하기 위해 추가
 import 'package:flutter/gestures.dart';   // OneSequenceGestureRecognizer를 사용하기 위해 추가
+import 'package:permission_handler/permission_handler.dart'; // 위치 권한 요청을 위해 추가
 
 class HomeFragment extends StatefulWidget {
   @override
@@ -12,7 +13,23 @@ class HomeFragment extends StatefulWidget {
 
 class _HomeFragmentState extends State<HomeFragment> {
   static const platform = MethodChannel('com.example.easytrip/search');
+  static const mapChannel = MethodChannel('com.example.easytrip/map');
   final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _requestLocationPermission();
+  }
+
+  Future<void> _requestLocationPermission() async {
+    if (await Permission.location.request().isGranted) {
+      // 위치 권한이 승인됨
+    } else {
+      // 위치 권한이 거부됨
+      openAppSettings();
+    }
+  }
 
   void _search() async {
     try {
@@ -41,7 +58,7 @@ class _HomeFragmentState extends State<HomeFragment> {
 
   void _zoomIn() async {
     try {
-      await platform.invokeMethod('zoomIn');
+      await mapChannel.invokeMethod('zoomIn');
     } on PlatformException catch (e) {
       print('Failed to zoom in: ${e.message}');
     }
@@ -49,7 +66,7 @@ class _HomeFragmentState extends State<HomeFragment> {
 
   void _zoomOut() async {
     try {
-      await platform.invokeMethod('zoomOut');
+      await mapChannel.invokeMethod('zoomOut');
     } on PlatformException catch (e) {
       print('Failed to zoom out: ${e.message}');
     }
@@ -57,7 +74,7 @@ class _HomeFragmentState extends State<HomeFragment> {
 
   void _moveToCurrentLocation() async {
     try {
-      await platform.invokeMethod('moveToCurrentLocation');
+      await mapChannel.invokeMethod('moveToCurrentLocation');
     } on PlatformException catch (e) {
       print('Failed to move to current location: ${e.message}');
     }
