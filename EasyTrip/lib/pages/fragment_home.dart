@@ -66,6 +66,14 @@ class _HomeFragmentState extends State<HomeFragment> {
     }
   }
 
+  void _addMarker(double latitude, double longitude) async {
+    try {
+      await mapChannel.invokeMethod('addMarker', {'latitude': latitude, 'longitude': longitude});
+    } on PlatformException catch (e) {
+      print('Failed to add marker: ${e.message}');
+    }
+  }
+
   void _zoomIn() async {
     try {
       await mapChannel.invokeMethod('zoomIn');
@@ -92,6 +100,7 @@ class _HomeFragmentState extends State<HomeFragment> {
 
   void _onPlaceTap(double latitude, double longitude) {
     _moveToLocation(latitude, longitude);
+    _addMarker(latitude, longitude);
     setState(() {
       _searchResults = [];
     });

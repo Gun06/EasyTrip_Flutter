@@ -12,6 +12,7 @@ import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
 import net.daum.mf.map.api.MapView
 import net.daum.mf.map.api.MapPoint
+import net.daum.mf.map.api.MapPOIItem
 import java.security.MessageDigest
 import android.content.pm.PackageManager
 import android.util.Base64
@@ -59,11 +60,26 @@ class MainActivity : FlutterActivity() {
             val latitude = (call.arguments as Map<*, *>)["latitude"] as Double
             val longitude = (call.arguments as Map<*, *>)["longitude"] as Double
             mapView.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(latitude, longitude), true)
+            addMarker(latitude, longitude)
+            result.success(null)
+          }
+          "addMarker" -> {
+            val latitude = (call.arguments as Map<*, *>)["latitude"] as Double
+            val longitude = (call.arguments as Map<*, *>)["longitude"] as Double
+            addMarker(latitude, longitude)
             result.success(null)
           }
           else -> result.notImplemented()
         }
       }
+  }
+
+  private fun addMarker(latitude: Double, longitude: Double) {
+    val marker = MapPOIItem()
+    marker.itemName = "Selected Location"
+    marker.mapPoint = MapPoint.mapPointWithGeoCoord(latitude, longitude)
+    marker.markerType = MapPOIItem.MarkerType.BluePin
+    mapView.addPOIItem(marker)
   }
 
   private fun searchPlaces(keyword: String, result: MethodChannel.Result) {
@@ -101,7 +117,6 @@ class MainActivity : FlutterActivity() {
       }
     })
   }
-
 
   override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
     super.configureFlutterEngine(flutterEngine)
