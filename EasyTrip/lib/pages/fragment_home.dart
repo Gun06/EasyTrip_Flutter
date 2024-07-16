@@ -90,6 +90,13 @@ class _HomeFragmentState extends State<HomeFragment> {
     }
   }
 
+  void _onPlaceTap(double latitude, double longitude) {
+    _moveToLocation(latitude, longitude);
+    setState(() {
+      _searchResults = [];
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -234,23 +241,37 @@ class _HomeFragmentState extends State<HomeFragment> {
           ),
           if (_searchResults.isNotEmpty)
             Positioned(
-              top: 200,
+              top: 110,
               left: 10,
               right: 10,
               child: Container(
-                height: 200,
-                child: ListView.builder(
-                  itemCount: _searchResults.length,
-                  itemBuilder: (context, index) {
-                    final place = _searchResults[index];
-                    return ListTile(
-                      title: Text(place['place_name']),
-                      subtitle: Text(place['address_name']),
-                      onTap: () {
-                        double lat = double.parse(place['y']);
-                        double lon = double.parse(place['x']);
-                        _moveToLocation(lat, lon);
-                      },
+                height: 240,
+                color: Colors.black12,
+                child: PageView.builder(
+                  scrollDirection: Axis.vertical,
+                  itemCount: (_searchResults.length / 3).ceil(),
+                  itemBuilder: (context, pageIndex) {
+                    int startIndex = pageIndex * 3;
+                    int endIndex = (startIndex + 3 < _searchResults.length) ? startIndex + 3 : _searchResults.length;
+                    return Column(
+                      children: List.generate(endIndex - startIndex, (index) {
+                        final place = _searchResults[startIndex + index];
+                        return Card(
+                          color: Colors.white,
+                          margin: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                          elevation: 4.0,
+                          shadowColor: Colors.black26,
+                          child: ListTile(
+                            title: Text(place['place_name']),
+                            subtitle: Text(place['address_name']),
+                            onTap: () {
+                              double lat = double.parse(place['y']);
+                              double lon = double.parse(place['x']);
+                              _onPlaceTap(lat, lon);
+                            },
+                          ),
+                        );
+                      }),
                     );
                   },
                 ),
