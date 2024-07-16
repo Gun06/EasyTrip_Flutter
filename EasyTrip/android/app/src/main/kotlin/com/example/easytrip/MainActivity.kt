@@ -4,6 +4,8 @@ import android.content.Context
 import android.app.Activity
 import android.os.Bundle
 import android.util.Log
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -78,14 +80,21 @@ class MainActivity : FlutterActivity() {
     val marker = MapPOIItem()
     marker.itemName = "Selected Location"
     marker.mapPoint = MapPoint.mapPointWithGeoCoord(latitude, longitude)
-    marker.markerType = MapPOIItem.MarkerType.BluePin
+    marker.markerType = MapPOIItem.MarkerType.CustomImage
+
+    val bitmap = BitmapFactory.decodeResource(resources, R.drawable.custom_marker)
+    val resizedBitmap = Bitmap.createScaledBitmap(bitmap, 150, 150, false)
+
+    marker.customImageBitmap = resizedBitmap
+    marker.isCustomImageAutoscale = false
+    marker.setCustomImageAnchor(0.5f, 1.0f) // 마커 앵커 포인트 설정
     mapView.addPOIItem(marker)
   }
 
   private fun searchPlaces(keyword: String, result: MethodChannel.Result) {
     val client = OkHttpClient()
     val url = "https://dapi.kakao.com/v2/local/search/keyword.json?query=$keyword"
-    val apiKey = "06458f1a2d01e02bb731d2a37cfa6c85" // 실제 키로 교체
+    val apiKey = "06458f1a2d01e02bb731d2a37cfa6c85"
     val request = Request.Builder()
       .url(url)
       .addHeader("Authorization", "KakaoAK $apiKey")
