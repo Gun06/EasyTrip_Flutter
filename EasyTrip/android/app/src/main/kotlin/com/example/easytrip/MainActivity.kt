@@ -4,7 +4,6 @@ import android.content.Context
 import android.app.Activity
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -16,6 +15,10 @@ import net.daum.mf.map.api.MapPoint
 import java.security.MessageDigest
 import android.content.pm.PackageManager
 import android.util.Base64
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.io.IOException
+import android.view.View
 
 class MainActivity : FlutterActivity() {
 
@@ -24,6 +27,17 @@ class MainActivity : FlutterActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     getAppKeyHash() // 키 해시를 얻기 위해 함수 호출
+
+    MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, "com.example.easytrip/search")
+      .setMethodCallHandler { call, result ->
+        when (call.method) {
+          "search" -> {
+            val keyword = call.arguments as String
+            searchPlaces(keyword, result)
+          }
+          else -> result.notImplemented()
+        }
+      }
 
     MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, "com.example.easytrip/map")
       .setMethodCallHandler { call, result ->
@@ -41,10 +55,53 @@ class MainActivity : FlutterActivity() {
             mapView.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(37.5665, 126.9780), true)
             result.success(null)
           }
+          "moveToLocation" -> {
+            val latitude = (call.arguments as Map<*, *>)["latitude"] as Double
+            val longitude = (call.arguments as Map<*, *>)["longitude"] as Double
+            mapView.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(latitude, longitude), true)
+            result.success(null)
+          }
           else -> result.notImplemented()
         }
       }
   }
+
+  private fun searchPlaces(keyword: String, result: MethodChannel.Result) {
+    val client = OkHttpClient()
+    val url = "https://dapi.kakao.com/v2/local/search/keyword.json?query=$keyword"
+    val apiKey = "06458f1a2d01e02bb731d2a37cfa6c85" // 실제 키로 교체
+    val request = Request.Builder()
+      .url(url)
+      .addHeader("Authorization", "KakaoAK $apiKey")
+      .build()
+
+    Log.d("searchPlaces", "Request URL: $url")
+    Log.d("searchPlaces", "Authorization: KakaoAK $apiKey") // 인증 헤더 로그 출력
+
+    client.newCall(request).enqueue(object : okhttp3.Callback {
+      override fun onFailure(call: okhttp3.Call, e: IOException) {
+        runOnUiThread {
+          Log.e("searchPlaces", "Request failed: ${e.message}")
+          result.error("ERROR", e.message, null)
+        }
+      }
+
+      override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+        val responseData = response.body?.string()
+        runOnUiThread {
+          Log.d("searchPlaces", "Response code: ${response.code}")
+          if (response.isSuccessful && responseData != null) {
+            Log.d("searchPlaces", "Response successful: $responseData")
+            result.success(responseData)
+          } else {
+            Log.e("searchPlaces", "Response failed: ${response.message}")
+            result.error("ERROR", "Failed to get response", null)
+          }
+        }
+      }
+    })
+  }
+
 
   override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
     super.configureFlutterEngine(flutterEngine)

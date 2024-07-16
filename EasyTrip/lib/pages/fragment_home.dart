@@ -1,10 +1,24 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'dart:io';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart'; // Factory를 사용하기 위해 추가
-import 'package:flutter/gestures.dart';   // OneSequenceGestureRecognizer를 사용하기 위해 추가
-import 'package:permission_handler/permission_handler.dart'; // 위치 권한 요청을 위해 추가
+import 'dart:convert';
+import 'package:permission_handler/permission_handler.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: HomeFragment(),
+    );
+  }
+}
 
 class HomeFragment extends StatefulWidget {
   @override
@@ -15,6 +29,7 @@ class _HomeFragmentState extends State<HomeFragment> {
   static const platform = MethodChannel('com.example.easytrip/search');
   static const mapChannel = MethodChannel('com.example.easytrip/map');
   final TextEditingController _searchController = TextEditingController();
+  List<dynamic> _searchResults = [];
 
   @override
   void initState() {
@@ -34,25 +49,20 @@ class _HomeFragmentState extends State<HomeFragment> {
   void _search() async {
     try {
       final String result = await platform.invokeMethod('search', _searchController.text);
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Search Results'),
-            content: Text(result),
-            actions: <Widget>[
-              TextButton(
-                child: Text('OK'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
-      );
+      final data = jsonDecode(result);
+      setState(() {
+        _searchResults = data['documents'];
+      });
     } on PlatformException catch (e) {
       print('Failed to search: ${e.message}');
+    }
+  }
+
+  void _moveToLocation(double latitude, double longitude) async {
+    try {
+      await mapChannel.invokeMethod('moveToLocation', {'latitude': latitude, 'longitude': longitude});
+    } on PlatformException catch (e) {
+      print('Failed to move to location: ${e.message}');
     }
   }
 
@@ -91,7 +101,7 @@ class _HomeFragmentState extends State<HomeFragment> {
             surfaceFactory:
                 (BuildContext context, PlatformViewController controller) {
               return AndroidViewSurface(
-                controller: controller as AndroidViewController, // 캐스팅 추가
+                controller: controller as AndroidViewController,
                 gestureRecognizers: const <
                     Factory<OneSequenceGestureRecognizer>>{},
                 hitTestBehavior: PlatformViewHitTestBehavior.opaque,
@@ -222,6 +232,30 @@ class _HomeFragmentState extends State<HomeFragment> {
               heroTag: 'locationHero',
             ),
           ),
+          if (_searchResults.isNotEmpty)
+            Positioned(
+              top: 200,
+              left: 10,
+              right: 10,
+              child: Container(
+                height: 200,
+                child: ListView.builder(
+                  itemCount: _searchResults.length,
+                  itemBuilder: (context, index) {
+                    final place = _searchResults[index];
+                    return ListTile(
+                      title: Text(place['place_name']),
+                      subtitle: Text(place['address_name']),
+                      onTap: () {
+                        double lat = double.parse(place['y']);
+                        double lon = double.parse(place['x']);
+                        _moveToLocation(lat, lon);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
         ],
       ),
     );
