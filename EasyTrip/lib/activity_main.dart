@@ -9,13 +9,13 @@ import 'pages/fragment_traffic.dart';
 class MainActivity extends StatefulWidget {
   final int userId;
 
-  MainActivity({required this.userId});
+  MainActivity({required this.userId, Key? key}) : super(key: key);
 
   @override
-  _MainActivityState createState() => _MainActivityState();
+  MainActivityState createState() => MainActivityState();
 }
 
-class _MainActivityState extends State<MainActivity> with SingleTickerProviderStateMixin {
+class MainActivityState extends State<MainActivity> with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -28,6 +28,12 @@ class _MainActivityState extends State<MainActivity> with SingleTickerProviderSt
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  void switchTab(int index) {
+    setState(() {
+      _tabController.animateTo(index);
+    });
   }
 
   @override

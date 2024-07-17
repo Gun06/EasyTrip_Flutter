@@ -1,24 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'dart:io';
 import 'package:flutter/services.dart';
-import 'dart:convert';
 import 'package:permission_handler/permission_handler.dart';
-
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: HomeFragment(),
-    );
-  }
-}
+import '../activity_main.dart';
 
 class HomeFragment extends StatefulWidget {
   @override
@@ -106,6 +95,11 @@ class _HomeFragmentState extends State<HomeFragment> {
     });
   }
 
+  void _navigateToTraffic() {
+    final mainActivityState = context.findAncestorStateOfType<MainActivityState>();
+    mainActivityState?.switchTab(3); // TrafficFragment의 인덱스로 이동
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -114,12 +108,10 @@ class _HomeFragmentState extends State<HomeFragment> {
           Platform.isAndroid
               ? PlatformViewLink(
             viewType: 'KakaoMapView',
-            surfaceFactory:
-                (BuildContext context, PlatformViewController controller) {
+            surfaceFactory: (BuildContext context, PlatformViewController controller) {
               return AndroidViewSurface(
                 controller: controller as AndroidViewController,
-                gestureRecognizers: const <
-                    Factory<OneSequenceGestureRecognizer>>{},
+                gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
                 hitTestBehavior: PlatformViewHitTestBehavior.opaque,
               );
             },
@@ -131,8 +123,7 @@ class _HomeFragmentState extends State<HomeFragment> {
                 creationParams: {},
                 creationParamsCodec: const StandardMessageCodec(),
               )
-                ..addOnPlatformViewCreatedListener(
-                    params.onPlatformViewCreated)
+                ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
                 ..create();
             },
           )
@@ -184,9 +175,7 @@ class _HomeFragmentState extends State<HomeFragment> {
             top: 50,
             right: 10,
             child: FloatingActionButton(
-              onPressed: () {
-                // 길찾기 버튼 기능 추가
-              },
+              onPressed: _navigateToTraffic,
               child: Icon(Icons.directions, color: Colors.white),
               backgroundColor: Colors.blue,
               mini: true,

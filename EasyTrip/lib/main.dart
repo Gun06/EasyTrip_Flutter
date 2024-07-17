@@ -14,6 +14,8 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  final GlobalKey<MainActivityState> mainActivityKey = GlobalKey<MainActivityState>();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -24,15 +26,15 @@ class MyApp extends StatelessWidget {
         '/admin': (context) => AdminPage(),
         '/step1': (context) => PreferencePage1(),
         '/step2': (context) => PreferencePage2(),
-        '/step3': (context) => PreferencePage3(activityPreferences: [],),
-        '/step4': (context) => PreferencePage4(activityPreferences: [], foodPreferences: [],),
-        '/signup': (context) => SignUpActivity(activityPreferences: [], foodPreferences: [], accommodationPreferences: [],),
+        '/step3': (context) => PreferencePage3(activityPreferences: []),
+        '/step4': (context) => PreferencePage4(activityPreferences: [], foodPreferences: []),
+        '/signup': (context) => SignUpActivity(activityPreferences: [], foodPreferences: [], accommodationPreferences: []),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/main') {
           final userId = settings.arguments as int;
           return MaterialPageRoute(
-            builder: (context) => MainActivity(userId: userId),
+            builder: (context) => MainActivity(userId: userId, key: mainActivityKey),
           );
         }
         return null;
