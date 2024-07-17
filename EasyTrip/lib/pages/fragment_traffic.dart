@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class TrafficFragment extends StatefulWidget {
   @override
@@ -7,11 +9,83 @@ class TrafficFragment extends StatefulWidget {
 
 class _TrafficFragmentState extends State<TrafficFragment> {
   int selectedIndex = 1; // 초기값으로 버스 선택
+  final TextEditingController _startController = TextEditingController();
+  final TextEditingController _endController = TextEditingController();
+  static const searchChannel = MethodChannel('com.example.easytrip/search');
+  static const mapChannel = MethodChannel('com.example.easytrip/map');
+
+  List<dynamic> _startSearchResults = [];
+  List<dynamic> _endSearchResults = [];
 
   Future<void> _refreshData() async {
-    // 여기에 새로고침 로직을 추가하세요.
     await Future.delayed(Duration(seconds: 2)); // 예제용 지연 시간
     print('새로고침 완료');
+  }
+
+  void _searchStartLocation(String query) async {
+    try {
+      final String result = await searchChannel.invokeMethod('search', query);
+      final data = jsonDecode(result);
+      setState(() {
+        _startSearchResults = data['documents'];
+      });
+    } on PlatformException catch (e) {
+      print('Failed to search: ${e.message}');
+    }
+  }
+
+  void _searchEndLocation(String query) async {
+    try {
+      final String result = await searchChannel.invokeMethod('search', query);
+      final data = jsonDecode(result);
+      setState(() {
+        _endSearchResults = data['documents'];
+      });
+    } on PlatformException catch (e) {
+      print('Failed to search: ${e.message}');
+    }
+  }
+
+  void _showRoute() async {
+    if (_startController.text.isNotEmpty && _endController.text.isNotEmpty) {
+      // 출발지와 도착지의 좌표를 지오코딩하여 얻습니다.
+      final startPlace = _startSearchResults.firstWhere((place) => place['place_name'] == _startController.text, orElse: () => null);
+      final endPlace = _endSearchResults.firstWhere((place) => place['place_name'] == _endController.text, orElse: () => null);
+
+      if (startPlace != null && endPlace != null) {
+        double startLat = double.parse(startPlace['y']);
+        double startLng = double.parse(startPlace['x']);
+        double endLat = double.parse(endPlace['y']);
+        double endLng = double.parse(endPlace['x']);
+
+        try {
+          await mapChannel.invokeMethod('getRoute', {
+            'startLatitude': startLat,
+            'startLongitude': startLng,
+            'endLatitude': endLat,
+            'endLongitude': endLng,
+          });
+        } on PlatformException catch (e) {
+          print('Failed to get route: ${e.message}');
+        }
+      } else {
+        print('Failed to find coordinates for the given places.');
+      }
+    }
+  }
+
+  void _onStartPlaceTap(Map<String, dynamic> place) {
+    _startController.text = place['place_name'];
+    setState(() {
+      _startSearchResults.clear();
+    });
+  }
+
+  void _onEndPlaceTap(Map<String, dynamic> place) {
+    _endController.text = place['place_name'];
+    setState(() {
+      _endSearchResults.clear();
+    });
   }
 
   @override
@@ -57,6 +131,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                   children: [
                     Expanded(
                       child: TextField(
+                        controller: _startController,
                         style: TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           labelText: '출발지',
@@ -73,6 +148,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                             borderSide: BorderSide(color: Colors.white),
                           ),
                         ),
+                        onChanged: _searchStartLocation,
                       ),
                     ),
                     IconButton(
@@ -83,11 +159,28 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                     ),
                   ],
                 ),
+                if (_startSearchResults.isNotEmpty)
+                  Container(
+                    color: Colors.white,
+                    height: 200,
+                    child: ListView.builder(
+                      itemCount: _startSearchResults.length,
+                      itemBuilder: (context, index) {
+                        final place = _startSearchResults[index];
+                        return ListTile(
+                          title: Text(place['place_name']),
+                          subtitle: Text(place['address_name']),
+                          onTap: () => _onStartPlaceTap(place),
+                        );
+                      },
+                    ),
+                  ),
                 SizedBox(height: 8),
                 Row(
                   children: [
                     Expanded(
                       child: TextField(
+                        controller: _endController,
                         style: TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           labelText: '도착지',
@@ -104,6 +197,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                             borderSide: BorderSide(color: Colors.white),
                           ),
                         ),
+                        onChanged: _searchEndLocation,
                       ),
                     ),
                     IconButton(
@@ -113,6 +207,26 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                       },
                     ),
                   ],
+                ),
+                if (_endSearchResults.isNotEmpty)
+                  Container(
+                    color: Colors.white,
+                    height: 200,
+                    child: ListView.builder(
+                      itemCount: _endSearchResults.length,
+                      itemBuilder: (context, index) {
+                        final place = _endSearchResults[index];
+                        return ListTile(
+                          title: Text(place['place_name']),
+                          subtitle: Text(place['address_name']),
+                          onTap: () => _onEndPlaceTap(place),
+                        );
+                      },
+                    ),
+                  ),
+                ElevatedButton(
+                  onPressed: _showRoute,
+                  child: Text('경로 보기'),
                 ),
               ],
             ),
