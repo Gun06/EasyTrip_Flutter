@@ -24,6 +24,9 @@ class _HomeFragmentState extends State<HomeFragment> {
   void initState() {
     super.initState();
     _requestLocationPermission();
+
+    // Add listener to search controller to update search results on text change
+    _searchController.addListener(_search);
   }
 
   Future<void> _requestLocationPermission() async {
@@ -36,6 +39,13 @@ class _HomeFragmentState extends State<HomeFragment> {
   }
 
   void _search() async {
+    if (_searchController.text.isEmpty) {
+      setState(() {
+        _searchResults = [];
+      });
+      return;
+    }
+
     try {
       final String result = await platform.invokeMethod('search', _searchController.text);
       final data = jsonDecode(result);
@@ -101,6 +111,13 @@ class _HomeFragmentState extends State<HomeFragment> {
   }
 
   @override
+  void dispose() {
+    _searchController.removeListener(_search);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
@@ -160,7 +177,6 @@ class _HomeFragmentState extends State<HomeFragment> {
                         hintText: '검색어를 입력하세요',
                         border: InputBorder.none,
                       ),
-                      onSubmitted: (value) => _search(),
                     ),
                   ),
                   IconButton(
