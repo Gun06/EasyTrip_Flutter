@@ -11,11 +11,45 @@ class _TrafficFragmentState extends State<TrafficFragment> {
   int selectedIndex = 1; // 초기값으로 버스 선택
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _endController = TextEditingController();
+  final FocusNode _startFocusNode = FocusNode();
+  final FocusNode _endFocusNode = FocusNode();
   static const searchChannel = MethodChannel('com.example.easytrip/search');
   static const mapChannel = MethodChannel('com.example.easytrip/map');
 
   List<dynamic> _startSearchResults = [];
   List<dynamic> _endSearchResults = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _startFocusNode.addListener(_onStartFocusChange);
+    _endFocusNode.addListener(_onEndFocusChange);
+  }
+
+  @override
+  void dispose() {
+    _startFocusNode.removeListener(_onStartFocusChange);
+    _endFocusNode.removeListener(_onEndFocusChange);
+    _startFocusNode.dispose();
+    _endFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _onStartFocusChange() {
+    if (_startFocusNode.hasFocus) {
+      setState(() {
+        _endSearchResults.clear();
+      });
+    }
+  }
+
+  void _onEndFocusChange() {
+    if (_endFocusNode.hasFocus) {
+      setState(() {
+        _startSearchResults.clear();
+      });
+    }
+  }
 
   Future<void> _refreshData() async {
     await Future.delayed(Duration(seconds: 2)); // 예제용 지연 시간
@@ -116,12 +150,10 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                         ],
                       ),
                     ),
-                    // 닫기 버튼
+                    // 검색 버튼
                     IconButton(
-                      icon: Icon(Icons.close, color: Colors.white),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
+                      icon: Icon(Icons.play_arrow, color: Colors.white),
+                      onPressed: _showRoute, // 검색 버튼이 경로 보기 기능 수행
                     ),
                   ],
                 ),
@@ -132,6 +164,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                     Expanded(
                       child: TextField(
                         controller: _startController,
+                        focusNode: _startFocusNode,
                         style: TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           labelText: '출발지',
@@ -160,19 +193,24 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                   ],
                 ),
                 if (_startSearchResults.isNotEmpty)
-                  Container(
-                    color: Colors.white,
-                    height: 200,
-                    child: ListView.builder(
-                      itemCount: _startSearchResults.length,
-                      itemBuilder: (context, index) {
-                        final place = _startSearchResults[index];
-                        return ListTile(
-                          title: Text(place['place_name']),
-                          subtitle: Text(place['address_name']),
-                          onTap: () => _onStartPlaceTap(place),
-                        );
-                      },
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      color: Colors.white,
+                      height: 180,
+                      width: 343,
+                      child: ListView.builder(
+                        padding: EdgeInsets.only(top: 5),
+                        itemCount: _startSearchResults.length,
+                        itemBuilder: (context, index) {
+                          final place = _startSearchResults[index];
+                          return ListTile(
+                            title: Text(place['place_name']),
+                            subtitle: Text(place['address_name']),
+                            onTap: () => _onStartPlaceTap(place),
+                          );
+                        },
+                      ),
                     ),
                   ),
                 SizedBox(height: 8),
@@ -181,6 +219,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                     Expanded(
                       child: TextField(
                         controller: _endController,
+                        focusNode: _endFocusNode,
                         style: TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           labelText: '도착지',
@@ -209,25 +248,26 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                   ],
                 ),
                 if (_endSearchResults.isNotEmpty)
-                  Container(
-                    color: Colors.white,
-                    height: 200,
-                    child: ListView.builder(
-                      itemCount: _endSearchResults.length,
-                      itemBuilder: (context, index) {
-                        final place = _endSearchResults[index];
-                        return ListTile(
-                          title: Text(place['place_name']),
-                          subtitle: Text(place['address_name']),
-                          onTap: () => _onEndPlaceTap(place),
-                        );
-                      },
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      color: Colors.white,
+                      height: 180,
+                      width: 343,
+                      child: ListView.builder(
+                        padding: EdgeInsets.only(top: 5),
+                        itemCount: _endSearchResults.length,
+                        itemBuilder: (context, index) {
+                          final place = _endSearchResults[index];
+                          return ListTile(
+                            title: Text(place['place_name']),
+                            subtitle: Text(place['address_name']),
+                            onTap: () => _onEndPlaceTap(place),
+                          );
+                        },
+                      ),
                     ),
                   ),
-                ElevatedButton(
-                  onPressed: _showRoute,
-                  child: Text('경로 보기'),
-                ),
               ],
             ),
           ),
