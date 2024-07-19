@@ -143,7 +143,7 @@ class MainActivity : FlutterActivity() {
   private fun getRoute(startLatitude: Double, startLongitude: Double, endLatitude: Double, endLongitude: Double, result: MethodChannel.Result) {
     val client = OkHttpClient()
     val url = "https://apis-navi.kakaomobility.com/v1/route"
-    val apiKey = "YOUR_KAKAO_API_KEY" // 실제 API 키를 넣어주세요
+    val apiKey = "06458f1a2d01e02bb731d2a37cfa6c85" // 실제 API 키를 넣어주세요
 
     val json = """
             {

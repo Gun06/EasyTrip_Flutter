@@ -1,6 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
+import '../activity_main.dart';
 
 class TrafficFragment extends StatefulWidget {
   @override
@@ -9,6 +16,7 @@ class TrafficFragment extends StatefulWidget {
 
 class _TrafficFragmentState extends State<TrafficFragment> {
   int selectedIndex = 1; // 초기값으로 버스 선택
+  final PageController _pageController = PageController(initialPage: 1);
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _endController = TextEditingController();
   final FocusNode _startFocusNode = FocusNode();
@@ -93,12 +101,33 @@ class _TrafficFragmentState extends State<TrafficFragment> {
         double endLng = double.parse(endPlace['x']);
 
         try {
-          await mapChannel.invokeMethod('getRoute', {
+          print('Requesting route from ($startLat, $startLng) to ($endLat, $endLng)');
+          final String result = await mapChannel.invokeMethod('getRoute', {
             'startLatitude': startLat,
             'startLongitude': startLng,
             'endLatitude': endLat,
             'endLongitude': endLng,
           });
+
+          final data = jsonDecode(result);
+          final routes = data['routes'];
+          if (routes.isNotEmpty) {
+            final route = routes[0];
+            final sections = route['sections'];
+            List<MapPoint> polylinePoints = [];
+            for (var section in sections) {
+              final roads = section['roads'];
+              for (var road in roads) {
+                final vertexes = road['vertexes'];
+                for (var i = 0; i < vertexes.length; i += 2) {
+                  double latitude = vertexes[i + 1];
+                  double longitude = vertexes[i];
+                  polylinePoints.add(MapPoint(latitude: latitude, longitude: longitude));
+                }
+              }
+            }
+            WalkPage.setPolylinePoints(polylinePoints);
+          }
         } on PlatformException catch (e) {
           print('Failed to get route: ${e.message}');
         }
@@ -119,6 +148,19 @@ class _TrafficFragmentState extends State<TrafficFragment> {
     _endController.text = place['place_name'];
     setState(() {
       _endSearchResults.clear();
+    });
+  }
+
+  void _onPageChanged(int index) {
+    setState(() {
+      selectedIndex = index;
+    });
+  }
+
+  void _onTransportButtonTapped(int index) {
+    _pageController.jumpToPage(index);
+    setState(() {
+      selectedIndex = index;
     });
   }
 
@@ -273,73 +315,27 @@ class _TrafficFragmentState extends State<TrafficFragment> {
           ),
           // 출발 시간 선택 및 경로 정보
           Expanded(
-            child: RefreshIndicator(
-              onRefresh: _refreshData,
-              color: Colors.white, // 로딩 스피너의 색상
-              backgroundColor: Color(0xFF4285F4), // 배경 색상
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('오늘 오후 2:44 출발', style: TextStyle(color: Colors.black)),
-                        Icon(Icons.arrow_drop_down, color: Colors.black),
-                      ],
-                    ),
-                    Divider(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('추천순', style: TextStyle(color: Colors.grey)),
-                        Icon(Icons.refresh, color: Colors.grey),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-                    // 경로 정보
-                    Expanded(
-                      child: ListView(
-                        children: [
-                          RouteCard(
-                            duration: '50분',
-                            departure: '오후 2:45',
-                            arrival: '오후 3:36',
-                            details: [
-                              '북부시장입구',
-                              '강북11 도착 또는 출발',
-                              '강북09',
-                              '수유역',
-                              '서울역',
-                              '남영역',
-                            ],
-                            fare: '1,600원',
-                            walk: '도보 10분',
-                            wait: '대기 5분 예상',
-                          ),
-                          RouteCard(
-                            duration: '48분',
-                            departure: '오후 2:47',
-                            arrival: '오후 3:35',
-                            details: [
-                              '북부시장입구',
-                              '강북12 도착 또는 출발',
-                              '강북10',
-                              '수유역',
-                              '서울역',
-                              '남영역',
-                            ],
-                            fare: '1,500원',
-                            walk: '도보 12분',
-                            wait: '대기 4분 예상',
-                          ),
-                          // 추가 경로 정보 카드
-                        ],
-                      ),
-                    ),
-                  ],
+            child: PageView(
+              controller: _pageController,
+              onPageChanged: _onPageChanged,
+              children: [
+                MapPage(),
+                BusPage(
+                  startController: _startController,
+                  endController: _endController,
+                  startFocusNode: _startFocusNode,
+                  endFocusNode: _endFocusNode,
+                  startSearchResults: _startSearchResults,
+                  endSearchResults: _endSearchResults,
+                  searchStartLocation: _searchStartLocation,
+                  searchEndLocation: _searchEndLocation,
+                  onStartPlaceTap: _onStartPlaceTap,
+                  onEndPlaceTap: _onEndPlaceTap,
+                  refreshData: _refreshData,
                 ),
-              ),
+                MapPage(),
+                MapPage(),
+              ],
             ),
           ),
         ],
@@ -355,16 +351,197 @@ class _TrafficFragmentState extends State<TrafficFragment> {
       ),
       padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: InkWell(
-        onTap: () {
-          setState(() {
-            selectedIndex = index;
-          });
-        },
+        onTap: () => _onTransportButtonTapped(index),
         child: Icon(
           icon,
           color: selectedIndex == index ? Colors.blue : Colors.white,
         ),
       ),
+    );
+  }
+}
+
+class MapPoint {
+  final double latitude;
+  final double longitude;
+
+  MapPoint({required this.latitude, required this.longitude});
+}
+
+class MapPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Platform.isAndroid
+            ? PlatformViewLink(
+          viewType: 'KakaoMapView',
+          surfaceFactory: (BuildContext context, PlatformViewController controller) {
+            return AndroidViewSurface(
+              controller: controller as AndroidViewController,
+              gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
+              hitTestBehavior: PlatformViewHitTestBehavior.opaque,
+            );
+          },
+          onCreatePlatformView: (PlatformViewCreationParams params) {
+            return PlatformViewsService.initSurfaceAndroidView(
+              id: params.id,
+              viewType: 'KakaoMapView',
+              layoutDirection: TextDirection.ltr,
+              creationParams: {},
+              creationParamsCodec: const StandardMessageCodec(),
+            )
+              ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
+              ..create();
+          },
+        )
+            : Center(child: Text('KakaoMap is not supported on this platform')),
+      ],
+    );
+  }
+}
+
+class BusPage extends StatelessWidget {
+  final TextEditingController startController;
+  final TextEditingController endController;
+  final FocusNode startFocusNode;
+  final FocusNode endFocusNode;
+  final List<dynamic> startSearchResults;
+  final List<dynamic> endSearchResults;
+  final Function(String) searchStartLocation;
+  final Function(String) searchEndLocation;
+  final Function(Map<String, dynamic>) onStartPlaceTap;
+  final Function(Map<String, dynamic>) onEndPlaceTap;
+  final Future<void> Function() refreshData;
+
+  BusPage({
+    required this.startController,
+    required this.endController,
+    required this.startFocusNode,
+    required this.endFocusNode,
+    required this.startSearchResults,
+    required this.endSearchResults,
+    required this.searchStartLocation,
+    required this.searchEndLocation,
+    required this.onStartPlaceTap,
+    required this.onEndPlaceTap,
+    required this.refreshData,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: refreshData,
+      color: Colors.white,
+      backgroundColor: Color(0xFF4285F4),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('오늘 오후 2:44 출발', style: TextStyle(color: Colors.black)),
+                Icon(Icons.arrow_drop_down, color: Colors.black),
+              ],
+            ),
+            Divider(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('추천순', style: TextStyle(color: Colors.grey)),
+                Icon(Icons.refresh, color: Colors.grey),
+              ],
+            ),
+            SizedBox(height: 16),
+            Expanded(
+              child: ListView(
+                children: [
+                  RouteCard(
+                    duration: '50분',
+                    departure: '오후 2:45',
+                    arrival: '오후 3:36',
+                    details: [
+                      '북부시장입구',
+                      '강북11 도착 또는 출발',
+                      '강북09',
+                      '수유역',
+                      '서울역',
+                      '남영역',
+                    ],
+                    fare: '1,600원',
+                    walk: '도보 10분',
+                    wait: '대기 5분 예상',
+                  ),
+                  RouteCard(
+                    duration: '48분',
+                    departure: '오후 2:47',
+                    arrival: '오후 3:35',
+                    details: [
+                      '북부시장입구',
+                      '강북12 도착 또는 출발',
+                      '강북10',
+                      '수유역',
+                      '서울역',
+                      '남영역',
+                    ],
+                    fare: '1,500원',
+                    walk: '도보 12분',
+                    wait: '대기 4분 예상',
+                  ),
+                  // 추가 경로 정보 카드
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class WalkPage extends StatefulWidget {
+  static List<MapPoint> _polylinePoints = [];
+
+  static void setPolylinePoints(List<MapPoint> points) {
+    _polylinePoints = points;
+  }
+
+  @override
+  _WalkPageState createState() => _WalkPageState();
+}
+
+class _WalkPageState extends State<WalkPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Platform.isAndroid
+            ? PlatformViewLink(
+          viewType: 'KakaoMapView',
+          surfaceFactory: (BuildContext context, PlatformViewController controller) {
+            return AndroidViewSurface(
+              controller: controller as AndroidViewController,
+              gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
+              hitTestBehavior: PlatformViewHitTestBehavior.opaque,
+            );
+          },
+          onCreatePlatformView: (PlatformViewCreationParams params) {
+            return PlatformViewsService.initSurfaceAndroidView(
+              id: params.id,
+              viewType: 'KakaoMapView',
+              layoutDirection: TextDirection.ltr,
+              creationParams: {
+                'polyline': WalkPage._polylinePoints.map((point) => [point.latitude, point.longitude]).toList(),
+              },
+              creationParamsCodec: const StandardMessageCodec(),
+            )
+              ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
+              ..create();
+          },
+        )
+            : Center(child: Text('KakaoMap is not supported on this platform')),
+      ],
     );
   }
 }
