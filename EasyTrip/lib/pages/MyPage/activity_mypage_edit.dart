@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'dart:io';
-import '../helpers/database_helper.dart';
-import '../models/user.dart';
-import '../profile_image_selector.dart';
+import '../../helpers/database_helper.dart';
+import '../../models/user.dart';
+import '../../profile_image_selector.dart';
 import 'package:intl/intl.dart';
 
 class EditProfilePage extends StatefulWidget {

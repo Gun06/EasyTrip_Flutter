@@ -8,6 +8,10 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../activity_main.dart';
+import 'activity_bike.dart';
+import 'activity_bus.dart';
+import 'activity_car.dart';
+import 'activity_walk.dart';
 
 class TrafficFragment extends StatefulWidget {
   @override
@@ -21,8 +25,6 @@ class _TrafficFragmentState extends State<TrafficFragment> {
   final TextEditingController _endController = TextEditingController();
   final FocusNode _startFocusNode = FocusNode();
   final FocusNode _endFocusNode = FocusNode();
-  static const searchChannel = MethodChannel('com.example.easytrip/search');
-  static const mapChannel = MethodChannel('com.example.easytrip/map');
 
   List<dynamic> _startSearchResults = [];
   List<dynamic> _endSearchResults = [];
@@ -66,7 +68,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
 
   void _searchStartLocation(String query) async {
     try {
-      final String result = await searchChannel.invokeMethod('search', query);
+      final String result = await MethodChannel('com.example.easytrip/search').invokeMethod('search', query);
       final data = jsonDecode(result);
       setState(() {
         _startSearchResults = data['documents'];
@@ -78,7 +80,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
 
   void _searchEndLocation(String query) async {
     try {
-      final String result = await searchChannel.invokeMethod('search', query);
+      final String result = await MethodChannel('com.example.easytrip/search').invokeMethod('search', query);
       final data = jsonDecode(result);
       setState(() {
         _endSearchResults = data['documents'];
@@ -102,7 +104,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
 
         try {
           print('Requesting route from ($startLat, $startLng) to ($endLat, $endLng)');
-          final String result = await mapChannel.invokeMethod('getRoute', {
+          final String result = await MethodChannel('com.example.easytrip/map').invokeMethod('getRoute', {
             'startLatitude': startLat,
             'startLongitude': startLng,
             'endLatitude': endLat,
@@ -137,14 +139,14 @@ class _TrafficFragmentState extends State<TrafficFragment> {
     }
   }
 
-  void _onStartPlaceTap(Map<String, dynamic> place) {
+  void _onStartPlaceTap(dynamic place) {
     _startController.text = place['place_name'];
     setState(() {
       _startSearchResults.clear();
     });
   }
 
-  void _onEndPlaceTap(Map<String, dynamic> place) {
+  void _onEndPlaceTap(dynamic place) {
     _endController.text = place['place_name'];
     setState(() {
       _endSearchResults.clear();
@@ -318,8 +320,9 @@ class _TrafficFragmentState extends State<TrafficFragment> {
             child: PageView(
               controller: _pageController,
               onPageChanged: _onPageChanged,
+              physics: NeverScrollableScrollPhysics(), // 스와이프 비활성화
               children: [
-                MapPage(),
+                CarPage(refreshData: _refreshData),
                 BusPage(
                   startController: _startController,
                   endController: _endController,
@@ -333,8 +336,8 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                   onEndPlaceTap: _onEndPlaceTap,
                   refreshData: _refreshData,
                 ),
-                MapPage(),
-                MapPage(),
+                WalkPage(refreshData: _refreshData),
+                BikePage(refreshData: _refreshData),
               ],
             ),
           ),
@@ -366,241 +369,4 @@ class MapPoint {
   final double longitude;
 
   MapPoint({required this.latitude, required this.longitude});
-}
-
-class MapPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Platform.isAndroid
-            ? PlatformViewLink(
-          viewType: 'KakaoMapView',
-          surfaceFactory: (BuildContext context, PlatformViewController controller) {
-            return AndroidViewSurface(
-              controller: controller as AndroidViewController,
-              gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
-              hitTestBehavior: PlatformViewHitTestBehavior.opaque,
-            );
-          },
-          onCreatePlatformView: (PlatformViewCreationParams params) {
-            return PlatformViewsService.initSurfaceAndroidView(
-              id: params.id,
-              viewType: 'KakaoMapView',
-              layoutDirection: TextDirection.ltr,
-              creationParams: {},
-              creationParamsCodec: const StandardMessageCodec(),
-            )
-              ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
-              ..create();
-          },
-        )
-            : Center(child: Text('KakaoMap is not supported on this platform')),
-      ],
-    );
-  }
-}
-
-class BusPage extends StatelessWidget {
-  final TextEditingController startController;
-  final TextEditingController endController;
-  final FocusNode startFocusNode;
-  final FocusNode endFocusNode;
-  final List<dynamic> startSearchResults;
-  final List<dynamic> endSearchResults;
-  final Function(String) searchStartLocation;
-  final Function(String) searchEndLocation;
-  final Function(Map<String, dynamic>) onStartPlaceTap;
-  final Function(Map<String, dynamic>) onEndPlaceTap;
-  final Future<void> Function() refreshData;
-
-  BusPage({
-    required this.startController,
-    required this.endController,
-    required this.startFocusNode,
-    required this.endFocusNode,
-    required this.startSearchResults,
-    required this.endSearchResults,
-    required this.searchStartLocation,
-    required this.searchEndLocation,
-    required this.onStartPlaceTap,
-    required this.onEndPlaceTap,
-    required this.refreshData,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: refreshData,
-      color: Colors.white,
-      backgroundColor: Color(0xFF4285F4),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('오늘 오후 2:44 출발', style: TextStyle(color: Colors.black)),
-                Icon(Icons.arrow_drop_down, color: Colors.black),
-              ],
-            ),
-            Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('추천순', style: TextStyle(color: Colors.grey)),
-                Icon(Icons.refresh, color: Colors.grey),
-              ],
-            ),
-            SizedBox(height: 16),
-            Expanded(
-              child: ListView(
-                children: [
-                  RouteCard(
-                    duration: '50분',
-                    departure: '오후 2:45',
-                    arrival: '오후 3:36',
-                    details: [
-                      '북부시장입구',
-                      '강북11 도착 또는 출발',
-                      '강북09',
-                      '수유역',
-                      '서울역',
-                      '남영역',
-                    ],
-                    fare: '1,600원',
-                    walk: '도보 10분',
-                    wait: '대기 5분 예상',
-                  ),
-                  RouteCard(
-                    duration: '48분',
-                    departure: '오후 2:47',
-                    arrival: '오후 3:35',
-                    details: [
-                      '북부시장입구',
-                      '강북12 도착 또는 출발',
-                      '강북10',
-                      '수유역',
-                      '서울역',
-                      '남영역',
-                    ],
-                    fare: '1,500원',
-                    walk: '도보 12분',
-                    wait: '대기 4분 예상',
-                  ),
-                  // 추가 경로 정보 카드
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class WalkPage extends StatefulWidget {
-  static List<MapPoint> _polylinePoints = [];
-
-  static void setPolylinePoints(List<MapPoint> points) {
-    _polylinePoints = points;
-  }
-
-  @override
-  _WalkPageState createState() => _WalkPageState();
-}
-
-class _WalkPageState extends State<WalkPage> {
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Platform.isAndroid
-            ? PlatformViewLink(
-          viewType: 'KakaoMapView',
-          surfaceFactory: (BuildContext context, PlatformViewController controller) {
-            return AndroidViewSurface(
-              controller: controller as AndroidViewController,
-              gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
-              hitTestBehavior: PlatformViewHitTestBehavior.opaque,
-            );
-          },
-          onCreatePlatformView: (PlatformViewCreationParams params) {
-            return PlatformViewsService.initSurfaceAndroidView(
-              id: params.id,
-              viewType: 'KakaoMapView',
-              layoutDirection: TextDirection.ltr,
-              creationParams: {
-                'polyline': WalkPage._polylinePoints.map((point) => [point.latitude, point.longitude]).toList(),
-              },
-              creationParamsCodec: const StandardMessageCodec(),
-            )
-              ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
-              ..create();
-          },
-        )
-            : Center(child: Text('KakaoMap is not supported on this platform')),
-      ],
-    );
-  }
-}
-
-class RouteCard extends StatelessWidget {
-  final String duration;
-  final String departure;
-  final String arrival;
-  final List<String> details;
-  final String fare;
-  final String walk;
-  final String wait;
-
-  RouteCard({
-    required this.duration,
-    required this.departure,
-    required this.arrival,
-    required this.details,
-    required this.fare,
-    required this.walk,
-    required this.wait,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: Colors.white,
-      elevation: 4.0,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('$duration  $departure ~ $arrival', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('도보: $walk', style: TextStyle(color: Colors.grey)),
-                Text('대기: $wait', style: TextStyle(color: Colors.grey)),
-              ],
-            ),
-            SizedBox(height: 8),
-            Divider(),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: details.map((detail) => Text(detail)).toList(),
-            ),
-            SizedBox(height: 8),
-            Text('카드: $fare', style: TextStyle(color: Colors.grey)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: TrafficFragment(),
-  ));
 }

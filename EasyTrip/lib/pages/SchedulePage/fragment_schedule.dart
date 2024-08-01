@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import '../Custom_WeeklyCalendar.dart';
+import 'Custom_WeeklyCalendar.dart';
 
 class ScheduleFragment extends StatefulWidget {
   @override

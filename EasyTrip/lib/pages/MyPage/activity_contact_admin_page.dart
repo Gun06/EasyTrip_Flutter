@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import '../helpers/database_helper.dart';
+import '../../helpers/database_helper.dart';
 
 class ContactAdminPage extends StatefulWidget {
   final int userId;

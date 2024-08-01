@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:motion_tab_bar/MotionTabBar.dart';
-import 'pages/fragment_home.dart';
-import 'pages/fragment_mypage.dart';
-import 'pages/fragment_review.dart';
-import 'pages/fragment_schedule.dart';
-import 'pages/fragment_traffic.dart';
+import 'HomePage/fragment_home.dart';
+import 'MyPage/fragment_mypage.dart';
+import 'ReviewPage/fragment_review.dart';
+import 'SchedulePage/fragment_schedule.dart';
+import 'TrafficPage/fragment_traffic.dart';
 
 class MainActivity extends StatefulWidget {
   final int userId;

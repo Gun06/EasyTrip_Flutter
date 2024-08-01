@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'activity_preference_1.dart';
+import 'activity_preference_2.dart';
+import 'activity_preference_3.dart';
+import 'activity_preference_4.dart';
+import 'activity_start_page.dart';
 import 'admin_pages/admin.dart';
-import 'pages/activity_start_page.dart';
 import 'activity_login.dart';
-import 'pages/activity_preference_1.dart';
-import 'pages/activity_preference_2.dart';
-import 'pages/activity_preference_3.dart';
-import 'pages/activity_preference_4.dart';
 import 'activity_sign_up.dart';
-import 'activity_main.dart';
+import 'pages/activity_main.dart';
 
 void main() {
   runApp(MyApp());

@@ -2,12 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import '../helpers/database_helper.dart';
-import '../models/user.dart';
+import '../../helpers/database_helper.dart';
+import '../../models/user.dart';
 import 'activity_contact_admin_page.dart';
 import 'activity_mypage_edit.dart';
 import 'activity_shopping_cart.dart';
-import 'activity_preference_edit.dart';
+import '../../activity_preference_edit.dart';
 
 class MyPageFragment extends StatefulWidget {
   final int userId;

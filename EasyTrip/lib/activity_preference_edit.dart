@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../helpers/database_helper.dart';
-import '../models/user.dart';
+import 'helpers/database_helper.dart';
+import 'models/user.dart';
 
 class ActivityPreferenceEditPage extends StatefulWidget {
   final int userId;

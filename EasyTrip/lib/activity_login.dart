@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'activity_main.dart';
+import 'pages/activity_main.dart';
 import 'admin_pages/admin.dart';
 import 'helpers/database_helper.dart';
-import 'pages/activity_preference_1.dart';
+import 'activity_preference_1.dart';
 import 'activity_search.dart';
 import 'models/user.dart';
 
