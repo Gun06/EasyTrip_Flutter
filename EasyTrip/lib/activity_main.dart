@@ -15,39 +15,41 @@ class MainActivity extends StatefulWidget {
   MainActivityState createState() => MainActivityState();
 }
 
-class MainActivityState extends State<MainActivity> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class MainActivityState extends State<MainActivity> {
+  int _selectedIndex = 2; // Home의 인덱스를 초기 인덱스로 설정
+
+  late List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this, initialIndex: 2); // Home의 인덱스를 초기 인덱스로 설정
+    _pages = [
+      ReviewFragment(),
+      ScheduleFragment(),
+      HomeFragment(),
+      TrafficFragment(),
+      MyPageFragment(userId: widget.userId),
+    ];
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
+  void _onTabItemSelected(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   void switchTab(int index) {
     setState(() {
-      _tabController.animateTo(index);
+      _selectedIndex = index;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: TabBarView(
-        controller: _tabController,
-        children: <Widget>[
-          ReviewFragment(),
-          ScheduleFragment(),
-          HomeFragment(),
-          TrafficFragment(),
-          MyPageFragment(userId: widget.userId),
-        ],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
       ),
       bottomNavigationBar: MotionTabBar(
         initialSelectedTab: "Home", // 초기 선택 탭을 Home으로 설정
@@ -66,11 +68,7 @@ class MainActivityState extends State<MainActivity> with SingleTickerProviderSta
         tabSelectedColor: Colors.blue,
         tabIconSelectedColor: Colors.white,
         tabBarColor: Colors.white,
-        onTabItemSelected: (int index) {
-          setState(() {
-            _tabController.index = index;
-          });
-        },
+        onTabItemSelected: _onTabItemSelected,
       ),
     );
   }
