@@ -27,6 +27,9 @@ class _HomeFragmentState extends State<HomeFragment> {
 
     // Add listener to search controller to update search results on text change
     _searchController.addListener(_search);
+
+    // Remove any existing map view before initializing the new one
+    _removeMapView();
   }
 
   Future<void> _requestLocationPermission() async {
@@ -35,6 +38,14 @@ class _HomeFragmentState extends State<HomeFragment> {
     } else {
       // 위치 권한이 거부됨
       openAppSettings();
+    }
+  }
+
+  void _removeMapView() async {
+    try {
+      await mapChannel.invokeMethod('removeMapView');
+    } on PlatformException catch (e) {
+      print('Failed to remove map view: ${e.message}');
     }
   }
 

@@ -19,7 +19,7 @@ class TrafficFragment extends StatefulWidget {
 }
 
 class _TrafficFragmentState extends State<TrafficFragment> {
-  int selectedIndex = 1; // 초기값으로 버스 선택
+  int selectedIndex = 1; // 초기값으로 자동차 선택
   final PageController _pageController = PageController(initialPage: 1);
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _endController = TextEditingController();
@@ -28,6 +28,8 @@ class _TrafficFragmentState extends State<TrafficFragment> {
 
   List<dynamic> _startSearchResults = [];
   List<dynamic> _endSearchResults = [];
+  MapPoint? _startPoint;
+  MapPoint? _endPoint;
 
   @override
   void initState() {
@@ -90,9 +92,8 @@ class _TrafficFragmentState extends State<TrafficFragment> {
     }
   }
 
-  void _showRoute() async {
+  void _showRoute() {
     if (_startController.text.isNotEmpty && _endController.text.isNotEmpty) {
-      // 출발지와 도착지의 좌표를 지오코딩하여 얻습니다.
       final startPlace = _startSearchResults.firstWhere((place) => place['place_name'] == _startController.text, orElse: () => null);
       final endPlace = _endSearchResults.firstWhere((place) => place['place_name'] == _endController.text, orElse: () => null);
 
@@ -102,37 +103,32 @@ class _TrafficFragmentState extends State<TrafficFragment> {
         double endLat = double.parse(endPlace['y']);
         double endLng = double.parse(endPlace['x']);
 
-        try {
-          print('Requesting route from ($startLat, $startLng) to ($endLat, $endLng)');
-          final String result = await MethodChannel('com.example.easytrip/map').invokeMethod('getRoute', {
-            'startLatitude': startLat,
-            'startLongitude': startLng,
-            'endLatitude': endLat,
-            'endLongitude': endLng,
-          });
+        setState(() {
+          _startPoint = MapPoint(latitude: startLat, longitude: startLng);
+          _endPoint = MapPoint(latitude: endLat, longitude: endLng);
+        });
 
-          final data = jsonDecode(result);
-          final routes = data['routes'];
-          if (routes.isNotEmpty) {
-            final route = routes[0];
-            final sections = route['sections'];
-            List<MapPoint> polylinePoints = [];
-            for (var section in sections) {
-              final roads = section['roads'];
-              for (var road in roads) {
-                final vertexes = road['vertexes'];
-                for (var i = 0; i < vertexes.length; i += 2) {
-                  double latitude = vertexes[i + 1];
-                  double longitude = vertexes[i];
-                  polylinePoints.add(MapPoint(latitude: latitude, longitude: longitude));
-                }
-              }
-            }
-            WalkPage.setPolylinePoints(polylinePoints);
-          }
-        } on PlatformException catch (e) {
-          print('Failed to get route: ${e.message}');
-        }
+        MethodChannel('com.example.easytrip/map').invokeMethod('removeMapView').then((_) {
+          MethodChannel('com.example.easytrip/map').invokeMethod('moveToLocation', {
+            'latitude': startLat,
+            'longitude': startLng,
+          }).then((_) {
+            MethodChannel('com.example.easytrip/map').invokeMethod('addMarker', {
+              'latitude': startLat,
+              'longitude': startLng,
+            });
+          }).then((_) {
+            MethodChannel('com.example.easytrip/map').invokeMethod('moveToLocation', {
+              'latitude': endLat,
+              'longitude': endLng,
+            }).then((_) {
+              MethodChannel('com.example.easytrip/map').invokeMethod('addMarker', {
+                'latitude': endLat,
+                'longitude': endLng,
+              });
+            });
+          });
+        });
       } else {
         print('Failed to find coordinates for the given places.');
       }
@@ -315,29 +311,21 @@ class _TrafficFragmentState extends State<TrafficFragment> {
               ],
             ),
           ),
-          // 출발 시간 선택 및 경로 정보
+          // 지도와 출발 시간 선택 및 경로 정보
           Expanded(
             child: PageView(
               controller: _pageController,
               onPageChanged: _onPageChanged,
               physics: NeverScrollableScrollPhysics(), // 스와이프 비활성화
               children: [
-                CarPage(refreshData: _refreshData),
-                BusPage(
-                  startController: _startController,
-                  endController: _endController,
-                  startFocusNode: _startFocusNode,
-                  endFocusNode: _endFocusNode,
-                  startSearchResults: _startSearchResults,
-                  endSearchResults: _endSearchResults,
-                  searchStartLocation: _searchStartLocation,
-                  searchEndLocation: _searchEndLocation,
-                  onStartPlaceTap: _onStartPlaceTap,
-                  onEndPlaceTap: _onEndPlaceTap,
+                CarPage(
                   refreshData: _refreshData,
+                  startPoint: _startPoint,
+                  endPoint: _endPoint,
                 ),
-                WalkPage(refreshData: _refreshData),
-                BikePage(refreshData: _refreshData),
+                BusPage(),
+                WalkPage(),
+                BikePage(),
               ],
             ),
           ),
@@ -369,4 +357,13 @@ class MapPoint {
   final double longitude;
 
   MapPoint({required this.latitude, required this.longitude});
+
+  MapPoint.fromJson(Map<String, dynamic> json)
+      : latitude = json['latitude'],
+        longitude = json['longitude'];
+
+  Map<String, dynamic> toJson() => {
+    'latitude': latitude,
+    'longitude': longitude,
+  };
 }

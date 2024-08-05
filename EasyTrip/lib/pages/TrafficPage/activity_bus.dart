@@ -1,99 +1,68 @@
 import 'package:flutter/material.dart';
 
 class BusPage extends StatelessWidget {
-  final TextEditingController startController;
-  final TextEditingController endController;
-  final FocusNode startFocusNode;
-  final FocusNode endFocusNode;
-  final List<dynamic> startSearchResults;
-  final List<dynamic> endSearchResults;
-  final Function(String) searchStartLocation;
-  final Function(String) searchEndLocation;
-  final Function(dynamic) onStartPlaceTap;
-  final Function(dynamic) onEndPlaceTap;
-  final Future<void> Function() refreshData;
-
-  BusPage({
-    required this.startController,
-    required this.endController,
-    required this.startFocusNode,
-    required this.endFocusNode,
-    required this.startSearchResults,
-    required this.endSearchResults,
-    required this.searchStartLocation,
-    required this.searchEndLocation,
-    required this.onStartPlaceTap,
-    required this.onEndPlaceTap,
-    required this.refreshData,
-  });
-
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: refreshData,
-      color: Colors.white,
-      backgroundColor: Color(0xFF4285F4),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('오늘 오후 2:44 출발', style: TextStyle(color: Colors.black)),
+              Icon(Icons.arrow_drop_down, color: Colors.black),
+            ],
+          ),
+          Divider(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('추천순', style: TextStyle(color: Colors.grey)),
+              Icon(Icons.refresh, color: Colors.grey),
+            ],
+          ),
+          SizedBox(height: 16),
+          Expanded(
+            child: ListView(
               children: [
-                Text('오늘 오후 2:44 출발', style: TextStyle(color: Colors.black)),
-                Icon(Icons.arrow_drop_down, color: Colors.black),
+                RouteCard(
+                  duration: '50분',
+                  departure: '오후 2:45',
+                  arrival: '오후 3:36',
+                  details: [
+                    '북부시장입구',
+                    '강북11 도착 또는 출발',
+                    '강북09',
+                    '수유역',
+                    '서울역',
+                    '남영역',
+                  ],
+                  fare: '1,600원',
+                  walk: '도보 10분',
+                  wait: '대기 5분 예상',
+                ),
+                RouteCard(
+                  duration: '48분',
+                  departure: '오후 2:47',
+                  arrival: '오후 3:35',
+                  details: [
+                    '북부시장입구',
+                    '강북12 도착 또는 출발',
+                    '강북10',
+                    '수유역',
+                    '서울역',
+                    '남영역',
+                  ],
+                  fare: '1,500원',
+                  walk: '도보 12분',
+                  wait: '대기 4분 예상',
+                ),
+                // 추가 경로 정보 카드
               ],
             ),
-            Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('추천순', style: TextStyle(color: Colors.grey)),
-                Icon(Icons.refresh, color: Colors.grey),
-              ],
-            ),
-            SizedBox(height: 16),
-            Expanded(
-              child: ListView(
-                children: [
-                  RouteCard(
-                    duration: '50분',
-                    departure: '오후 2:45',
-                    arrival: '오후 3:36',
-                    details: [
-                      '북부시장입구',
-                      '강북11 도착 또는 출발',
-                      '강북09',
-                      '수유역',
-                      '서울역',
-                      '남영역',
-                    ],
-                    fare: '1,600원',
-                    walk: '도보 10분',
-                    wait: '대기 5분 예상',
-                  ),
-                  RouteCard(
-                    duration: '48분',
-                    departure: '오후 2:47',
-                    arrival: '오후 3:35',
-                    details: [
-                      '북부시장입구',
-                      '강북12 도착 또는 출발',
-                      '강북10',
-                      '수유역',
-                      '서울역',
-                      '남영역',
-                    ],
-                    fare: '1,500원',
-                    walk: '도보 12분',
-                    wait: '대기 4분 예상',
-                  ),
-                  // 추가 경로 정보 카드
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
