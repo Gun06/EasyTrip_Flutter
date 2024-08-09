@@ -32,6 +32,24 @@ class _HomeFragmentState extends State<HomeFragment> {
     _removeMapView();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _createMapView(); // HomeFragment로 돌아올 때마다 지도를 다시 생성
+  }
+
+  @override
+  void dispose() {
+    // _searchController와 같은 리소스를 해제합니다.
+    _searchController.removeListener(_search);
+    _searchController.dispose();
+
+    // 지도와 같은 네이티브 뷰를 정리하기 위해 removeMapView 호출
+    mapChannel.invokeMethod('removeMapView');
+
+    super.dispose();
+  }
+
   Future<void> _requestLocationPermission() async {
     if (await Permission.location.request().isGranted) {
       // 위치 권한이 승인됨
@@ -46,6 +64,18 @@ class _HomeFragmentState extends State<HomeFragment> {
       await mapChannel.invokeMethod('removeMapView');
     } on PlatformException catch (e) {
       print('Failed to remove map view: ${e.message}');
+    }
+  }
+
+  void _createMapView() async {
+    try {
+      // 지도 뷰를 다시 생성하는 코드
+      await mapChannel.invokeMethod('moveToLocation', {
+        'latitude': 37.5665, // 초기화할 때의 기본 위치
+        'longitude': 126.9780,
+      });
+    } on PlatformException catch (e) {
+      print('Failed to create map view: ${e.message}');
     }
   }
 
@@ -119,13 +149,6 @@ class _HomeFragmentState extends State<HomeFragment> {
   void _navigateToTraffic() {
     final mainActivityState = context.findAncestorStateOfType<MainActivityState>();
     mainActivityState?.switchTab(3); // TrafficFragment의 인덱스로 이동
-  }
-
-  @override
-  void dispose() {
-    _searchController.removeListener(_search);
-    _searchController.dispose();
-    super.dispose();
   }
 
   @override

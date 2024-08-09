@@ -5,22 +5,29 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'fragment_traffic.dart'; // Import the shared MapPoint class
 
-class CarPage extends StatelessWidget {
+class CarPage extends StatefulWidget {
   final Future<void> Function() refreshData;
   final MapPoint? startPoint;
   final MapPoint? endPoint;
 
   CarPage({required this.refreshData, required this.startPoint, required this.endPoint});
 
-  void _navigateToHome(BuildContext context) {
-    Navigator.pop(context);
+  @override
+  _CarPageState createState() => _CarPageState();
+}
+
+class _CarPageState extends State<CarPage> {
+
+  @override
+  void dispose() {
     MethodChannel('com.example.easytrip/map').invokeMethod('removeMapView');
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: refreshData,
+      onRefresh: widget.refreshData,
       child: Container(
         child: PlatformViewLink(
           viewType: 'KakaoMapView',
@@ -39,10 +46,10 @@ class CarPage extends StatelessWidget {
               viewType: 'KakaoMapView',
               layoutDirection: TextDirection.ltr,
               creationParams: {
-                'startLatitude': startPoint?.latitude,
-                'startLongitude': startPoint?.longitude,
-                'endLatitude': endPoint?.latitude,
-                'endLongitude': endPoint?.longitude,
+                'startLatitude': widget.startPoint?.latitude,
+                'startLongitude': widget.startPoint?.longitude,
+                'endLatitude': widget.endPoint?.latitude,
+                'endLongitude': widget.endPoint?.longitude,
               },
               creationParamsCodec: const StandardMessageCodec(),
             )
@@ -52,9 +59,5 @@ class CarPage extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  void dispose() {
-    MethodChannel('com.example.easytrip/map').invokeMethod('removeMapView');
   }
 }
