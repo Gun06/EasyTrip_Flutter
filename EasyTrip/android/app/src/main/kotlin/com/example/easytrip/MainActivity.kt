@@ -31,7 +31,7 @@ class MainActivity : FlutterActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    getAppKeyHash() // 키 해시를 얻기 위해 함수 호출
+    getAppKeyHash()
 
     MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, "com.example.easytrip/search")
       .setMethodCallHandler { call, result ->
@@ -56,7 +56,6 @@ class MainActivity : FlutterActivity() {
             result.success(null)
           }
           "moveToCurrentLocation" -> {
-            // 현재 위치로 이동하는 기능 구현
             mapView?.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(37.5665, 126.9780), true)
             result.success(null)
           }
@@ -106,7 +105,7 @@ class MainActivity : FlutterActivity() {
 
       customImageBitmap = resizedBitmap
       isCustomImageAutoscale = false
-      setCustomImageAnchor(0.5f, 1.0f) // 마커 앵커 포인트 설정
+      setCustomImageAnchor(0.5f, 1.0f)
     }
     mapView?.addPOIItem(marker)
   }
@@ -121,7 +120,7 @@ class MainActivity : FlutterActivity() {
       .build()
 
     Log.d("searchPlaces", "Request URL: $url")
-    Log.d("searchPlaces", "Authorization: KakaoAK $apiKey") // 인증 헤더 로그 출력
+    Log.d("searchPlaces", "Authorization: KakaoAK $apiKey")
 
     client.newCall(request).enqueue(object : okhttp3.Callback {
       override fun onFailure(call: okhttp3.Call, e: IOException) {
@@ -173,9 +172,8 @@ class MainActivity : FlutterActivity() {
 class KakaoMapFactory(private val activity: Activity) : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
   override fun create(context: Context?, viewId: Int, args: Any?): PlatformView {
     val mapView = MapView(activity)
-    (activity as MainActivity).mapView = mapView // mapView를 MainActivity에 설정
+    (activity as MainActivity).mapView = mapView
 
-    // 전달받은 좌표를 기반으로 지도 초기화 및 마커 추가
     val creationParams = args as Map<String, Any>
     val startLatitude = creationParams["startLatitude"] as? Double
     val startLongitude = creationParams["startLongitude"] as? Double

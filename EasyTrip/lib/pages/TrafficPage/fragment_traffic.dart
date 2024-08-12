@@ -1,12 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
-
-import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../activity_main.dart';
 import 'activity_bike.dart';
 import 'activity_bus.dart';
@@ -63,11 +57,6 @@ class _TrafficFragmentState extends State<TrafficFragment> {
     }
   }
 
-  Future<void> _refreshData() async {
-    await Future.delayed(Duration(seconds: 2)); // 예제용 지연 시간
-    print('새로고침 완료');
-  }
-
   void _searchStartLocation(String query) async {
     try {
       final String result = await MethodChannel('com.example.easytrip/search').invokeMethod('search', query);
@@ -92,61 +81,70 @@ class _TrafficFragmentState extends State<TrafficFragment> {
     }
   }
 
-  void _showRoute() {
-    if (_startController.text.isNotEmpty && _endController.text.isNotEmpty) {
-      final startPlace = _startSearchResults.firstWhere((place) => place['place_name'] == _startController.text, orElse: () => null);
-      final endPlace = _endSearchResults.firstWhere((place) => place['place_name'] == _endController.text, orElse: () => null);
-
-      if (startPlace != null && endPlace != null) {
-        double startLat = double.parse(startPlace['y']);
-        double startLng = double.parse(startPlace['x']);
-        double endLat = double.parse(endPlace['y']);
-        double endLng = double.parse(endPlace['x']);
-
-        setState(() {
-          _startPoint = MapPoint(latitude: startLat, longitude: startLng);
-          _endPoint = MapPoint(latitude: endLat, longitude: endLng);
-        });
-
-        MethodChannel('com.example.easytrip/map').invokeMethod('removeMapView').then((_) {
-          MethodChannel('com.example.easytrip/map').invokeMethod('moveToLocation', {
-            'latitude': startLat,
-            'longitude': startLng,
-          }).then((_) {
-            MethodChannel('com.example.easytrip/map').invokeMethod('addMarker', {
-              'latitude': startLat,
-              'longitude': startLng,
-            });
-          }).then((_) {
-            MethodChannel('com.example.easytrip/map').invokeMethod('moveToLocation', {
-              'latitude': endLat,
-              'longitude': endLng,
-            }).then((_) {
-              MethodChannel('com.example.easytrip/map').invokeMethod('addMarker', {
-                'latitude': endLat,
-                'longitude': endLng,
-              });
-            });
-          });
-        });
-      } else {
-        print('Failed to find coordinates for the given places.');
-      }
-    }
-  }
-
   void _onStartPlaceTap(dynamic place) {
     _startController.text = place['place_name'];
     setState(() {
+      _startPoint = MapPoint(
+        latitude: double.parse(place['y']),
+        longitude: double.parse(place['x']),
+      );
       _startSearchResults.clear();
     });
+
+    // 좌표값을 터미널에 출력
+    print('출발지 선택: ${_startPoint!.latitude}, ${_startPoint!.longitude}');
   }
 
   void _onEndPlaceTap(dynamic place) {
     _endController.text = place['place_name'];
     setState(() {
+      _endPoint = MapPoint(
+        latitude: double.parse(place['y']),
+        longitude: double.parse(place['x']),
+      );
       _endSearchResults.clear();
     });
+
+    // 좌표값을 터미널에 출력
+    print('도착지 선택: ${_endPoint!.latitude}, ${_endPoint!.longitude}');
+  }
+
+  void _showRoute() {
+    if (_startPoint != null) {
+      // 출발지에 핀 찍고 이동
+      double startLat = _startPoint!.latitude;
+      double startLng = _startPoint!.longitude;
+
+      MethodChannel('com.example.easytrip/map').invokeMethod('removeMapView').then((_) {
+        MethodChannel('com.example.easytrip/map').invokeMethod('moveToLocation', {
+          'latitude': startLat,
+          'longitude': startLng,
+        }).then((_) {
+          MethodChannel('com.example.easytrip/map').invokeMethod('addMarker', {
+            'latitude': startLat,
+            'longitude': startLng,
+          });
+        });
+      });
+    }
+
+    if (_endPoint != null) {
+      // 도착지에 핀 찍고 이동
+      double endLat = _endPoint!.latitude;
+      double endLng = _endPoint!.longitude;
+
+      MethodChannel('com.example.easytrip/map').invokeMethod('moveToLocation', {
+        'latitude': endLat,
+        'longitude': endLng,
+      }).then((_) {
+        MethodChannel('com.example.easytrip/map').invokeMethod('addMarker', {
+          'latitude': endLat,
+          'longitude': endLng,
+        });
+      });
+    } else {
+      print("Start or end location is not selected.");
+    }
   }
 
   void _onPageChanged(int index) {
@@ -156,10 +154,10 @@ class _TrafficFragmentState extends State<TrafficFragment> {
   }
 
   void _onTransportButtonTapped(int index) {
-    _pageController.jumpToPage(index);
     setState(() {
       selectedIndex = index;
     });
+    _pageController.jumpToPage(index);
   }
 
   @override
@@ -227,7 +225,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                     IconButton(
                       icon: Icon(Icons.swap_vert, color: Colors.white),
                       onPressed: () {
-                        // 스왑 버튼 기능 추가
+                        // 스왑 버튼 기능 추가 가능
                       },
                     ),
                   ],
@@ -282,7 +280,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                     IconButton(
                       icon: Icon(Icons.more_vert, color: Colors.white),
                       onPressed: () {
-                        // 더보기 버튼 기능 추가
+                        // 더보기 버튼 기능 추가 가능
                       },
                     ),
                   ],
@@ -319,7 +317,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
               physics: NeverScrollableScrollPhysics(), // 스와이프 비활성화
               children: [
                 CarPage(
-                  refreshData: _refreshData,
+                  refreshData: () async {}, // 더미 데이터로 채워넣음
                   startPoint: _startPoint,
                   endPoint: _endPoint,
                 ),
