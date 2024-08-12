@@ -324,7 +324,11 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                   endPoint: _endPoint,
                 ),
                 BusPage(),
-                WalkPage(),
+                WalkPage(
+                  refreshData: () async {}, // 더미 데이터로 채워넣음
+                  startPoint: _startPoint,
+                  endPoint: _endPoint,
+                ),
                 BikePage(),
               ],
             ),
