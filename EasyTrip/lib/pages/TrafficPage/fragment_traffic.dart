@@ -13,7 +13,7 @@ class TrafficFragment extends StatefulWidget {
 }
 
 class _TrafficFragmentState extends State<TrafficFragment> {
-  int selectedIndex = 1;
+  int selectedIndex = 1; // 초기값으로 자동차 선택
   final PageController _pageController = PageController(initialPage: 1);
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _endController = TextEditingController();
@@ -112,17 +112,15 @@ class _TrafficFragmentState extends State<TrafficFragment> {
       double startLat = _startPoint!.latitude;
       double startLng = _startPoint!.longitude;
 
-      MethodChannel('com.example.easytrip/map').invokeMethod('removeMapView').then((_) {
-        MethodChannel('com.example.easytrip/map').invokeMethod('moveToLocation', {
+      MethodChannel('com.example.easytrip/map').invokeMethod('moveToLocation', {
+        'latitude': startLat,
+        'longitude': startLng,
+      }).then((_) {
+        MethodChannel('com.example.easytrip/map').invokeMethod('addMarker', {
           'latitude': startLat,
           'longitude': startLng,
         }).then((_) {
-          MethodChannel('com.example.easytrip/map').invokeMethod('addMarker', {
-            'latitude': startLat,
-            'longitude': startLng,
-          }).then((_) {
-            setState(() {});
-          });
+          setState(() {}); // 지도 갱신
         });
       });
     }
@@ -139,12 +137,15 @@ class _TrafficFragmentState extends State<TrafficFragment> {
           'latitude': endLat,
           'longitude': endLng,
         }).then((_) {
-          setState(() {});
+          setState(() {}); // 지도 갱신
         });
       });
     } else {
       print("Start or end location is not selected.");
     }
+
+    // 페이지를 강제로 갱신하여 지도가 즉시 반영되도록 함
+    setState(() {});
   }
 
   void _onPageChanged(int index) {
@@ -306,7 +307,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
               ],
             ),
           ),
-          // 지도와 경로 정보
+          // 지도와 출발 시간 선택 및 경로 정보
           Expanded(
             child: PageView(
               controller: _pageController,
