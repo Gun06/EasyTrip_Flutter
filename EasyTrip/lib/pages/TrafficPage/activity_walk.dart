@@ -41,6 +41,7 @@ class _WalkPageState extends State<WalkPage> {
 
     try {
       await MethodChannel('com.example.easytrip/map').invokeMethod('drawRouteLine', params);
+      setState(() {}); // 지도 업데이트를 위해 setState 호출
     } catch (e) {
       print("Failed to draw route line: $e");
     }

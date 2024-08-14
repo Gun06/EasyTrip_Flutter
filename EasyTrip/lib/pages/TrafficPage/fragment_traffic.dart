@@ -13,7 +13,7 @@ class TrafficFragment extends StatefulWidget {
 }
 
 class _TrafficFragmentState extends State<TrafficFragment> {
-  int selectedIndex = 1; // 초기값으로 자동차 선택
+  int selectedIndex = 1;
   final PageController _pageController = PageController(initialPage: 1);
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _endController = TextEditingController();
@@ -91,7 +91,6 @@ class _TrafficFragmentState extends State<TrafficFragment> {
       _startSearchResults.clear();
     });
 
-    // 좌표값을 터미널에 출력
     print('출발지 선택: ${_startPoint!.latitude}, ${_startPoint!.longitude}');
   }
 
@@ -105,13 +104,11 @@ class _TrafficFragmentState extends State<TrafficFragment> {
       _endSearchResults.clear();
     });
 
-    // 좌표값을 터미널에 출력
     print('도착지 선택: ${_endPoint!.latitude}, ${_endPoint!.longitude}');
   }
 
   void _showRoute() {
     if (_startPoint != null) {
-      // 출발지에 핀 찍고 이동
       double startLat = _startPoint!.latitude;
       double startLng = _startPoint!.longitude;
 
@@ -123,13 +120,14 @@ class _TrafficFragmentState extends State<TrafficFragment> {
           MethodChannel('com.example.easytrip/map').invokeMethod('addMarker', {
             'latitude': startLat,
             'longitude': startLng,
+          }).then((_) {
+            setState(() {});
           });
         });
       });
     }
 
     if (_endPoint != null) {
-      // 도착지에 핀 찍고 이동
       double endLat = _endPoint!.latitude;
       double endLng = _endPoint!.longitude;
 
@@ -140,6 +138,8 @@ class _TrafficFragmentState extends State<TrafficFragment> {
         MethodChannel('com.example.easytrip/map').invokeMethod('addMarker', {
           'latitude': endLat,
           'longitude': endLng,
+        }).then((_) {
+          setState(() {});
         });
       });
     } else {
@@ -166,17 +166,15 @@ class _TrafficFragmentState extends State<TrafficFragment> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // 파란색 배경의 상단 부분
+          // 상단 부분
           Container(
-            color: Color(0xFF4285F4), // 파란 배경 색상
-            padding: EdgeInsets.only(top: 50, left: 16, right: 5, bottom: 20), // 상단 여백 추가
+            color: Color(0xFF4285F4),
+            padding: EdgeInsets.only(top: 50, left: 16, right: 5, bottom: 20),
             child: Column(
               children: [
-                // 교통 수단 선택 버튼과 닫기 버튼
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // 교통 수단 선택 버튼 박스
                     Expanded(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -188,10 +186,9 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                         ],
                       ),
                     ),
-                    // 검색 버튼
                     IconButton(
                       icon: Icon(Icons.play_arrow, color: Colors.white),
-                      onPressed: _showRoute, // 검색 버튼이 경로 보기 기능 수행
+                      onPressed: _showRoute,
                     ),
                   ],
                 ),
@@ -309,21 +306,21 @@ class _TrafficFragmentState extends State<TrafficFragment> {
               ],
             ),
           ),
-          // 지도와 출발 시간 선택 및 경로 정보
+          // 지도와 경로 정보
           Expanded(
             child: PageView(
               controller: _pageController,
               onPageChanged: _onPageChanged,
-              physics: NeverScrollableScrollPhysics(), // 스와이프 비활성화
+              physics: NeverScrollableScrollPhysics(),
               children: [
                 CarPage(
-                  refreshData: () async {}, // 더미 데이터로 채워넣음
+                  refreshData: () async {},
                   startPoint: _startPoint,
                   endPoint: _endPoint,
                 ),
                 BusPage(),
                 WalkPage(
-                  refreshData: () async {}, // 더미 데이터로 채워넣음
+                  refreshData: () async {},
                   startPoint: _startPoint,
                   endPoint: _endPoint,
                 ),
@@ -340,7 +337,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
     return Container(
       decoration: BoxDecoration(
         color: selectedIndex == index ? Colors.white : Colors.transparent,
-        borderRadius: BorderRadius.circular(20.0), // 알약 형태
+        borderRadius: BorderRadius.circular(20.0),
       ),
       padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: InkWell(
