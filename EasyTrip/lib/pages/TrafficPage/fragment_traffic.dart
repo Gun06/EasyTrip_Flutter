@@ -59,7 +59,8 @@ class _TrafficFragmentState extends State<TrafficFragment> {
 
   void _searchStartLocation(String query) async {
     try {
-      final String result = await MethodChannel('com.example.easytrip/search').invokeMethod('search', query);
+      final String result = await MethodChannel('com.example.easytrip/search')
+          .invokeMethod('search', query);
       final data = jsonDecode(result);
       setState(() {
         _startSearchResults = data['documents'];
@@ -71,7 +72,8 @@ class _TrafficFragmentState extends State<TrafficFragment> {
 
   void _searchEndLocation(String query) async {
     try {
-      final String result = await MethodChannel('com.example.easytrip/search').invokeMethod('search', query);
+      final String result = await MethodChannel('com.example.easytrip/search')
+          .invokeMethod('search', query);
       final data = jsonDecode(result);
       setState(() {
         _endSearchResults = data['documents'];
@@ -107,7 +109,29 @@ class _TrafficFragmentState extends State<TrafficFragment> {
     print('도착지 선택: ${_endPoint!.latitude}, ${_endPoint!.longitude}');
   }
 
+  void _swapLocations() {
+    setState(() {
+      // Swap the text in the controllers
+      String tempText = _startController.text;
+      _startController.text = _endController.text;
+      _endController.text = tempText;
+
+      // Swap the MapPoint objects
+      MapPoint? tempPoint = _startPoint;
+      _startPoint = _endPoint;
+      _endPoint = tempPoint;
+
+      print("Swapped: 출발지 -> ${_startPoint?.latitude}, ${_startPoint?.longitude}, 도착지 -> ${_endPoint?.latitude}, ${_endPoint?.longitude}");
+
+      // Clear existing markers and add new ones
+      MethodChannel('com.example.easytrip/map').invokeMethod('removeAllMarkers');
+      _showRoute();
+    });
+  }
+
+
   void _showRoute() {
+
     if (_startPoint != null) {
       double startLat = _startPoint!.latitude;
       double startLng = _startPoint!.longitude;
@@ -115,12 +139,12 @@ class _TrafficFragmentState extends State<TrafficFragment> {
       MethodChannel('com.example.easytrip/map').invokeMethod('moveToLocation', {
         'latitude': startLat,
         'longitude': startLng,
-        'isStartPoint': true,  // 출발지로 설정
+        'isStartPoint': true, // 출발지로 설정
       }).then((_) {
         MethodChannel('com.example.easytrip/map').invokeMethod('addMarker', {
           'latitude': startLat,
           'longitude': startLng,
-          'isStartPoint': true,  // 출발지로 설정
+          'isStartPoint': true, // 출발지로 설정
         }).then((_) {
           setState(() {}); // 지도 갱신
         });
@@ -134,12 +158,12 @@ class _TrafficFragmentState extends State<TrafficFragment> {
       MethodChannel('com.example.easytrip/map').invokeMethod('moveToLocation', {
         'latitude': endLat,
         'longitude': endLng,
-        'isStartPoint': false,  // 도착지로 설정
+        'isStartPoint': false, // 도착지로 설정
       }).then((_) {
         MethodChannel('com.example.easytrip/map').invokeMethod('addMarker', {
           'latitude': endLat,
           'longitude': endLng,
-          'isStartPoint': false,  // 도착지로 설정
+          'isStartPoint': false, // 도착지로 설정
         }).then((_) {
           setState(() {}); // 지도 갱신
         });
@@ -151,7 +175,6 @@ class _TrafficFragmentState extends State<TrafficFragment> {
     // 페이지를 강제로 갱신하여 지도가 즉시 반영되도록 함
     setState(() {});
   }
-
 
   void _onPageChanged(int index) {
     setState(() {
@@ -227,9 +250,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                     ),
                     IconButton(
                       icon: Icon(Icons.swap_vert, color: Colors.white),
-                      onPressed: () {
-                        // 스왑 버튼 기능 추가 가능
-                      },
+                      onPressed: _swapLocations, // 스왑 버튼 기능 추가
                     ),
                   ],
                 ),

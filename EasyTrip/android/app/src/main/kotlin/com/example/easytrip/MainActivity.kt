@@ -28,8 +28,8 @@ import java.security.MessageDigest
 class MainActivity : FlutterActivity() {
 
   var mapView: MapView? = null
-  private var isStartPointMarkerAdded = false
-  private var isEndPointMarkerAdded = false
+  private var startMarker: MapPOIItem? = null
+  private var endMarker: MapPOIItem? = null
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -62,30 +62,24 @@ class MainActivity : FlutterActivity() {
             result.success(null)
           }
           "moveToLocation" -> {
-            val latitude = (call.arguments as Map<*, *>)["latitude"] as Double
-            val longitude = (call.arguments as Map<*, *>)["longitude"] as Double
-            val isStartPoint = (call.arguments as Map<*, *>)["isStartPoint"] as Boolean
+            val latitude = (call.arguments as Map<*, *>?)?.get("latitude") as? Double
+            val longitude = (call.arguments as Map<*, *>?)?.get("longitude") as? Double
+            val isStartPoint = (call.arguments as Map<*, *>?)?.get("isStartPoint") as? Boolean
 
-            mapView?.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(latitude, longitude), true)
-
-            // 마커 추가는 출발지와 도착지 이외의 경우에만 수행
-            if (!isStartPoint && !isStartPointMarkerAdded && !isEndPointMarkerAdded) {
-              addMarker(latitude, longitude, isStartPoint = false)
+            if (latitude != null && longitude != null && isStartPoint != null) {
+              mapView?.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(latitude, longitude), true)
+              addMarker(latitude, longitude, isStartPoint)
             }
 
             result.success(null)
           }
           "addMarker" -> {
-            val latitude = (call.arguments as Map<*, *>)["latitude"] as Double
-            val longitude = (call.arguments as Map<*, *>)["longitude"] as Double
-            val isStartPoint = (call.arguments as Map<*, *>)["isStartPoint"] as Boolean
+            val latitude = (call.arguments as Map<*, *>?)?.get("latitude") as? Double
+            val longitude = (call.arguments as Map<*, *>?)?.get("longitude") as? Double
+            val isStartPoint = (call.arguments as Map<*, *>?)?.get("isStartPoint") as? Boolean
 
-            addMarker(latitude, longitude, isStartPoint)
-
-            if (isStartPoint) {
-              isStartPointMarkerAdded = true
-            } else {
-              isEndPointMarkerAdded = true
+            if (latitude != null && longitude != null && isStartPoint != null) {
+              addMarker(latitude, longitude, isStartPoint)
             }
 
             result.success(null)
@@ -126,8 +120,19 @@ class MainActivity : FlutterActivity() {
       isCustomImageAutoscale = false
       setCustomImageAnchor(0.5f, 1.0f)
     }
+
+    if (isStartPoint) {
+      startMarker?.let { mapView?.removePOIItem(it) }
+      startMarker = marker
+    } else {
+      endMarker?.let { mapView?.removePOIItem(it) }
+      endMarker = marker
+    }
+
     mapView?.addPOIItem(marker)
   }
+
+
 
   private fun searchPlaces(keyword: String, result: MethodChannel.Result) {
     val client = OkHttpClient()
