@@ -115,10 +115,12 @@ class _TrafficFragmentState extends State<TrafficFragment> {
       MethodChannel('com.example.easytrip/map').invokeMethod('moveToLocation', {
         'latitude': startLat,
         'longitude': startLng,
+        'isStartPoint': true,  // 출발지로 설정
       }).then((_) {
         MethodChannel('com.example.easytrip/map').invokeMethod('addMarker', {
           'latitude': startLat,
           'longitude': startLng,
+          'isStartPoint': true,  // 출발지로 설정
         }).then((_) {
           setState(() {}); // 지도 갱신
         });
@@ -132,10 +134,12 @@ class _TrafficFragmentState extends State<TrafficFragment> {
       MethodChannel('com.example.easytrip/map').invokeMethod('moveToLocation', {
         'latitude': endLat,
         'longitude': endLng,
+        'isStartPoint': false,  // 도착지로 설정
       }).then((_) {
         MethodChannel('com.example.easytrip/map').invokeMethod('addMarker', {
           'latitude': endLat,
           'longitude': endLng,
+          'isStartPoint': false,  // 도착지로 설정
         }).then((_) {
           setState(() {}); // 지도 갱신
         });
@@ -147,6 +151,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
     // 페이지를 강제로 갱신하여 지도가 즉시 반영되도록 함
     setState(() {});
   }
+
 
   void _onPageChanged(int index) {
     setState(() {

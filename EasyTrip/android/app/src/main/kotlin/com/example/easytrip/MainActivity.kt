@@ -28,6 +28,8 @@ import java.security.MessageDigest
 class MainActivity : FlutterActivity() {
 
   var mapView: MapView? = null
+  private var isStartPointMarkerAdded = false
+  private var isEndPointMarkerAdded = false
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -62,14 +64,30 @@ class MainActivity : FlutterActivity() {
           "moveToLocation" -> {
             val latitude = (call.arguments as Map<*, *>)["latitude"] as Double
             val longitude = (call.arguments as Map<*, *>)["longitude"] as Double
+            val isStartPoint = (call.arguments as Map<*, *>)["isStartPoint"] as Boolean
+
             mapView?.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(latitude, longitude), true)
-            addMarker(latitude, longitude)
+
+            // 마커 추가는 출발지와 도착지 이외의 경우에만 수행
+            if (!isStartPoint && !isStartPointMarkerAdded && !isEndPointMarkerAdded) {
+              addMarker(latitude, longitude, isStartPoint = false)
+            }
+
             result.success(null)
           }
           "addMarker" -> {
             val latitude = (call.arguments as Map<*, *>)["latitude"] as Double
             val longitude = (call.arguments as Map<*, *>)["longitude"] as Double
-            addMarker(latitude, longitude)
+            val isStartPoint = (call.arguments as Map<*, *>)["isStartPoint"] as Boolean
+
+            addMarker(latitude, longitude, isStartPoint)
+
+            if (isStartPoint) {
+              isStartPointMarkerAdded = true
+            } else {
+              isEndPointMarkerAdded = true
+            }
+
             result.success(null)
           }
           "removeMapView" -> {
@@ -94,13 +112,14 @@ class MainActivity : FlutterActivity() {
     mapView = null
   }
 
-  fun addMarker(latitude: Double, longitude: Double) {
+  fun addMarker(latitude: Double, longitude: Double, isStartPoint: Boolean) {
     val marker = MapPOIItem().apply {
-      itemName = "Selected Location"
+      itemName = if (isStartPoint) "출발지" else "도착지"
       mapPoint = MapPoint.mapPointWithGeoCoord(latitude, longitude)
       markerType = MapPOIItem.MarkerType.CustomImage
 
-      val bitmap = BitmapFactory.decodeResource(resources, R.drawable.custom_marker)
+      val bitmapResource = if (isStartPoint) R.drawable.start_marker else R.drawable.end_marker
+      val bitmap = BitmapFactory.decodeResource(resources, bitmapResource)
       val resizedBitmap = Bitmap.createScaledBitmap(bitmap, 150, 150, false)
 
       customImageBitmap = resizedBitmap
@@ -181,10 +200,10 @@ class KakaoMapFactory(private val activity: Activity) : PlatformViewFactory(Stan
     val endLongitude = creationParams["endLongitude"] as? Double
 
     if (startLatitude != null && startLongitude != null) {
-      activity.addMarker(startLatitude, startLongitude)
+      activity.addMarker(startLatitude, startLongitude, true)  // 출발지
     }
     if (endLatitude != null && endLongitude != null) {
-      activity.addMarker(endLatitude, endLongitude)
+      activity.addMarker(endLatitude, endLongitude, false)  // 도착지
     }
 
     return KakaoMapView(mapView)
