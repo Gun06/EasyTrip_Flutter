@@ -88,6 +88,10 @@ class MainActivity : FlutterActivity() {
             removeMapView()
             result.success(null)
           }
+          "removeAllMarkers" -> {
+            removeAllMarkers()
+            result.success(null)
+          }
           else -> result.notImplemented()
         }
       }
@@ -99,6 +103,10 @@ class MainActivity : FlutterActivity() {
       parent?.removeView(mapView)
       mapView = null
     }
+  }
+
+  private fun removeAllMarkers() {
+    mapView?.removeAllPOIItems()
   }
 
   override fun onDestroy() {
@@ -131,8 +139,6 @@ class MainActivity : FlutterActivity() {
 
     mapView?.addPOIItem(marker)
   }
-
-
 
   private fun searchPlaces(keyword: String, result: MethodChannel.Result) {
     val client = OkHttpClient()
