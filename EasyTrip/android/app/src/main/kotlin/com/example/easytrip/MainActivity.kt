@@ -21,7 +21,6 @@ import net.daum.mf.map.api.MapPoint
 import net.daum.mf.map.api.MapView
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.json.JSONObject
 import java.io.IOException
 import java.security.MessageDigest
 
@@ -66,9 +65,13 @@ class MainActivity : FlutterActivity() {
             val longitude = (call.arguments as Map<*, *>?)?.get("longitude") as? Double
             val isStartPoint = (call.arguments as Map<*, *>?)?.get("isStartPoint") as? Boolean
 
-            if (latitude != null && longitude != null && isStartPoint != null) {
+            if (latitude != null && longitude != null) {
               mapView?.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(latitude, longitude), true)
-              addMarker(latitude, longitude, isStartPoint)
+              if (isStartPoint != null) {
+                addMarker(latitude, longitude, isStartPoint)
+              } else {
+                addMarker(latitude, longitude)
+              }
             }
 
             result.success(null)
@@ -78,8 +81,12 @@ class MainActivity : FlutterActivity() {
             val longitude = (call.arguments as Map<*, *>?)?.get("longitude") as? Double
             val isStartPoint = (call.arguments as Map<*, *>?)?.get("isStartPoint") as? Boolean
 
-            if (latitude != null && longitude != null && isStartPoint != null) {
-              addMarker(latitude, longitude, isStartPoint)
+            if (latitude != null && longitude != null) {
+              if (isStartPoint != null) {
+                addMarker(latitude, longitude, isStartPoint)
+              } else {
+                addMarker(latitude, longitude)
+              }
             }
 
             result.success(null)
@@ -112,6 +119,22 @@ class MainActivity : FlutterActivity() {
   override fun onDestroy() {
     super.onDestroy()
     mapView = null
+  }
+
+  fun addMarker(latitude: Double, longitude: Double) {
+    val marker = MapPOIItem().apply {
+      itemName = "Selected Location"
+      mapPoint = MapPoint.mapPointWithGeoCoord(latitude, longitude)
+      markerType = MapPOIItem.MarkerType.CustomImage
+
+      val bitmap = BitmapFactory.decodeResource(resources, R.drawable.custom_marker)
+      val resizedBitmap = Bitmap.createScaledBitmap(bitmap, 150, 150, false)
+
+      customImageBitmap = resizedBitmap
+      isCustomImageAutoscale = false
+      setCustomImageAnchor(0.5f, 1.0f)
+    }
+    mapView?.addPOIItem(marker)
   }
 
   fun addMarker(latitude: Double, longitude: Double, isStartPoint: Boolean) {
