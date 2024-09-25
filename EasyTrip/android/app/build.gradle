@@ -22,7 +22,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.easytrip"
-        minSdkVersion 21
+        minSdkVersion 23
         targetSdkVersion 34
         versionCode flutterVersionCode
         versionName flutterVersionName
@@ -31,6 +31,10 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
 
     buildTypes {
@@ -45,6 +49,15 @@ android {
         }
     }
 
+    repositories {
+        google()
+        mavenCentral()
+        flatDir {
+            dirs 'libs'
+        }
+    }
+
+
     buildFeatures {
         dataBinding true
     }
@@ -56,11 +69,14 @@ flutter {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation files('libs/libDaumMapAndroid.jar')
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.9.1'
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
     implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.squareup.okhttp3:okhttp:4.9.0'
+    implementation 'org.json:json:20210307'
+    implementation 'com.kakao.maps.open:android:2.11.9'
+    implementation 'com.google.android.gms:play-services-maps:19.0.0'
 }

@@ -129,9 +129,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
     });
   }
 
-
   void _showRoute() {
-
     if (_startPoint != null) {
       double startLat = _startPoint!.latitude;
       double startLng = _startPoint!.longitude;
@@ -165,6 +163,10 @@ class _TrafficFragmentState extends State<TrafficFragment> {
           'longitude': endLng,
           'isStartPoint': false, // 도착지로 설정
         }).then((_) {
+          MethodChannel('com.example.easytrip/map').invokeMethod('drawRouteLine', {
+            'startLatLng': {'latitude': _startPoint?.latitude, 'longitude': _startPoint?.longitude},
+            'endLatLng': {'latitude': _endPoint?.latitude, 'longitude': _endPoint?.longitude},
+          });
           setState(() {}); // 지도 갱신
         });
       });

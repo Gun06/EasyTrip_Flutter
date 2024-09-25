@@ -19,6 +19,7 @@ class _HomeFragmentState extends State<HomeFragment> {
   static const mapChannel = MethodChannel('com.example.easytrip/map');
   final TextEditingController _searchController = TextEditingController();
   List<dynamic> _searchResults = [];
+  List<Map<String, dynamic>> _labels = []; // 레이블 리스트 추가
 
   @override
   void initState() {
@@ -36,17 +37,15 @@ class _HomeFragmentState extends State<HomeFragment> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _createMapView(); // HomeFragment로 돌아올 때마다 지도를 다시 생성
+    restoreLabels(); // 지도를 다시 생성할 때 저장된 레이블 복구
   }
 
   @override
   void dispose() {
-    // _searchController와 같은 리소스를 해제합니다.
     _searchController.removeListener(_search);
     _searchController.dispose();
 
-    // 지도와 같은 네이티브 뷰를 정리하기 위해 removeMapView 호출
-    mapChannel.invokeMethod('removeMapView');
-
+    mapChannel.invokeMethod('removeMapView'); // 지도가 정리될 때 호출
     super.dispose();
   }
 
@@ -54,8 +53,7 @@ class _HomeFragmentState extends State<HomeFragment> {
     if (await Permission.location.request().isGranted) {
       // 위치 권한이 승인됨
     } else {
-      // 위치 권한이 거부됨
-      openAppSettings();
+      openAppSettings(); // 권한이 거부된 경우 설정으로 이동
     }
   }
 
@@ -77,6 +75,50 @@ class _HomeFragmentState extends State<HomeFragment> {
     } on PlatformException catch (e) {
       print('Failed to create map view: ${e.message}');
     }
+  }
+
+  void _removeLabel(double latitude, double longitude) async {
+    try {
+      await mapChannel.invokeMethod('removeLabel', {'latitude': latitude, 'longitude': longitude});
+      // 레이블 목록에서 해당 레이블 삭제
+      setState(() {
+        _labels.removeWhere((label) => label['latitude'] == latitude && label['longitude'] == longitude);
+      });
+    } on PlatformException catch (e) {
+      print('Failed to remove label: ${e.message}');
+    }
+  }
+
+  void restoreLabels() async {
+    for (var label in _labels) {
+      try {
+        await mapChannel.invokeMethod('addLabel', {
+          'latitude': label['latitude'],
+          'longitude': label['longitude'],
+        });
+      } on PlatformException catch (e) {
+        print('Failed to restore label: ${e.message}');
+      }
+    }
+  }
+
+  void _addLabel(double latitude, double longitude) async {
+    try {
+      await mapChannel.invokeMethod('addLabel', {'latitude': latitude, 'longitude': longitude});
+      setState(() {
+        _labels.add({'latitude': latitude, 'longitude': longitude}); // 레이블 정보 저장
+      });
+    } on PlatformException catch (e) {
+      print('Failed to add label: ${e.message}');
+    }
+  }
+
+  void _onPlaceTap(double latitude, double longitude) {
+    _moveToLocation(latitude, longitude);
+    _addLabel(latitude, longitude);
+    setState(() {
+      _searchResults = [];
+    });
   }
 
   void _search() async {
@@ -106,14 +148,6 @@ class _HomeFragmentState extends State<HomeFragment> {
     }
   }
 
-  void _addMarker(double latitude, double longitude) async {
-    try {
-      await mapChannel.invokeMethod('addMarker', {'latitude': latitude, 'longitude': longitude});
-    } on PlatformException catch (e) {
-      print('Failed to add marker: ${e.message}');
-    }
-  }
-
   void _zoomIn() async {
     try {
       await mapChannel.invokeMethod('zoomIn');
@@ -136,14 +170,6 @@ class _HomeFragmentState extends State<HomeFragment> {
     } on PlatformException catch (e) {
       print('Failed to move to current location: ${e.message}');
     }
-  }
-
-  void _onPlaceTap(double latitude, double longitude) {
-    _moveToLocation(latitude, longitude);
-    _addMarker(latitude, longitude);
-    setState(() {
-      _searchResults = [];
-    });
   }
 
   void _navigateToTraffic() {
