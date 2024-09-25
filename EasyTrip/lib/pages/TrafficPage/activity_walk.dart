@@ -3,8 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'dart:convert';
-import 'fragment_traffic.dart'; // Import the shared MapPoint class
+import 'fragment_traffic.dart';
 
 class WalkPage extends StatefulWidget {
   final Future<void> Function() refreshData;
@@ -29,21 +28,31 @@ class _WalkPageState extends State<WalkPage> {
   void initState() {
     super.initState();
     if (widget.startPoint != null && widget.endPoint != null) {
-      _drawRoute(widget.startPoint!, widget.endPoint!);
+      _getWalkingRoute(widget.startPoint!, widget.endPoint!);
     }
   }
 
-  Future<void> _drawRoute(MapPoint start, MapPoint end) async {
-    final Map<String, dynamic> params = {
-      'startLatLng': {'latitude': start.latitude, 'longitude': start.longitude},
-      'endLatLng': {'latitude': end.latitude, 'longitude': end.longitude},
-    };
-
+  // getWalkingRoute를 호출하는 함수
+  Future<void> _getWalkingRoute(MapPoint start, MapPoint end) async {
     try {
-      await MethodChannel('com.example.easytrip/map').invokeMethod('drawRouteLine', params);
-      setState(() {}); // 지도 업데이트를 위해 setState 호출
+      await MethodChannel('com.example.easytrip/map').invokeMethod('getWalkingRoute', {
+        'startLatitude': start.latitude,
+        'startLongitude': start.longitude,
+        'endLatitude': end.latitude,
+        'endLongitude': end.longitude,
+      });
+      setState(() {});
     } catch (e) {
-      print("Failed to draw route line: $e");
+      print("Failed to fetch walking route: $e");
+    }
+  }
+
+  // 로드뷰 라인 오버레이 호출
+  Future<void> _setRoadViewLineOverlay() async {
+    try {
+      await MethodChannel('com.example.easytrip/map').invokeMethod('setRoadViewLineOverlay');
+    } catch (e) {
+      print("Failed to set road view line overlay: $e");
     }
   }
 
@@ -51,35 +60,57 @@ class _WalkPageState extends State<WalkPage> {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: widget.refreshData,
-      child: Container(
-        child: PlatformViewLink(
-          viewType: 'KakaoMapView',
-          surfaceFactory: (BuildContext context, PlatformViewController controller) {
-            return AndroidViewSurface(
-              controller: controller as AndroidViewController,
-              gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
-              hitTestBehavior: PlatformViewHitTestBehavior.opaque,
-            );
-          },
-          onCreatePlatformView: (PlatformViewCreationParams params) {
-            MethodChannel('com.example.easytrip/map').invokeMethod('removeMapView'); // 기존 지도 제거
+      child: Stack(
+        children: [
+          Container(
+            height: MediaQuery.of(context).size.height, // 화면 높이를 기준으로 제한
+            child: Column(
+              children: [
+                Expanded(
+                  child: PlatformViewLink(
+                    viewType: 'KakaoMapView',
+                    surfaceFactory: (BuildContext context, PlatformViewController controller) {
+                      return AndroidViewSurface(
+                        controller: controller as AndroidViewController,
+                        gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
+                        hitTestBehavior: PlatformViewHitTestBehavior.opaque,
+                      );
+                    },
+                    onCreatePlatformView: (PlatformViewCreationParams params) {
+                      MethodChannel('com.example.easytrip/map').invokeMethod('removeMapView');
 
-            return PlatformViewsService.initSurfaceAndroidView(
-              id: params.id,
-              viewType: 'KakaoMapView',
-              layoutDirection: TextDirection.ltr,
-              creationParams: {
-                'startLatitude': widget.startPoint?.latitude,
-                'startLongitude': widget.startPoint?.longitude,
-                'endLatitude': widget.endPoint?.latitude,
-                'endLongitude': widget.endPoint?.longitude,
-              },
-              creationParamsCodec: const StandardMessageCodec(),
-            )
-              ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
-              ..create();
-          },
-        ),
+                      return PlatformViewsService.initSurfaceAndroidView(
+                        id: params.id,
+                        viewType: 'KakaoMapView',
+                        layoutDirection: TextDirection.ltr,
+                        creationParams: {
+                          'startLatitude': widget.startPoint?.latitude,
+                          'startLongitude': widget.startPoint?.longitude,
+                          'endLatitude': widget.endPoint?.latitude,
+                          'endLongitude': widget.endPoint?.longitude,
+                        },
+                        creationParamsCodec: const StandardMessageCodec(),
+                      )
+                        ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
+                        ..create();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            top: 20, // 상단에서 20픽셀 떨어지도록 설정
+            right: 20, // 오른쪽에서 20픽셀 떨어지도록 설정
+            child: ElevatedButton(
+              onPressed: _setRoadViewLineOverlay,
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.blue, backgroundColor: Colors.white, // 글씨 색 파란색
+              ),
+              child: Text('로드뷰 라인 표시'),
+            ),
+          ),
+        ],
       ),
     );
   }

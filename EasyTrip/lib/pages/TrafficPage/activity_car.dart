@@ -36,7 +36,7 @@ class _CarPageState extends State<CarPage> {
   }
 
   Future<void> _drawRoute(MapPoint start, MapPoint end) async {
-    final String apiKey = "YOUR_KAKAO_REST_API_KEY";
+    final String apiKey = "06458f1a2d01e02bb731d2a37cfa6c85";
     final String url = "https://apis-navi.kakaomobility.com/v1/directions?origin=${start.longitude},${start.latitude}&destination=${end.longitude},${end.latitude}&waypoints=&priority=RECOMMENDED&road_details=false";
 
     final response = await HttpClient().getUrl(Uri.parse(url))
@@ -62,11 +62,12 @@ class _CarPageState extends State<CarPage> {
     }
 
     if (routePoints.isNotEmpty) {
-      await MethodChannel('com.example.easytrip/map').invokeMethod('drawPolyline', {
+      await MethodChannel('com.example.easytrip/map').invokeMethod('drawRouteLine', {
         'points': routePoints.map((point) => {'latitude': point.latitude, 'longitude': point.longitude}).toList(),
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
