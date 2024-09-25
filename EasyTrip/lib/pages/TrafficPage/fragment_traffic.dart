@@ -13,7 +13,7 @@ class TrafficFragment extends StatefulWidget {
 }
 
 class _TrafficFragmentState extends State<TrafficFragment> {
-  int selectedIndex = 1; // 초기값으로 자동차 선택
+  int selectedIndex = 1;
   final PageController _pageController = PageController(initialPage: 1);
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _endController = TextEditingController();
@@ -111,72 +111,94 @@ class _TrafficFragmentState extends State<TrafficFragment> {
 
   void _swapLocations() {
     setState(() {
-      // Swap the text in the controllers
       String tempText = _startController.text;
       _startController.text = _endController.text;
       _endController.text = tempText;
 
-      // Swap the MapPoint objects
       MapPoint? tempPoint = _startPoint;
       _startPoint = _endPoint;
       _endPoint = tempPoint;
 
       print("Swapped: 출발지 -> ${_startPoint?.latitude}, ${_startPoint?.longitude}, 도착지 -> ${_endPoint?.latitude}, ${_endPoint?.longitude}");
 
-      // Clear existing markers and add new ones
-      MethodChannel('com.example.easytrip/map').invokeMethod('removeAllMarkers');
+      MethodChannel('com.example.easytrip/map').invokeMethod('removeLabel');
       _showRoute();
     });
   }
 
+  // drawRouteLine 호출 부분 수정
   void _showRoute() {
-    if (_startPoint != null) {
+    if (_startPoint != null && _endPoint != null) {
       double startLat = _startPoint!.latitude;
       double startLng = _startPoint!.longitude;
-
-      MethodChannel('com.example.easytrip/map').invokeMethod('moveToLocation', {
-        'latitude': startLat,
-        'longitude': startLng,
-        'isStartPoint': true, // 출발지로 설정
-      }).then((_) {
-        MethodChannel('com.example.easytrip/map').invokeMethod('addMarker', {
-          'latitude': startLat,
-          'longitude': startLng,
-          'isStartPoint': true, // 출발지로 설정
-        }).then((_) {
-          setState(() {}); // 지도 갱신
-        });
-      });
-    }
-
-    if (_endPoint != null) {
       double endLat = _endPoint!.latitude;
       double endLng = _endPoint!.longitude;
 
+      String methodToCall;
+      switch (selectedIndex) {
+        case 0:
+        // 차량 경로 탐색
+          methodToCall = 'getCarRoute';
+          break;
+        case 1:
+        // 버스 경로 탐색 (별도의 로직 필요할 수 있음)
+          methodToCall = 'getBusRoute';  // 구현에 따라 수정
+          break;
+        case 2:
+        // 도보 경로 탐색
+          methodToCall = 'getWalkingRoute';
+          break;
+        case 3:
+        // 자전거 경로 탐색
+          methodToCall = 'getBicycleRoute';
+          break;
+        default:
+          methodToCall = 'drawRouteLine'; // 기본적으로 drawRouteLine 사용
+      }
+
+      // Start point 설정
       MethodChannel('com.example.easytrip/map').invokeMethod('moveToLocation', {
-        'latitude': endLat,
-        'longitude': endLng,
-        'isStartPoint': false, // 도착지로 설정
+        'latitude': startLat,
+        'longitude': startLng,
+        'isStartPoint': true,
       }).then((_) {
-        MethodChannel('com.example.easytrip/map').invokeMethod('addMarker', {
-          'latitude': endLat,
-          'longitude': endLng,
-          'isStartPoint': false, // 도착지로 설정
+        // Start point 라벨 추가
+        MethodChannel('com.example.easytrip/map').invokeMethod('addLabel', {
+          'latitude': startLat,
+          'longitude': startLng,
+          'isStartPoint': true,
         }).then((_) {
-          MethodChannel('com.example.easytrip/map').invokeMethod('drawRouteLine', {
-            'startLatLng': {'latitude': _startPoint?.latitude, 'longitude': _startPoint?.longitude},
-            'endLatLng': {'latitude': _endPoint?.latitude, 'longitude': _endPoint?.longitude},
+          // End point 설정 및 라벨 추가
+          MethodChannel('com.example.easytrip/map').invokeMethod('moveToLocation', {
+            'latitude': endLat,
+            'longitude': endLng,
+            'isStartPoint': false,
+          }).then((_) {
+            MethodChannel('com.example.easytrip/map').invokeMethod('addLabel', {
+              'latitude': endLat,
+              'longitude': endLng,
+              'isStartPoint': false,
+            }).then((_) {
+              // 각 교통수단에 맞는 경로 탐색 메서드 호출
+              MethodChannel('com.example.easytrip/map').invokeMethod(methodToCall, {
+                'startLatitude': startLat,
+                'startLongitude': startLng,
+                'endLatitude': endLat,
+                'endLongitude': endLng,
+              }).then((_) {
+                setState(() {});
+              }).catchError((error) {
+                print("Error drawing route line: $error");
+              });
+            });
           });
-          setState(() {}); // 지도 갱신
         });
       });
     } else {
       print("Start or end location is not selected.");
     }
-
-    // 페이지를 강제로 갱신하여 지도가 즉시 반영되도록 함
-    setState(() {});
   }
+
 
   void _onPageChanged(int index) {
     setState(() {
@@ -197,7 +219,6 @@ class _TrafficFragmentState extends State<TrafficFragment> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // 상단 부분
           Container(
             color: Color(0xFF4285F4),
             padding: EdgeInsets.only(top: 50, left: 16, right: 5, bottom: 20),
@@ -224,7 +245,6 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                   ],
                 ),
                 SizedBox(height: 16),
-                // 출발지와 도착지 입력 필드
                 Row(
                   children: [
                     Expanded(
@@ -252,7 +272,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                     ),
                     IconButton(
                       icon: Icon(Icons.swap_vert, color: Colors.white),
-                      onPressed: _swapLocations, // 스왑 버튼 기능 추가
+                      onPressed: _swapLocations,
                     ),
                   ],
                 ),
@@ -306,7 +326,6 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                     IconButton(
                       icon: Icon(Icons.more_vert, color: Colors.white),
                       onPressed: () {
-                        // 더보기 버튼 기능 추가 가능
                       },
                     ),
                   ],
@@ -335,7 +354,6 @@ class _TrafficFragmentState extends State<TrafficFragment> {
               ],
             ),
           ),
-          // 지도와 출발 시간 선택 및 경로 정보
           Expanded(
             child: PageView(
               controller: _pageController,
