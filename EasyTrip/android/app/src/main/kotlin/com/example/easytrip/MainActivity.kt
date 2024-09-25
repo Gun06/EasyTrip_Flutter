@@ -419,8 +419,6 @@ class MainActivity : FlutterActivity() {
     }
   }
 
-
-
   fun fetchWalkingRoute(startLatitude: Double, startLongitude: Double, endLatitude: Double, endLongitude: Double) {
     val client = OkHttpClient()
     val url = "https://apis-navi.kakaomobility.com/v1/directions?origin=${startLongitude},${startLatitude}&destination=${endLongitude},${endLatitude}&priority=RECOMMEND&roadDetails=false&vehicleType=1" // vehicleType=1은 도보
