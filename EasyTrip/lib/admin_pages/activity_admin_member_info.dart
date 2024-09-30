@@ -34,6 +34,7 @@ class _AdminMemberInfoPageState extends State<AdminMemberInfoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white30,
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : ListView.builder(

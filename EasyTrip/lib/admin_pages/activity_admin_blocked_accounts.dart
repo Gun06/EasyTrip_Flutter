@@ -29,6 +29,7 @@ class _AdminBlockedAccountsPageState extends State<AdminBlockedAccountsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white30,
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : ListView.builder(
