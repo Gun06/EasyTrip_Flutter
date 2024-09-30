@@ -168,6 +168,27 @@ class MainActivity : FlutterActivity() {
             val endLng = call.argument<Double>("endLongitude") ?: 0.0
             fetchBicycleRoute(startLat, startLng, endLat, endLng)
           }
+
+          "addWaypoints" -> {
+            val waypoints = call.arguments as List<Map<String, Double>>  // 경유지 정보 리스트를 받음
+            waypoints.forEach { waypoint ->
+              val latitude = waypoint["latitude"] ?: 0.0
+              val longitude = waypoint["longitude"] ?: 0.0
+              addWaypointLabel(latitude, longitude)  // 경유지 라벨 추가
+            }
+            result.success(null)
+          }
+
+          "drawRouteWithWaypoints" -> {
+            val startLat = call.argument<Double>("startLatitude") ?: 0.0
+            val startLng = call.argument<Double>("startLongitude") ?: 0.0
+            val endLat = call.argument<Double>("endLatitude") ?: 0.0
+            val endLng = call.argument<Double>("endLongitude") ?: 0.0
+            val waypoints = call.argument<List<Map<String, Double>>>("waypoints") ?: emptyList()
+
+            drawRouteLineWithWaypoints(startLat, startLng, endLat, endLng, waypoints)
+            result.success(null)
+          }
           else -> result.notImplemented()
         }
       }
@@ -634,6 +655,65 @@ class MainActivity : FlutterActivity() {
       }
     })
   }
+
+  fun addWaypointLabel(latitude: Double, longitude: Double) {
+    initializeLabelLayerIfNeeded() // labelLayer 초기화 확인
+
+    if (isMapReady) {
+      Log.d("KakaoMap", "Adding waypoint label at: $latitude, $longitude")
+      val pos = LatLng.from(latitude, longitude)
+
+      // BitmapFactory를 사용해 drawable을 비트맵으로 변환 (경유지 마커)
+      val bitmap = BitmapFactory.decodeResource(resources, R.drawable.custom_marker)
+      val scaledBitmap = Bitmap.createScaledBitmap(bitmap, 100, 100, true)
+
+      // LabelOptions 생성
+      val labelOptions = LabelOptions.from(pos).setStyles(LabelStyle.from(scaledBitmap))
+
+      // 레이블 추가
+      labelLayer.addLabel(labelOptions)
+
+      Log.d("KakaoMap", "Waypoint label added at: $latitude, $longitude")
+    } else {
+      Log.e("KakaoMap", "KakaoMap is not initialized")
+    }
+  }
+
+  private fun drawRouteLineWithWaypoints(startLat: Double, startLng: Double, endLat: Double, endLng: Double, waypoints: List<Map<String, Double>>) {
+    if (isMapReady) {
+      val startLatLng = LatLng.from(startLat, startLng)
+      val endLatLng = LatLng.from(endLat, endLng)
+
+      // 경유지 좌표를 LatLng 리스트로 변환
+      val waypointLatLngs = waypoints.map { LatLng.from(it["latitude"]!!, it["longitude"]!!) }
+
+      // 모든 경로 좌표를 하나의 리스트에 담음 (출발지 -> 경유지들 -> 도착지)
+      val allPoints = mutableListOf(startLatLng).apply {
+        addAll(waypointLatLngs)
+        add(endLatLng)
+      }
+
+      // 경로 스타일 설정
+      val routeLineStyle = RouteLineStyle.from(16f, Color.BLUE)
+
+      // RouteLineSegment 생성
+      val segment = RouteLineSegment.from(allPoints).setStyles(routeLineStyle)
+
+      // RouteLineOptions 생성
+      val routeLineOptions = RouteLineOptions.from(listOf(segment))
+
+      // RouteLineLayer 가져오기
+      val layer = kakaoMap.getRouteLineManager()?.getLayer()
+
+      // RouteLine 추가
+      layer?.addRouteLine(routeLineOptions)
+
+      Log.d("KakaoMap", "Route line with waypoints added from $startLat, $startLng to $endLat, $endLng")
+    } else {
+      Log.e("KakaoMap", "Map is not ready to draw route line")
+    }
+  }
+
 
   // 경로 전체를 화면에 맞추기 위한 카메라 이동 함수
   private fun moveToFitRoute(points: Array<LatLng>) {

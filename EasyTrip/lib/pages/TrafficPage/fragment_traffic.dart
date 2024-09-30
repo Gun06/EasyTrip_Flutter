@@ -143,6 +143,21 @@ class _TrafficFragmentState extends State<TrafficFragment> {
     });
   }
 
+  void addWaypoints(List<Map<String, double>> waypoints) {
+    MethodChannel('com.example.easytrip/map').invokeMethod('addWaypoints', waypoints);
+  }
+
+  void drawRouteWithWaypoints(double startLat, double startLng, double endLat, double endLng, List<Map<String, double>> waypoints) {
+    MethodChannel('com.example.easytrip/map').invokeMethod('drawRouteWithWaypoints', {
+      'startLatitude': startLat,
+      'startLongitude': startLng,
+      'endLatitude': endLat,
+      'endLongitude': endLng,
+      'waypoints': waypoints,
+    });
+  }
+
+
   void _swapLocations() {
     setState(() {
       String tempText = _startController.text;
@@ -198,6 +213,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
       double endLat = _endPoint!.latitude;
       double endLng = _endPoint!.longitude;
 
+      // 경유지 리스트를 구성
       List<Map<String, dynamic>> waypointCoords = [];
       for (var waypoint in _waypoints) {
         if (waypoint != null) {
@@ -208,6 +224,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
         }
       }
 
+      // 선택된 교통수단에 맞는 메소드 설정
       String methodToCall;
       switch (selectedIndex) {
         case 0:
@@ -232,6 +249,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
         'longitude': startLng,
         'isStartPoint': true,
       }).then((_) {
+        // 출발지 라벨 추가
         MethodChannel('com.example.easytrip/map').invokeMethod('addLabel', {
           'latitude': startLat,
           'longitude': startLng,
@@ -243,6 +261,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
             'longitude': endLng,
             'isStartPoint': false,
           }).then((_) {
+            // 도착지 라벨 추가
             MethodChannel('com.example.easytrip/map').invokeMethod('addLabel', {
               'latitude': endLat,
               'longitude': endLng,
@@ -256,6 +275,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                 'endLongitude': endLng,
                 'waypoints': waypointCoords,
               }).then((_) {
+                // 경로 그리기 완료 후 상태 업데이트
                 setState(() {});
               }).catchError((error) {
                 print("Error drawing route line: $error");
@@ -436,48 +456,52 @@ class _TrafficFragmentState extends State<TrafficFragment> {
         for (int i = 0; i < _waypointControllers.length; i++)
           Padding(
             padding: const EdgeInsets.only(top: 8.0), // 필드 간 간격 조정
-            child: Row(
+            child: Column(
               children: [
-                Expanded(
-                  child: Container(
-                    child: Stack(
-                      children: [
-                        TextField(
-                          controller: _waypointControllers[i],
-                          focusNode: _waypointFocusNodes[i],
-                          style: TextStyle(color: Colors.white),
-                          decoration: InputDecoration(
-                            labelText: '경유지',
-                            labelStyle: TextStyle(color: Colors.white),
-                            filled: true,
-                            fillColor: Colors.white.withOpacity(0.2),
-                            border: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          TextField(
+                            controller: _waypointControllers[i],
+                            focusNode: _waypointFocusNodes[i],
+                            style: TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              labelText: '경유지',
+                              labelStyle: TextStyle(color: Colors.white),
+                              filled: true,
+                              fillColor: Colors.white.withOpacity(0.2),
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white),
+                              ),
                             ),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white),
+                            onChanged: (query) => _searchWaypointLocation(query, i), // 경유지 검색 호출
+                          ),
+                          Positioned(
+                            right: 8,
+                            top: 6,
+                            child: IconButton(
+                              icon: Icon(Icons.remove, color: Colors.white),
+                              onPressed: () => _removeWaypoint(i),
                             ),
                           ),
-                          onChanged: (query) => _searchWaypointLocation(query, i),
-                        ),
-                        Positioned(
-                          right: 8,
-                          top: 6,
-                          child: IconButton(
-                            icon: Icon(Icons.remove, color: Colors.white),
-                            onPressed: () => _removeWaypoint(i),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
+                    SizedBox(width: 12), // 스왑 버튼과 필드 사이 간격 조절
+                    Icon(Icons.swap_vert, color: Colors.white), // 드래그 앤 드롭 버튼
+                    SizedBox(width: 12), // 스왑 버튼과 필드 사이 간격 조절
+                  ],
                 ),
-                SizedBox(width: 12), // 스왑 버튼과 필드 사이 간격 조절
-                Icon(Icons.swap_vert, color: Colors.white), // 드래그 앤 드롭 버튼
-                SizedBox(width: 12), // 스왑 버튼과 필드 사이 간격 조절
+                // 경유지 검색 결과 표시
+                if (_waypointSearchResults[i].isNotEmpty) _buildWaypointSearchResults(i),
               ],
             ),
           ),
@@ -508,6 +532,35 @@ class _TrafficFragmentState extends State<TrafficFragment> {
       ),
     );
   }
+
+  Widget _buildWaypointSearchResults(int index) {
+    // 경유지별로 고유한 검색 결과 리스트를 가져옴
+    List<dynamic> searchResults = _waypointSearchResults[index];
+
+    if (searchResults.isEmpty) return SizedBox.shrink();  // 검색 결과가 없으면 아무것도 보여주지 않음
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        color: Colors.white,
+        height: 180,
+        width: 343,
+        child: ListView.builder(
+          padding: EdgeInsets.only(top: 5),
+          itemCount: searchResults.length,
+          itemBuilder: (context, resultIndex) {
+            final place = searchResults[resultIndex];
+            return ListTile(
+              title: Text(place['place_name']),
+              subtitle: Text(place['address_name']),
+              onTap: () => _onWaypointPlaceTap(place, index), // 경유지 필드 인덱스에 맞는 선택 처리
+            );
+          },
+        ),
+      ),
+    );
+  }
+
 
   Widget _buildTransportButton(IconData icon, int index) {
     return Container(
