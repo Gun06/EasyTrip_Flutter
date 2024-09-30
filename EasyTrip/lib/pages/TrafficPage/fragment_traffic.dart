@@ -267,6 +267,16 @@ class _TrafficFragmentState extends State<TrafficFragment> {
               'longitude': endLng,
               'isStartPoint': false,
             }).then((_) {
+              // 경유지 라벨 추가
+              for (int i = 0; i < waypointCoords.length; i++) {
+                final waypoint = waypointCoords[i];
+                MethodChannel('com.example.easytrip/map').invokeMethod('addLabel', {
+                  'latitude': waypoint['latitude'],
+                  'longitude': waypoint['longitude'],
+                  'isWaypoint': true,  // 경유지임을 표시
+                });
+              }
+
               // 경유지 포함한 경로 계산
               MethodChannel('com.example.easytrip/map').invokeMethod(methodToCall, {
                 'startLatitude': startLat,
