@@ -33,9 +33,13 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.StandardMessageCodec
 import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import org.json.JSONObject
+import org.json.JSONArray
 import java.io.IOException
 import java.net.URLEncoder
 import java.security.MessageDigest
@@ -462,28 +466,13 @@ class MainActivity : FlutterActivity() {
     startLongitude: Double,
     endLatitude: Double,
     endLongitude: Double,
-    waypoints: List<Map<String, Double>>  // waypoints 추가
+    waypoints: List<Map<String, Double>> = emptyList()  // 경유지 옵션 추가
   ) {
     val client = OkHttpClient()
 
-    // 경유지를 처리하는 문자열 생성
-    val waypointsString = waypoints.joinToString("|") { "${it["longitude"]},${it["latitude"]}" }
-
-    val url = "https://apis-navi.kakaomobility.com/v1/waypoints/directions?origin=${startLongitude},${startLatitude}&waypoints=${waypointsString}&destination=${endLongitude},${endLatitude}&priority=RECOMMEND&roadDetails=false&vehicleType=1"
-
-    val request = Request.Builder()
-      .url(url)
-      .addHeader("Authorization", "KakaoAK 06458f1a2d01e02bb731d2a37cfa6c85")  // REST API 키 입력
-      .build()
-
-    client.newCall(request).enqueue(object : okhttp3.Callback {
-      override fun onFailure(call: okhttp3.Call, e: IOException) {
-        runOnUiThread {
-          Log.e("RouteLine", "Failed to get route: ${e.message}")
-        }
-      }
-
-      override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+    // 경로 응답 처리 함수 (내부 함수로 포함)
+    fun handleResponse(response: Response) {
+      response.use {
         if (!response.isSuccessful) {
           Log.e("RouteLine", "Failed to get route: ${response.message}")
           return
@@ -492,41 +481,49 @@ class MainActivity : FlutterActivity() {
         val responseData = response.body?.string()
         Log.d("RouteLine", "Response Data: $responseData")
 
+        // JSON 응답 파싱
         val jsonResponse = JSONObject(responseData)
-        val routes = jsonResponse.getJSONArray("routes")
-        if (routes.length() == 0) {
+        val routes = jsonResponse.optJSONArray("routes")
+        if (routes == null || routes.length() == 0) {
           Log.e("RouteLine", "No routes found in the response")
           return
         }
 
-        // 경로 데이터에서 vertexes를 추출
-        val routePoints = routes.getJSONObject(0).getJSONArray("sections").getJSONObject(0).getJSONArray("roads")
-
-        // 경로 점들을 담을 리스트 생성
+        // 첫 번째 route에서 sections를 추출
+        val sections = routes.getJSONObject(0).optJSONArray("sections")
         val points = mutableListOf<LatLng>()
-        for (i in 0 until routePoints.length()) {
-          val road = routePoints.getJSONObject(i)
-          val vertexes = road.getJSONArray("vertexes")
 
-          // vertexes 배열은 [lng1, lat1, lng2, lat2, ...] 형식으로 구성됨
-          for (j in 0 until vertexes.length() step 2) {
-            val lng = vertexes.getDouble(j)
-            val lat = vertexes.getDouble(j + 1)
-            points.add(LatLng.from(lat, lng))
+        // sections의 각 도로 정보를 반복하며 vertexes 추출
+        for (i in 0 until sections.length()) {
+          val section = sections.getJSONObject(i)
+          val roads = section.getJSONArray("roads")
+
+          // roads의 각 도로에서 vertexes 추출
+          for (j in 0 until roads.length()) {
+            val road = roads.getJSONObject(j)
+            val vertexes = road.getJSONArray("vertexes")
+
+            // vertexes 배열은 [lng1, lat1, lng2, lat2, ...] 형식으로 구성됨
+            for (k in 0 until vertexes.length() step 2) {
+              val lng = vertexes.getDouble(k)
+              val lat = vertexes.getDouble(k + 1)
+              points.add(LatLng.from(lat, lng))
+            }
           }
         }
 
+        // 경로 데이터가 존재하면 지도에 그리기
         runOnUiThread {
           if (points.isNotEmpty()) {
-            // RouteLineSegment 생성
+            // 경로 스타일 설정
             val routeLineStyle = RouteLineStyle.from(10f, Color.BLUE)
             val segment = RouteLineSegment.from(points).setStyles(routeLineStyle)
 
             // RouteLineOptions 생성
             val routeLineOptions = RouteLineOptions.from(listOf(segment))
-
-            // RouteLineLayer에 경로 추가
             val layer = kakaoMap.getRouteLineManager()?.getLayer()
+
+            // 경로 추가
             layer?.addRouteLine(routeLineOptions)
 
             // 경로가 잘 보이도록 카메라 이동
@@ -536,45 +533,240 @@ class MainActivity : FlutterActivity() {
           }
         }
       }
-    })
+    }
+
+    // 경유지가 없으면 GET 요청, 경유지가 있으면 POST 요청 처리
+    if (waypoints.isEmpty()) {
+      // GET 방식 처리
+      val url = "https://apis-navi.kakaomobility.com/v1/directions?origin=$startLongitude,$startLatitude&destination=$endLongitude,$endLatitude&priority=RECOMMEND&roadDetails=false&vehicleType=1"
+
+      val request = Request.Builder()
+        .url(url)
+        .addHeader("Authorization", "KakaoAK 06458f1a2d01e02bb731d2a37cfa6c85")
+        .build()
+
+      client.newCall(request).enqueue(object : okhttp3.Callback {
+        override fun onFailure(call: okhttp3.Call, e: IOException) {
+          runOnUiThread {
+            Log.e("RouteLine", "Failed to get route: ${e.message}")
+            // 사용자에게 실패 메시지 표시
+          }
+        }
+
+        override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+          if (response.isSuccessful) {
+            handleResponse(response)
+          } else {
+            // 추가 로그를 통해 응답 상태 코드 및 오류 메시지 출력
+            Log.e("RouteLine", "Request failed with response code: ${response.code}, message: ${response.body?.string()}")
+          }
+        }
+
+      })
+    } else {
+      // POST 방식 처리
+      val jsonBody = JSONObject().apply {
+        put("origin", JSONObject().apply {
+          put("x", startLongitude)
+          put("y", startLatitude)
+        })
+        put("destination", JSONObject().apply {
+          put("x", endLongitude)
+          put("y", endLatitude)
+        })
+        put("priority", "RECOMMEND")
+        put("roadDetails", false)
+        put("vehicleType", 1)
+
+        // 경유지 목록을 JSONArray로 변환
+        val waypointArray = JSONArray()
+        waypoints.forEach { waypoint ->
+          val waypointObject = JSONObject().apply {
+            put("name", "Waypoint")  // 경유지 이름. 필요시 다르게 설정 가능
+            put("x", waypoint["longitude"])  // 경유지의 경도
+            put("y", waypoint["latitude"])   // 경유지의 위도
+          }
+          waypointArray.put(waypointObject)
+        }
+        put("waypoints", waypointArray)  // JSONArray로 추가
+      }
+
+      val body = jsonBody.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
+      val request = Request.Builder()
+        .url("https://apis-navi.kakaomobility.com/v1/waypoints/directions")
+        .addHeader("Authorization", "KakaoAK 06458f1a2d01e02bb731d2a37cfa6c85")
+        .post(body)
+        .build()
+
+      client.newCall(request).enqueue(object : okhttp3.Callback {
+        override fun onFailure(call: okhttp3.Call, e: IOException) {
+          Log.e("Waypoint RouteLine", "Failed to get route: ${e.message}")
+        }
+
+        override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+          if (response.isSuccessful) {
+            handleResponse(response)
+          } else {
+            Log.e("Waypoint RouteLine", "Request failed with response code: ${response.code}, message: ${response.body?.string()}")
+          }
+        }
+      })
+    }
   }
 
+
+  // 경로 요청 함수 (GET과 POST 방식 모두 처리)
   fun fetchCarRoute(
     startLatitude: Double,
     startLongitude: Double,
     endLatitude: Double,
     endLongitude: Double,
-    waypoints: List<Map<String, Double>>  // waypoints 추가
+    waypoints: List<Map<String, Double>> = emptyList()  // 경유지 옵션 추가
   ) {
     val client = OkHttpClient()
 
-    val waypointsString = waypoints.joinToString("|") { "${it["longitude"]},${it["latitude"]}" }
-
-    val url = "https://apis-navi.kakaomobility.com/v1/waypoints/directions?origin=${startLongitude},${startLatitude}&waypoints=${waypointsString}&destination=${endLongitude},${endLatitude}&priority=RECOMMEND&roadDetails=false&vehicleType=2"
-
-    val request = Request.Builder()
-      .url(url)
-      .addHeader("Authorization", "KakaoAK 06458f1a2d01e02bb731d2a37cfa6c85")
-      .build()
-
-    client.newCall(request).enqueue(object : okhttp3.Callback {
-      override fun onFailure(call: okhttp3.Call, e: IOException) {
-        runOnUiThread {
-          Log.e("RouteLine", "Failed to get car route: ${e.message}")
-        }
-      }
-
-      override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+    // 경로 응답 처리 함수 (내부 함수로 포함)
+    fun handleResponse(response: Response) {
+      response.use {
         if (!response.isSuccessful) {
-          Log.e("RouteLine", "Failed to get car route: ${response.message}")
+          Log.e("RouteLine", "Failed to get route: ${response.message}")
           return
         }
 
         val responseData = response.body?.string()
         Log.d("RouteLine", "Response Data: $responseData")
-        // (생략된 동일한 처리 로직)
+
+        // JSON 응답 파싱
+        val jsonResponse = JSONObject(responseData)
+        val routes = jsonResponse.optJSONArray("routes")
+        if (routes == null || routes.length() == 0) {
+          Log.e("RouteLine", "No routes found in the response")
+          return
+        }
+
+        // 첫 번째 route에서 sections를 추출
+        val sections = routes.getJSONObject(0).optJSONArray("sections")
+        val points = mutableListOf<LatLng>()
+
+        // sections의 각 도로 정보를 반복하며 vertexes 추출
+        for (i in 0 until sections.length()) {
+          val section = sections.getJSONObject(i)
+          val roads = section.getJSONArray("roads")
+
+          // roads의 각 도로에서 vertexes 추출
+          for (j in 0 until roads.length()) {
+            val road = roads.getJSONObject(j)
+            val vertexes = road.getJSONArray("vertexes")
+
+            // vertexes 배열은 [lng1, lat1, lng2, lat2, ...] 형식으로 구성됨
+            for (k in 0 until vertexes.length() step 2) {
+              val lng = vertexes.getDouble(k)
+              val lat = vertexes.getDouble(k + 1)
+              points.add(LatLng.from(lat, lng))
+            }
+          }
+        }
+
+        // 경로 데이터가 존재하면 지도에 그리기
+        runOnUiThread {
+          if (points.isNotEmpty()) {
+            // 경로 스타일 설정
+            val routeLineStyle = RouteLineStyle.from(10f, Color.BLUE)
+            val segment = RouteLineSegment.from(points).setStyles(routeLineStyle)
+
+            // RouteLineOptions 생성
+            val routeLineOptions = RouteLineOptions.from(listOf(segment))
+            val layer = kakaoMap.getRouteLineManager()?.getLayer()
+
+            // 경로 추가
+            layer?.addRouteLine(routeLineOptions)
+
+            // 경로가 잘 보이도록 카메라 이동
+            moveToFitRoute(points.toTypedArray())  // 경로 전체를 화면에 맞춤
+          } else {
+            Log.e("RouteLine", "Not enough points to draw a route")
+          }
+        }
       }
-    })
+    }
+
+    // 경유지가 없으면 GET 요청, 경유지가 있으면 POST 요청 처리
+    if (waypoints.isEmpty()) {
+      // GET 방식 처리
+      val url = "https://apis-navi.kakaomobility.com/v1/directions?origin=$startLongitude,$startLatitude&destination=$endLongitude,$endLatitude&priority=RECOMMEND&roadDetails=false&vehicleType=2"
+
+      val request = Request.Builder()
+        .url(url)
+        .addHeader("Authorization", "KakaoAK 06458f1a2d01e02bb731d2a37cfa6c85")
+        .build()
+
+      client.newCall(request).enqueue(object : okhttp3.Callback {
+        override fun onFailure(call: okhttp3.Call, e: IOException) {
+          runOnUiThread {
+            Log.e("RouteLine", "Failed to get route: ${e.message}")
+            // 사용자에게 실패 메시지 표시
+          }
+        }
+
+        override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+          if (response.isSuccessful) {
+            handleResponse(response)
+          } else {
+            // 추가 로그를 통해 응답 상태 코드 및 오류 메시지 출력
+            Log.e("RouteLine", "Request failed with response code: ${response.code}, message: ${response.body?.string()}")
+          }
+        }
+
+      })
+    } else {
+      // POST 방식 처리
+      val jsonBody = JSONObject().apply {
+        put("origin", JSONObject().apply {
+          put("x", startLongitude)
+          put("y", startLatitude)
+        })
+        put("destination", JSONObject().apply {
+          put("x", endLongitude)
+          put("y", endLatitude)
+        })
+        put("priority", "RECOMMEND")
+        put("roadDetails", false)
+        put("vehicleType", 2)
+
+        // 경유지 목록을 JSONArray로 변환
+        val waypointArray = JSONArray()
+        waypoints.forEach { waypoint ->
+          val waypointObject = JSONObject().apply {
+            put("name", "Waypoint")  // 경유지 이름. 필요시 다르게 설정 가능
+            put("x", waypoint["longitude"])  // 경유지의 경도
+            put("y", waypoint["latitude"])   // 경유지의 위도
+          }
+          waypointArray.put(waypointObject)
+        }
+        put("waypoints", waypointArray)  // JSONArray로 추가
+      }
+
+      val body = jsonBody.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
+      val request = Request.Builder()
+        .url("https://apis-navi.kakaomobility.com/v1/waypoints/directions")
+        .addHeader("Authorization", "KakaoAK 06458f1a2d01e02bb731d2a37cfa6c85")
+        .post(body)
+        .build()
+
+      client.newCall(request).enqueue(object : okhttp3.Callback {
+        override fun onFailure(call: okhttp3.Call, e: IOException) {
+          Log.e("Waypoint RouteLine", "Failed to get route: ${e.message}")
+        }
+
+        override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+          if (response.isSuccessful) {
+            handleResponse(response)
+          } else {
+            Log.e("Waypoint RouteLine", "Request failed with response code: ${response.code}, message: ${response.body?.string()}")
+          }
+        }
+      })
+    }
   }
 
   fun fetchBicycleRoute(
@@ -582,37 +774,152 @@ class MainActivity : FlutterActivity() {
     startLongitude: Double,
     endLatitude: Double,
     endLongitude: Double,
-    waypoints: List<Map<String, Double>>  // waypoints 추가
+    waypoints: List<Map<String, Double>> = emptyList()  // 경유지 옵션 추가
   ) {
     val client = OkHttpClient()
 
-    val waypointsString = waypoints.joinToString("|") { "${it["longitude"]},${it["latitude"]}" }
-
-    val url = "https://apis-navi.kakaomobility.com/v1/waypoints/directions?origin=${startLongitude},${startLatitude}&waypoints=${waypointsString}&destination=${endLongitude},${endLatitude}&priority=RECOMMEND&roadDetails=false&vehicleType=3"
-
-    val request = Request.Builder()
-      .url(url)
-      .addHeader("Authorization", "KakaoAK 06458f1a2d01e02bb731d2a37cfa6c85")
-      .build()
-
-    client.newCall(request).enqueue(object : okhttp3.Callback {
-      override fun onFailure(call: okhttp3.Call, e: IOException) {
-        runOnUiThread {
-          Log.e("RouteLine", "Failed to get bicycle route: ${e.message}")
-        }
-      }
-
-      override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+    // 경로 응답 처리 함수 (내부 함수로 포함)
+    fun handleResponse(response: Response) {
+      response.use {
         if (!response.isSuccessful) {
-          Log.e("RouteLine", "Failed to get bicycle route: ${response.message}")
+          Log.e("RouteLine", "Failed to get route: ${response.message}")
           return
         }
 
         val responseData = response.body?.string()
         Log.d("RouteLine", "Response Data: $responseData")
-        // (생략된 동일한 처리 로직)
+
+        // JSON 응답 파싱
+        val jsonResponse = JSONObject(responseData)
+        val routes = jsonResponse.optJSONArray("routes")
+        if (routes == null || routes.length() == 0) {
+          Log.e("RouteLine", "No routes found in the response")
+          return
+        }
+
+        // 첫 번째 route에서 sections를 추출
+        val sections = routes.getJSONObject(0).optJSONArray("sections")
+        val points = mutableListOf<LatLng>()
+
+        // sections의 각 도로 정보를 반복하며 vertexes 추출
+        for (i in 0 until sections.length()) {
+          val section = sections.getJSONObject(i)
+          val roads = section.getJSONArray("roads")
+
+          // roads의 각 도로에서 vertexes 추출
+          for (j in 0 until roads.length()) {
+            val road = roads.getJSONObject(j)
+            val vertexes = road.getJSONArray("vertexes")
+
+            // vertexes 배열은 [lng1, lat1, lng2, lat2, ...] 형식으로 구성됨
+            for (k in 0 until vertexes.length() step 2) {
+              val lng = vertexes.getDouble(k)
+              val lat = vertexes.getDouble(k + 1)
+              points.add(LatLng.from(lat, lng))
+            }
+          }
+        }
+
+        // 경로 데이터가 존재하면 지도에 그리기
+        runOnUiThread {
+          if (points.isNotEmpty()) {
+            // 경로 스타일 설정
+            val routeLineStyle = RouteLineStyle.from(10f, Color.BLUE)
+            val segment = RouteLineSegment.from(points).setStyles(routeLineStyle)
+
+            // RouteLineOptions 생성
+            val routeLineOptions = RouteLineOptions.from(listOf(segment))
+            val layer = kakaoMap.getRouteLineManager()?.getLayer()
+
+            // 경로 추가
+            layer?.addRouteLine(routeLineOptions)
+
+            // 경로가 잘 보이도록 카메라 이동
+            moveToFitRoute(points.toTypedArray())  // 경로 전체를 화면에 맞춤
+          } else {
+            Log.e("RouteLine", "Not enough points to draw a route")
+          }
+        }
       }
-    })
+    }
+
+    // 경유지가 없으면 GET 요청, 경유지가 있으면 POST 요청 처리
+    if (waypoints.isEmpty()) {
+      // GET 방식 처리
+      val url = "https://apis-navi.kakaomobility.com/v1/directions?origin=$startLongitude,$startLatitude&destination=$endLongitude,$endLatitude&priority=RECOMMEND&roadDetails=false&vehicleType=3"
+
+      val request = Request.Builder()
+        .url(url)
+        .addHeader("Authorization", "KakaoAK 06458f1a2d01e02bb731d2a37cfa6c85")
+        .build()
+
+      client.newCall(request).enqueue(object : okhttp3.Callback {
+        override fun onFailure(call: okhttp3.Call, e: IOException) {
+          runOnUiThread {
+            Log.e("RouteLine", "Failed to get route: ${e.message}")
+            // 사용자에게 실패 메시지 표시
+          }
+        }
+
+        override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+          if (response.isSuccessful) {
+            handleResponse(response)
+          } else {
+            // 추가 로그를 통해 응답 상태 코드 및 오류 메시지 출력
+            Log.e("RouteLine", "Request failed with response code: ${response.code}, message: ${response.body?.string()}")
+          }
+        }
+
+      })
+    } else {
+      // POST 방식 처리
+      val jsonBody = JSONObject().apply {
+        put("origin", JSONObject().apply {
+          put("x", startLongitude)
+          put("y", startLatitude)
+        })
+        put("destination", JSONObject().apply {
+          put("x", endLongitude)
+          put("y", endLatitude)
+        })
+        put("priority", "RECOMMEND")
+        put("roadDetails", false)
+        put("vehicleType", 3)
+
+        // 경유지 목록을 JSONArray로 변환
+        val waypointArray = JSONArray()
+        waypoints.forEach { waypoint ->
+          val waypointObject = JSONObject().apply {
+            put("name", "Waypoint")  // 경유지 이름. 필요시 다르게 설정 가능
+            put("x", waypoint["longitude"])  // 경유지의 경도
+            put("y", waypoint["latitude"])   // 경유지의 위도
+          }
+          waypointArray.put(waypointObject)
+        }
+        put("waypoints", waypointArray)  // JSONArray로 추가
+      }
+
+      val body = jsonBody.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
+      val request = Request.Builder()
+        .url("https://apis-navi.kakaomobility.com/v1/waypoints/directions")
+        .addHeader("Authorization", "KakaoAK 06458f1a2d01e02bb731d2a37cfa6c85")
+        .post(body)
+        .build()
+
+      client.newCall(request).enqueue(object : okhttp3.Callback {
+        override fun onFailure(call: okhttp3.Call, e: IOException) {
+          Log.e("Waypoint RouteLine", "Failed to get route: ${e.message}")
+        }
+
+        override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+          if (response.isSuccessful) {
+            handleResponse(response)
+          } else {
+            Log.e("Waypoint RouteLine", "Request failed with response code: ${response.code}, message: ${response.body?.string()}")
+          }
+        }
+      })
+    }
   }
 
   fun addWaypointLabel(latitude: Double, longitude: Double) {
@@ -643,31 +950,24 @@ class MainActivity : FlutterActivity() {
       val startLatLng = LatLng.from(startLat, startLng)
       val endLatLng = LatLng.from(endLat, endLng)
 
-      // 경유지 좌표를 LatLng 리스트로 변환
       val waypointLatLngs = waypoints.map { LatLng.from(it["latitude"]!!, it["longitude"]!!) }
+      Log.d("RouteLine", "Waypoints: $waypointLatLngs")  // 경유지 좌표 확인
 
-      // 모든 경로 좌표를 하나의 리스트에 담음 (출발지 -> 경유지들 -> 도착지)
       val allPoints = mutableListOf(startLatLng).apply {
         addAll(waypointLatLngs)
         add(endLatLng)
       }
 
-      // 경로 스타일 설정
-      val routeLineStyle = RouteLineStyle.from(16f, Color.BLUE)
+      Log.d("RouteLine", "All route points: $allPoints")  // 모든 경로 좌표 확인
 
-      // RouteLineSegment 생성
+      val routeLineStyle = RouteLineStyle.from(16f, Color.BLUE)
       val segment = RouteLineSegment.from(allPoints).setStyles(routeLineStyle)
 
-      // RouteLineOptions 생성
       val routeLineOptions = RouteLineOptions.from(listOf(segment))
-
-      // RouteLineLayer 가져오기
       val layer = kakaoMap.getRouteLineManager()?.getLayer()
-
-      // RouteLine 추가
       layer?.addRouteLine(routeLineOptions)
 
-      Log.d("KakaoMap", "Route line with waypoints added from $startLat, $startLng to $endLat, $endLng")
+      Log.d("RouteLine", "Route line with waypoints drawn successfully")
     } else {
       Log.e("KakaoMap", "Map is not ready to draw route line")
     }
@@ -677,8 +977,10 @@ class MainActivity : FlutterActivity() {
   // 경로 전체를 화면에 맞추기 위한 카메라 이동 함수
   private fun moveToFitRoute(points: Array<LatLng>) {
     if (isMapReady) {
-      val cameraUpdate = CameraUpdateFactory.fitMapPoints(points)  // 경로 좌표 배열을 사용하여 카메라 업데이트
+      val cameraUpdate = CameraUpdateFactory.fitMapPoints(points)
       kakaoMap.moveCamera(cameraUpdate)
+
+      Log.d("KakaoMap", "Camera moved to fit route: $points")  // 카메라 이동 확인
     } else {
       Log.e("KakaoMap", "KakaoMap is not initialized")
     }

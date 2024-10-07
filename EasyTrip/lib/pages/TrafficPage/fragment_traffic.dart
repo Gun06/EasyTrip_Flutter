@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../activity_main.dart';
 import 'activity_bike.dart';
-import 'activity_bus.dart';
 import 'activity_car.dart';
 import 'activity_walk.dart';
 
@@ -13,8 +12,8 @@ class TrafficFragment extends StatefulWidget {
 }
 
 class _TrafficFragmentState extends State<TrafficFragment> {
-  int selectedIndex = 1;
-  final PageController _pageController = PageController(initialPage: 1);
+  int selectedIndex = 0;
+  final PageController _pageController = PageController(initialPage: 0);
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _endController = TextEditingController();
   final FocusNode _startFocusNode = FocusNode();
@@ -148,14 +147,22 @@ class _TrafficFragmentState extends State<TrafficFragment> {
   }
 
   void drawRouteWithWaypoints(double startLat, double startLng, double endLat, double endLng, List<Map<String, double>> waypoints) {
+    // 경유지 포함하여 POST 방식으로 경로 요청
     MethodChannel('com.example.easytrip/map').invokeMethod('drawRouteWithWaypoints', {
       'startLatitude': startLat,
       'startLongitude': startLng,
       'endLatitude': endLat,
       'endLongitude': endLng,
-      'waypoints': waypoints,
+      'waypoints': waypoints,  // POST 방식으로 경유지 전달
+    }).then((_) {
+      // 경로 그리기 완료 후 상태 업데이트
+      print("경로 계산 및 그리기 완료: 출발지($startLat, $startLng), 도착지($endLat, $endLng), 경유지($waypoints)");
+      setState(() {});
+    }).catchError((error) {
+      print("경로 그리기 중 오류 발생: $error");
     });
   }
+
 
 
   void _swapLocations() {
@@ -231,12 +238,9 @@ class _TrafficFragmentState extends State<TrafficFragment> {
           methodToCall = 'getCarRoute';
           break;
         case 1:
-          methodToCall = 'getBusRoute';
-          break;
-        case 2:
           methodToCall = 'getWalkingRoute';
           break;
-        case 3:
+        case 2:
           methodToCall = 'getBicycleRoute';
           break;
         default:
@@ -286,6 +290,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                 'waypoints': waypointCoords,
               }).then((_) {
                 // 경로 그리기 완료 후 상태 업데이트
+                print("Start: $startLat, $startLng, End: $endLat, $endLng, Waypoints: $waypointCoords");
                 setState(() {});
               }).catchError((error) {
                 print("Error drawing route line: $error");
@@ -331,9 +336,8 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           _buildTransportButton(Icons.directions_car, 0),
-                          _buildTransportButton(Icons.directions_bus, 1),
-                          _buildTransportButton(Icons.directions_walk, 2),
-                          _buildTransportButton(Icons.directions_bike, 3),
+                          _buildTransportButton(Icons.directions_walk, 1),
+                          _buildTransportButton(Icons.directions_bike, 2),
                         ],
                       ),
                     ),
@@ -444,7 +448,6 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                   startPoint: _startPoint,
                   endPoint: _endPoint,
                 ),
-                BusPage(),
                 WalkPage(
                   refreshData: () async {},
                   startPoint: _startPoint,

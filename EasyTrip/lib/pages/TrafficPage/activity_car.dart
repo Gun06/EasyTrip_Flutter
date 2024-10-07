@@ -12,15 +12,20 @@ class CarPage extends StatefulWidget {
   final Future<void> Function() refreshData;
   final MapPoint? startPoint;
   final MapPoint? endPoint;
+  final List<MapPoint> waypoints; // 경유지를 받는 파라미터 추가
 
-  CarPage({required this.refreshData, required this.startPoint, required this.endPoint});
+  CarPage({
+    required this.refreshData,
+    required this.startPoint,
+    required this.endPoint,
+    this.waypoints = const [], // 기본값으로 빈 리스트를 설정
+  });
 
   @override
   _CarPageState createState() => _CarPageState();
 }
 
 class _CarPageState extends State<CarPage> {
-
   @override
   void dispose() {
     MethodChannel('com.example.easytrip/map').invokeMethod('removeMapView');
@@ -31,13 +36,22 @@ class _CarPageState extends State<CarPage> {
   void initState() {
     super.initState();
     if (widget.startPoint != null && widget.endPoint != null) {
-      _drawRoute(widget.startPoint!, widget.endPoint!);
+      _drawRoute(widget.startPoint!, widget.endPoint!, widget.waypoints);
     }
   }
 
-  Future<void> _drawRoute(MapPoint start, MapPoint end) async {
+  Future<void> _drawRoute(MapPoint start, MapPoint end, List<MapPoint> waypoints) async {
     final String apiKey = "06458f1a2d01e02bb731d2a37cfa6c85";
-    final String url = "https://apis-navi.kakaomobility.com/v1/directions?origin=${start.longitude},${start.latitude}&destination=${end.longitude},${end.latitude}&waypoints=&priority=RECOMMENDED&road_details=false";
+
+    // 경유지 문자열 생성
+    String waypointsString = waypoints.isNotEmpty
+        ? waypoints.map((point) => "${point.longitude},${point.latitude}").join("|")
+        : "";
+
+    // URL 구성 (경유지가 있으면 포함)
+    final String url = waypointsString.isNotEmpty
+        ? "https://apis-navi.kakaomobility.com/v1/waypoints/directions?origin=${start.longitude},${start.latitude}&waypoints=$waypointsString&destination=${end.longitude},${end.latitude}&priority=RECOMMENDED&road_details=false"
+        : "https://apis-navi.kakaomobility.com/v1/directions?origin=${start.longitude},${start.latitude}&destination=${end.longitude},${end.latitude}&priority=RECOMMENDED&road_details=false";
 
     final response = await HttpClient().getUrl(Uri.parse(url))
         .then((request) {
@@ -52,11 +66,11 @@ class _CarPageState extends State<CarPage> {
 
     for (var section in jsonResponse['routes'][0]['sections']) {
       for (var road in section['roads']) {
-        for (var vertex in road['vertexes']) {
-          routePoints.add(MapPoint(
-            latitude: vertex['location']['y'],
-            longitude: vertex['location']['x'],
-          ));
+        for (int i = 0; i < road['vertexes'].length; i += 2) {
+          // vertexes 배열에서 경로 좌표 추출
+          double lng = road['vertexes'][i];
+          double lat = road['vertexes'][i + 1];
+          routePoints.add(MapPoint(latitude: lat, longitude: lng));
         }
       }
     }
@@ -67,7 +81,6 @@ class _CarPageState extends State<CarPage> {
       });
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -95,6 +108,11 @@ class _CarPageState extends State<CarPage> {
                 'startLongitude': widget.startPoint?.longitude,
                 'endLatitude': widget.endPoint?.latitude,
                 'endLongitude': widget.endPoint?.longitude,
+                // waypoints 추가
+                'waypoints': widget.waypoints.map((point) => {
+                  'latitude': point.latitude,
+                  'longitude': point.longitude,
+                }).toList(),
               },
               creationParamsCodec: const StandardMessageCodec(),
             )
