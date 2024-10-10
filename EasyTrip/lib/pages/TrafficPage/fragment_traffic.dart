@@ -19,9 +19,8 @@ class _TrafficFragmentState extends State<TrafficFragment> {
   final FocusNode _startFocusNode = FocusNode();
   final FocusNode _endFocusNode = FocusNode();
 
-  // 동적으로 높이를 변경하기 위한 초기값 설정
-  double _scrollHeight = 120; // 기본 높이 설정
-  bool _isHeightIncreased = false; // 높이가 한번만 200으로 증가되도록 제어하는 변수
+  bool _isExpanded = false; // 패널이 펼쳐졌는지 여부
+  double _containerHeight = 140; // 컨테이너 높이 초기값
 
   // 경유지 관련 추가 변수들
   final List<TextEditingController> _waypointControllers = [];
@@ -142,28 +141,12 @@ class _TrafficFragmentState extends State<TrafficFragment> {
     });
   }
 
-  void addWaypoints(List<Map<String, double>> waypoints) {
-    MethodChannel('com.example.easytrip/map').invokeMethod('addWaypoints', waypoints);
-  }
-
-  void drawRouteWithWaypoints(double startLat, double startLng, double endLat, double endLng, List<Map<String, double>> waypoints) {
-    // 경유지 포함하여 POST 방식으로 경로 요청
-    MethodChannel('com.example.easytrip/map').invokeMethod('drawRouteWithWaypoints', {
-      'startLatitude': startLat,
-      'startLongitude': startLng,
-      'endLatitude': endLat,
-      'endLongitude': endLng,
-      'waypoints': waypoints,  // POST 방식으로 경유지 전달
-    }).then((_) {
-      // 경로 그리기 완료 후 상태 업데이트
-      print("경로 계산 및 그리기 완료: 출발지($startLat, $startLng), 도착지($endLat, $endLng), 경유지($waypoints)");
-      setState(() {});
-    }).catchError((error) {
-      print("경로 그리기 중 오류 발생: $error");
+  void _toggleExpanded() {
+    setState(() {
+      _isExpanded = !_isExpanded;
+      _containerHeight = _isExpanded ? 250 : 140; // V 버튼을 누르면 높이를 200으로, 다시 누르면 130으로 변경
     });
   }
-
-
 
   void _swapLocations() {
     setState(() {
@@ -188,12 +171,6 @@ class _TrafficFragmentState extends State<TrafficFragment> {
       _waypointFocusNodes.add(FocusNode());
       _waypoints.add(null);
       _waypointSearchResults.add([]);
-
-      // 경유지가 추가될 때 높이가 200으로 한 번만 증가
-      if (!_isHeightIncreased) {
-        _scrollHeight = 200;
-        _isHeightIncreased = true;
-      }
     });
   }
 
@@ -203,12 +180,6 @@ class _TrafficFragmentState extends State<TrafficFragment> {
       _waypointFocusNodes.removeAt(index);
       _waypoints.removeAt(index);
       _waypointSearchResults.removeAt(index);
-
-      // 경유지가 모두 삭제되면 높이를 다시 120으로 설정
-      if (_waypointControllers.isEmpty) {
-        _scrollHeight = 120;
-        _isHeightIncreased = false;
-      }
     });
   }
 
@@ -304,17 +275,11 @@ class _TrafficFragmentState extends State<TrafficFragment> {
     }
   }
 
-  void _onPageChanged(int index) {
-    setState(() {
-      selectedIndex = index;
-    });
-  }
-
   void _onTransportButtonTapped(int index) {
     setState(() {
       selectedIndex = index;
     });
-    _pageController.jumpToPage(index);
+    _pageController.jumpToPage(index    );
   }
 
   @override
@@ -351,7 +316,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
 
                 // 스크롤이 가능한 출발지, 경유지, 도착지 리스트 영역
                 Container(
-                  height: _scrollHeight,  // 동적으로 변경된 높이를 적용
+                  height: _containerHeight, // 패널 높이를 동적으로 설정
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
@@ -387,10 +352,9 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                             ),
                           ],
                         ),
-                        // 경유지 필드 섹션
                         if (_startSearchResults.isNotEmpty)
                           _buildSearchResults(_startSearchResults, _onStartPlaceTap),
-                        _buildWaypointsSection(),  // 경유지 섹션
+                        _buildWaypointsSection(), // 경유지 섹션
                         SizedBox(height: 8),
                         // 도착지 필드
                         Row(
@@ -424,15 +388,21 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                             ),
                           ],
                         ),
+                        if (_endSearchResults.isNotEmpty)
+                          _buildSearchResults(_endSearchResults, _onEndPlaceTap),
                       ],
                     ),
                   ),
                 ),
 
-                if (_startSearchResults.isNotEmpty)
-                  _buildSearchResults(_startSearchResults, _onStartPlaceTap),
-                if (_endSearchResults.isNotEmpty)
-                  _buildSearchResults(_endSearchResults, _onEndPlaceTap),
+                // 펼쳐보기 아이콘 (V 모양)
+                IconButton(
+                  icon: Icon(
+                    _isExpanded ? Icons.expand_less : Icons.expand_more,
+                    color: Colors.white,
+                  ),
+                  onPressed: _toggleExpanded,
+                ),
               ],
             ),
           ),
@@ -440,7 +410,11 @@ class _TrafficFragmentState extends State<TrafficFragment> {
           Expanded(
             child: PageView(
               controller: _pageController,
-              onPageChanged: _onPageChanged,
+              onPageChanged: (index) {
+                setState(() {
+                  selectedIndex = index;
+                });
+              },
               physics: NeverScrollableScrollPhysics(),
               children: [
                 CarPage(
@@ -495,7 +469,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                                 borderSide: BorderSide(color: Colors.white),
                               ),
                             ),
-                            onChanged: (query) => _searchWaypointLocation(query, i), // 경유지 검색 호출
+                            onChanged: (query) => _searchWaypointLocation(query, i),
                           ),
                           Positioned(
                             right: 8,
@@ -513,8 +487,8 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                     SizedBox(width: 12), // 스왑 버튼과 필드 사이 간격 조절
                   ],
                 ),
-                // 경유지 검색 결과 표시
-                if (_waypointSearchResults[i].isNotEmpty) _buildWaypointSearchResults(i),
+                if (_waypointSearchResults[i].isNotEmpty)
+                  _buildWaypointSearchResults(i),
               ],
             ),
           ),
@@ -522,7 +496,6 @@ class _TrafficFragmentState extends State<TrafficFragment> {
     );
   }
 
-  // 검색 결과 빌드
   Widget _buildSearchResults(List<dynamic> searchResults, Function(dynamic) onTap) {
     return Align(
       alignment: Alignment.centerLeft,
@@ -547,10 +520,8 @@ class _TrafficFragmentState extends State<TrafficFragment> {
   }
 
   Widget _buildWaypointSearchResults(int index) {
-    // 경유지별로 고유한 검색 결과 리스트를 가져옴
     List<dynamic> searchResults = _waypointSearchResults[index];
-
-    if (searchResults.isEmpty) return SizedBox.shrink();  // 검색 결과가 없으면 아무것도 보여주지 않음
+    if (searchResults.isEmpty) return SizedBox.shrink(); // 검색 결과가 없으면 숨김
 
     return Align(
       alignment: Alignment.centerLeft,
@@ -573,7 +544,6 @@ class _TrafficFragmentState extends State<TrafficFragment> {
       ),
     );
   }
-
 
   Widget _buildTransportButton(IconData icon, int index) {
     return Container(
@@ -599,3 +569,4 @@ class MapPoint {
 
   MapPoint({required this.latitude, required this.longitude});
 }
+
