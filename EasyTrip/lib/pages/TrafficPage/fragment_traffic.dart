@@ -14,274 +14,198 @@ class TrafficFragment extends StatefulWidget {
 class _TrafficFragmentState extends State<TrafficFragment> {
   int selectedIndex = 0;
   final PageController _pageController = PageController(initialPage: 0);
-  final TextEditingController _startController = TextEditingController();
-  final TextEditingController _endController = TextEditingController();
-  final FocusNode _startFocusNode = FocusNode();
-  final FocusNode _endFocusNode = FocusNode();
 
   bool _isExpanded = false; // 패널이 펼쳐졌는지 여부
   double _containerHeight = 140; // 컨테이너 높이 초기값
 
-  // 경유지 관련 추가 변수들
-  final List<TextEditingController> _waypointControllers = [];
-  final List<FocusNode> _waypointFocusNodes = [];
-  List<MapPoint?> _waypoints = [];
-  List<List<dynamic>> _waypointSearchResults = [];
-
-  List<dynamic> _startSearchResults = [];
-  List<dynamic> _endSearchResults = [];
-  MapPoint? _startPoint;
-  MapPoint? _endPoint;
+  // 위치 관련 변수들
+  List<LocationItem> _locations = []; // 위치 아이템 리스트 (출발지, 경유지, 도착지 포함)
+  List<List<dynamic>> _searchResults = []; // 각 위치 아이템의 검색 결과 리스트
 
   @override
   void initState() {
     super.initState();
-    _startFocusNode.addListener(_onStartFocusChange);
-    _endFocusNode.addListener(_onEndFocusChange);
+    // 초기에는 출발지와 도착지 필드를 추가합니다.
+    _addLocationItem(isStart: true);
+    _addLocationItem(isEnd: true);
   }
 
-  @override
-  void dispose() {
-    _startFocusNode.removeListener(_onStartFocusChange);
-    _endFocusNode.removeListener(_onEndFocusChange);
-    _startFocusNode.dispose();
-    _endFocusNode.dispose();
-    super.dispose();
+  // 위치 아이템 추가 함수
+  void _addLocationItem({bool isStart = false, bool isEnd = false}) {
+    final controller = TextEditingController();
+    final focusNode = FocusNode();
+    focusNode.addListener(() => _onFocusChange(focusNode));
+
+    setState(() {
+      _locations.insert(
+        isEnd ? _locations.length : (_locations.isNotEmpty ? _locations.length - 1 : 0),
+        LocationItem(
+          controller: controller,
+          focusNode: focusNode,
+          isStart: isStart,
+          isEnd: isEnd,
+        ),
+      );
+      _searchResults.add([]);
+    });
   }
 
-  void _onStartFocusChange() {
-    if (_startFocusNode.hasFocus) {
-      setState(() {
-        _endSearchResults.clear();
-      });
-    }
+  // 위치 아이템 제거 함수
+  void _removeLocationItem(int index) {
+    setState(() {
+      _locations[index].focusNode.dispose();
+      _locations.removeAt(index);
+      _searchResults.removeAt(index);
+
+      // 위치에 따른 아이콘 업데이트
+      for (int i = 0; i < _locations.length; i++) {
+        _locations[i].isStart = i == 0;
+        _locations[i].isEnd = i == _locations.length - 1;
+      }
+    });
   }
 
-  void _onEndFocusChange() {
-    if (_endFocusNode.hasFocus) {
-      setState(() {
-        _startSearchResults.clear();
-      });
-    }
+  // 포커스 변경 시 호출되는 함수
+  void _onFocusChange(FocusNode focusNode) {
+    setState(() {
+      // 모든 검색 결과를 초기화합니다.
+      _searchResults = List.generate(_locations.length, (_) => []);
+    });
   }
 
-  void _searchStartLocation(String query) async {
+  // 위치 검색 함수
+  void _searchLocation(String query, int index) async {
     try {
       final String result = await MethodChannel('com.example.easytrip/search')
           .invokeMethod('search', query);
       final data = jsonDecode(result);
       setState(() {
-        _startSearchResults = data['documents'];
+        _searchResults[index] = data['documents'];
       });
     } on PlatformException catch (e) {
       print('Failed to search: ${e.message}');
     }
   }
 
-  void _searchEndLocation(String query) async {
-    try {
-      final String result = await MethodChannel('com.example.easytrip/search')
-          .invokeMethod('search', query);
-      final data = jsonDecode(result);
-      setState(() {
-        _endSearchResults = data['documents'];
-      });
-    } on PlatformException catch (e) {
-      print('Failed to search: ${e.message}');
-    }
-  }
-
-  void _searchWaypointLocation(String query, int index) async {
-    try {
-      final String result = await MethodChannel('com.example.easytrip/search')
-          .invokeMethod('search', query);
-      final data = jsonDecode(result);
-      setState(() {
-        _waypointSearchResults[index] = data['documents'];
-      });
-    } on PlatformException catch (e) {
-      print('Failed to search: ${e.message}');
-    }
-  }
-
-  void _onStartPlaceTap(dynamic place) {
-    _startController.text = place['place_name'];
+  // 장소 선택 시 호출되는 함수
+  void _onPlaceTap(dynamic place, int index) {
+    _locations[index].controller.text = place['place_name'];
     setState(() {
-      _startPoint = MapPoint(
+      _locations[index].point = MapPoint(
         latitude: double.parse(place['y']),
         longitude: double.parse(place['x']),
       );
-      _startSearchResults.clear();
-    });
-
-    print('출발지 선택: ${_startPoint!.latitude}, ${_startPoint!.longitude}');
-  }
-
-  void _onEndPlaceTap(dynamic place) {
-    _endController.text = place['place_name'];
-    setState(() {
-      _endPoint = MapPoint(
-        latitude: double.parse(place['y']),
-        longitude: double.parse(place['x']),
-      );
-      _endSearchResults.clear();
-    });
-
-    print('도착지 선택: ${_endPoint!.latitude}, ${_endPoint!.longitude}');
-  }
-
-  void _onWaypointPlaceTap(dynamic place, int index) {
-    _waypointControllers[index].text = place['place_name'];
-    setState(() {
-      _waypoints[index] = MapPoint(
-        latitude: double.parse(place['y']),
-        longitude: double.parse(place['x']),
-      );
-      _waypointSearchResults[index].clear();
+      _searchResults[index].clear();
     });
   }
 
-  void _toggleExpanded() {
-    setState(() {
-      _isExpanded = !_isExpanded;
-      _containerHeight = _isExpanded ? 250 : 140; // V 버튼을 누르면 높이를 200으로, 다시 누르면 130으로 변경
-    });
-  }
-
-  void _swapLocations() {
-    setState(() {
-      String tempText = _startController.text;
-      _startController.text = _endController.text;
-      _endController.text = tempText;
-
-      MapPoint? tempPoint = _startPoint;
-      _startPoint = _endPoint;
-      _endPoint = tempPoint;
-
-      print("Swapped: 출발지 -> ${_startPoint?.latitude}, ${_startPoint?.longitude}, 도착지 -> ${_endPoint?.latitude}, ${_endPoint?.longitude}");
-
-      MethodChannel('com.example.easytrip/map').invokeMethod('removeLabel');
-      _showRoute();
-    });
-  }
-
-  void _addWaypoint() {
-    setState(() {
-      _waypointControllers.add(TextEditingController());
-      _waypointFocusNodes.add(FocusNode());
-      _waypoints.add(null);
-      _waypointSearchResults.add([]);
-    });
-  }
-
-  void _removeWaypoint(int index) {
-    setState(() {
-      _waypointControllers.removeAt(index);
-      _waypointFocusNodes.removeAt(index);
-      _waypoints.removeAt(index);
-      _waypointSearchResults.removeAt(index);
-    });
-  }
-
-  // drawRouteLine 호출 부분 수정
+  // 경로 표시 함수
   void _showRoute() {
-    if (_startPoint != null && _endPoint != null) {
-      double startLat = _startPoint!.latitude;
-      double startLng = _startPoint!.longitude;
-      double endLat = _endPoint!.latitude;
-      double endLng = _endPoint!.longitude;
-
-      // 경유지 리스트를 구성
-      List<Map<String, dynamic>> waypointCoords = [];
-      for (var waypoint in _waypoints) {
-        if (waypoint != null) {
-          waypointCoords.add({
-            'latitude': waypoint.latitude,
-            'longitude': waypoint.longitude,
-          });
-        }
-      }
-
-      // 선택된 교통수단에 맞는 메소드 설정
-      String methodToCall;
-      switch (selectedIndex) {
-        case 0:
-          methodToCall = 'getCarRoute';
-          break;
-        case 1:
-          methodToCall = 'getWalkingRoute';
-          break;
-        case 2:
-          methodToCall = 'getBicycleRoute';
-          break;
-        default:
-          methodToCall = 'drawRouteLine';
-      }
-
-      // Start point 설정
-      MethodChannel('com.example.easytrip/map').invokeMethod('moveToLocation', {
-        'latitude': startLat,
-        'longitude': startLng,
-        'isStartPoint': true,
-      }).then((_) {
-        // 출발지 라벨 추가
-        MethodChannel('com.example.easytrip/map').invokeMethod('addLabel', {
-          'latitude': startLat,
-          'longitude': startLng,
-          'isStartPoint': true,
-        }).then((_) {
-          // End point 설정 및 라벨 추가
-          MethodChannel('com.example.easytrip/map').invokeMethod('moveToLocation', {
-            'latitude': endLat,
-            'longitude': endLng,
-            'isStartPoint': false,
-          }).then((_) {
-            // 도착지 라벨 추가
-            MethodChannel('com.example.easytrip/map').invokeMethod('addLabel', {
-              'latitude': endLat,
-              'longitude': endLng,
-              'isStartPoint': false,
-            }).then((_) {
-              // 경유지 라벨 추가
-              for (int i = 0; i < waypointCoords.length; i++) {
-                final waypoint = waypointCoords[i];
-                MethodChannel('com.example.easytrip/map').invokeMethod('addLabel', {
-                  'latitude': waypoint['latitude'],
-                  'longitude': waypoint['longitude'],
-                  'isWaypoint': true,  // 경유지임을 표시
-                });
-              }
-
-              // 경유지 포함한 경로 계산
-              MethodChannel('com.example.easytrip/map').invokeMethod(methodToCall, {
-                'startLatitude': startLat,
-                'startLongitude': startLng,
-                'endLatitude': endLat,
-                'endLongitude': endLng,
-                'waypoints': waypointCoords,
-              }).then((_) {
-                // 경로 그리기 완료 후 상태 업데이트
-                print("Start: $startLat, $startLng, End: $endLat, $endLng, Waypoints: $waypointCoords");
-                setState(() {});
-              }).catchError((error) {
-                print("Error drawing route line: $error");
-              });
-            });
-          });
-        });
-      });
-    } else {
-      print("Start or end location is not selected.");
+    if (_locations.isEmpty || _locations.length < 2) {
+      print("출발지와 도착지를 설정해주세요.");
+      return;
     }
+
+    final startPoint = _locations.first.point;
+    final endPoint = _locations.last.point;
+
+    if (startPoint == null || endPoint == null) {
+      print("출발지와 도착지를 선택해주세요.");
+      return;
+    }
+
+    final waypoints = _locations.sublist(1, _locations.length - 1).where((loc) => loc.point != null).map((loc) {
+      return {
+        'latitude': loc.point!.latitude,
+        'longitude': loc.point!.longitude,
+      };
+    }).toList();
+
+    // 교통수단에 따른 메소드 설정
+    String methodToCall;
+    switch (selectedIndex) {
+      case 0:
+        methodToCall = 'getCarRoute';
+        break;
+      case 1:
+        methodToCall = 'getWalkingRoute';
+        break;
+      case 2:
+        methodToCall = 'getBicycleRoute';
+        break;
+      default:
+        methodToCall = 'drawRouteLine';
+    }
+
+    // 지도에 경로 표시
+    MethodChannel('com.example.easytrip/map').invokeMethod('removeLabel');
+    MethodChannel('com.example.easytrip/map').invokeMethod(methodToCall, {
+      'startLatitude': startPoint.latitude,
+      'startLongitude': startPoint.longitude,
+      'endLatitude': endPoint.latitude,
+      'endLongitude': endPoint.longitude,
+      'waypoints': waypoints,
+    }).then((_) {
+      // 라벨 추가
+      MethodChannel('com.example.easytrip/map').invokeMethod('addLabel', {
+        'latitude': startPoint.latitude,
+        'longitude': startPoint.longitude,
+        'isStartPoint': true,
+      });
+      MethodChannel('com.example.easytrip/map').invokeMethod('addLabel', {
+        'latitude': endPoint.latitude,
+        'longitude': endPoint.longitude,
+        'isStartPoint': false,
+      });
+      for (var waypoint in waypoints) {
+        MethodChannel('com.example.easytrip/map').invokeMethod('addLabel', {
+          'latitude': waypoint['latitude'],
+          'longitude': waypoint['longitude'],
+          'isWaypoint': true,
+        });
+      }
+    }).catchError((error) {
+      print("Error drawing route line: $error");
+    });
   }
 
+  // 드래그 앤 드롭 시 호출되는 함수
+  void _onReorder(int oldIndex, int newIndex) {
+    setState(() {
+      if (oldIndex < newIndex) {
+        newIndex -= 1;
+      }
+      final item = _locations.removeAt(oldIndex);
+      _locations.insert(newIndex, item);
+
+      final result = _searchResults.removeAt(oldIndex);
+      _searchResults.insert(newIndex, result);
+
+      // 위치에 따른 아이콘 업데이트
+      for (int i = 0; i < _locations.length; i++) {
+        _locations[i].isStart = i == 0;
+        _locations[i].isEnd = i == _locations.length - 1;
+      }
+    });
+  }
+
+  // 교통수단 선택 함수
   void _onTransportButtonTapped(int index) {
     setState(() {
       selectedIndex = index;
     });
-    _pageController.jumpToPage(index    );
+    _pageController.jumpToPage(index);
   }
 
+  // 패널 확장/축소 토글 함수
+  void _toggleExpanded() {
+    setState(() {
+      _isExpanded = !_isExpanded;
+      _containerHeight = _isExpanded ? 400 : 140;
+    });
+  }
+
+  // 위젯 빌드 함수
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -290,9 +214,10 @@ class _TrafficFragmentState extends State<TrafficFragment> {
         children: [
           Container(
             color: Color(0xFF4285F4),
-            padding: EdgeInsets.only(top: 50, left: 16, right: 5, bottom: 20),
+            padding: EdgeInsets.only(top: 50, left: 16, right: 5, bottom: 5),
             child: Column(
               children: [
+                // 교통수단 선택 및 경로 표시 버튼
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -314,88 +239,28 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                 ),
                 SizedBox(height: 16),
 
-                // 스크롤이 가능한 출발지, 경유지, 도착지 리스트 영역
+                // 위치 리스트 영역
                 Container(
-                  height: _containerHeight, // 패널 높이를 동적으로 설정
+                  height: _containerHeight,
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        // 출발지 필드
-                        Row(
+                        ReorderableListView(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          onReorder: _onReorder,
+                          header: SizedBox(height: 5), // 출발지 입력 필드 위에 공간 추가
                           children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _startController,
-                                focusNode: _startFocusNode,
-                                style: TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  labelText: '출발지',
-                                  labelStyle: TextStyle(color: Colors.white),
-                                  filled: true,
-                                  fillColor: Colors.white.withOpacity(0.2),
-                                  border: OutlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.white),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.white),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.white),
-                                  ),
-                                ),
-                                onChanged: _searchStartLocation,
-                              ),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.swap_vert, color: Colors.white),
-                              onPressed: _swapLocations,
-                            ),
+                            for (int index = 0; index < _locations.length; index++)
+                              _buildLocationItem(index),
                           ],
                         ),
-                        if (_startSearchResults.isNotEmpty)
-                          _buildSearchResults(_startSearchResults, _onStartPlaceTap),
-                        _buildWaypointsSection(), // 경유지 섹션
-                        SizedBox(height: 8),
-                        // 도착지 필드
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _endController,
-                                focusNode: _endFocusNode,
-                                style: TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  labelText: '도착지',
-                                  labelStyle: TextStyle(color: Colors.white),
-                                  filled: true,
-                                  fillColor: Colors.white.withOpacity(0.2),
-                                  border: OutlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.white),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.white),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.white),
-                                  ),
-                                ),
-                                onChanged: _searchEndLocation,
-                              ),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.add, color: Colors.white),
-                              onPressed: _addWaypoint,
-                            ),
-                          ],
-                        ),
-                        if (_endSearchResults.isNotEmpty)
-                          _buildSearchResults(_endSearchResults, _onEndPlaceTap),
                       ],
                     ),
                   ),
                 ),
 
-                // 펼쳐보기 아이콘 (V 모양)
+                // 펼쳐보기 아이콘
                 IconButton(
                   icon: Icon(
                     _isExpanded ? Icons.expand_less : Icons.expand_more,
@@ -407,6 +272,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
             ),
           ),
 
+          // 페이지 뷰 영역
           Expanded(
             child: PageView(
               controller: _pageController,
@@ -419,13 +285,13 @@ class _TrafficFragmentState extends State<TrafficFragment> {
               children: [
                 CarPage(
                   refreshData: () async {},
-                  startPoint: _startPoint,
-                  endPoint: _endPoint,
+                  startPoint: _locations.first.point,
+                  endPoint: _locations.last.point,
                 ),
                 WalkPage(
                   refreshData: () async {},
-                  startPoint: _startPoint,
-                  endPoint: _endPoint,
+                  startPoint: _locations.first.point,
+                  endPoint: _locations.last.point,
                 ),
                 BikePage(),
               ],
@@ -436,115 +302,101 @@ class _TrafficFragmentState extends State<TrafficFragment> {
     );
   }
 
-  // 경유지 섹션 빌드
-  Widget _buildWaypointsSection() {
+  // 위치 아이템 빌드 함수
+  Widget _buildLocationItem(int index) {
+    final location = _locations[index];
     return Column(
+      key: ValueKey(location),
       children: [
-        for (int i = 0; i < _waypointControllers.length; i++)
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0), // 필드 간 간격 조정
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Stack(
-                        children: [
-                          TextField(
-                            controller: _waypointControllers[i],
-                            focusNode: _waypointFocusNodes[i],
-                            style: TextStyle(color: Colors.white),
-                            decoration: InputDecoration(
-                              labelText: '경유지',
-                              labelStyle: TextStyle(color: Colors.white),
-                              filled: true,
-                              fillColor: Colors.white.withOpacity(0.2),
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.white),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.white),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.white),
-                              ),
-                            ),
-                            onChanged: (query) => _searchWaypointLocation(query, i),
-                          ),
-                          Positioned(
-                            right: 8,
-                            top: 6,
-                            child: IconButton(
-                              icon: Icon(Icons.remove, color: Colors.white),
-                              onPressed: () => _removeWaypoint(i),
-                            ),
-                          ),
-                        ],
+        Row(
+          children: [
+            Expanded(
+              child: Stack(
+                children: [
+                  TextField(
+                    controller: location.controller,
+                    focusNode: location.focusNode,
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: location.isStart
+                          ? '출발지'
+                          : location.isEnd
+                          ? '도착지'
+                          : '경유지',
+                      labelStyle: TextStyle(color: Colors.white),
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.2),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    ),
+                    onChanged: (query) => _searchLocation(query, index),
+                  ),
+                  // 경유지일 때만 - 버튼을 필드 안에 표시
+                  if (!location.isStart && !location.isEnd)
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: IconButton(
+                        icon: Icon(Icons.remove, color: Colors.white),
+                        onPressed: () => _removeLocationItem(index),
+                        padding: EdgeInsets.only(right: 12),
+                        iconSize: 24,
                       ),
                     ),
-                    SizedBox(width: 12), // 스왑 버튼과 필드 사이 간격 조절
-                    Icon(Icons.swap_vert, color: Colors.white), // 드래그 앤 드롭 버튼
-                    SizedBox(width: 12), // 스왑 버튼과 필드 사이 간격 조절
-                  ],
-                ),
-                if (_waypointSearchResults[i].isNotEmpty)
-                  _buildWaypointSearchResults(i),
-              ],
+                ],
+              ),
             ),
-          ),
+            SizedBox(width: 12),
+            // 아이콘 변경 로직: 모든 아이콘을 IconButton으로 통일
+            IconButton(
+              icon: location.isEnd
+                  ? Icon(Icons.add, color: Colors.white)
+                  : Icon(Icons.swap_vert, color: Colors.white),
+              onPressed: location.isEnd ? () => _addLocationItem() : () {},
+              padding: EdgeInsets.only(right: 12),
+              iconSize: 24,
+            ),
+          ],
+        ),
+        if (_searchResults[index].isNotEmpty) _buildSearchResults(index),
+        SizedBox(height: 8),
       ],
     );
   }
 
-  Widget _buildSearchResults(List<dynamic> searchResults, Function(dynamic) onTap) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        color: Colors.white,
-        height: 180,
-        width: 343,
-        child: ListView.builder(
-          padding: EdgeInsets.only(top: 5),
-          itemCount: searchResults.length,
-          itemBuilder: (context, index) {
-            final place = searchResults[index];
-            return ListTile(
-              title: Text(place['place_name']),
-              subtitle: Text(place['address_name']),
-              onTap: () => onTap(place),
-            );
-          },
-        ),
+  // 검색 결과 빌드 함수
+  Widget _buildSearchResults(int index) {
+    List<dynamic> results = _searchResults[index];
+    if (results.isEmpty) return SizedBox.shrink();
+
+    return Container(
+      color: Colors.white,
+      height: 180,
+      child: ListView.builder(
+        padding: EdgeInsets.only(top: 5),
+        itemCount: results.length,
+        itemBuilder: (context, resultIndex) {
+          final place = results[resultIndex];
+          return ListTile(
+            title: Text(place['place_name']),
+            subtitle: Text(place['address_name']),
+            onTap: () => _onPlaceTap(place, index),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildWaypointSearchResults(int index) {
-    List<dynamic> searchResults = _waypointSearchResults[index];
-    if (searchResults.isEmpty) return SizedBox.shrink(); // 검색 결과가 없으면 숨김
-
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        color: Colors.white,
-        height: 180,
-        width: 343,
-        child: ListView.builder(
-          padding: EdgeInsets.only(top: 5),
-          itemCount: searchResults.length,
-          itemBuilder: (context, resultIndex) {
-            final place = searchResults[resultIndex];
-            return ListTile(
-              title: Text(place['place_name']),
-              subtitle: Text(place['address_name']),
-              onTap: () => _onWaypointPlaceTap(place, index), // 경유지 필드 인덱스에 맞는 선택 처리
-            );
-          },
-        ),
-      ),
-    );
-  }
-
+  // 교통수단 버튼 빌드 함수
   Widget _buildTransportButton(IconData icon, int index) {
     return Container(
       decoration: BoxDecoration(
@@ -563,10 +415,27 @@ class _TrafficFragmentState extends State<TrafficFragment> {
   }
 }
 
+// 위치 아이템 클래스
+class LocationItem {
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  bool isStart;
+  bool isEnd;
+  MapPoint? point;
+
+  LocationItem({
+    required this.controller,
+    required this.focusNode,
+    this.isStart = false,
+    this.isEnd = false,
+    this.point,
+  });
+}
+
+// 지도 좌표 클래스
 class MapPoint {
   final double latitude;
   final double longitude;
 
   MapPoint({required this.latitude, required this.longitude});
 }
-
