@@ -232,6 +232,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
                       ),
                     ),
                     IconButton(
+                      padding: EdgeInsets.only(right: 12),
                       icon: Icon(Icons.play_arrow, color: Colors.white),
                       onPressed: _showRoute,
                     ),
