@@ -1,6 +1,9 @@
+// ScheduleFragment.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'Custom_WeeklyCalendar.dart';
+import 'activity_addschedule.dart'; // 추가
 
 class ScheduleFragment extends StatefulWidget {
   @override
@@ -97,8 +100,41 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
   }
 
   void _addSchedule() {
-    // 일정 추가 로직을 여기에 구현합니다.
-    print('일정 추가 버튼 클릭됨');
+    // 모달이 상단에서 나타나도록 showGeneralDialog 사용
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true, // 배리어를 누르면 닫히도록 설정
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: Colors.black54, // 배경색
+      transitionDuration: Duration(milliseconds: 300),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return SafeArea(
+          child: Align(
+            alignment: Alignment.topCenter, // 상단에서 나타나도록 설정
+            child: Material(
+              color: Colors.white, // 배경을 흰색으로 설정
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                margin: EdgeInsets.only(top: 20), // 상단 여백
+                child: AddSchedulePage(),
+              ),
+            ),
+          ),
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        // 상단에서 아래로 내려오는 애니메이션
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: Offset(0, -1.0),
+            end: Offset(0, 0),
+          ).animate(animation),
+          child: child,
+        );
+      },
+    );
   }
 
   @override
@@ -112,7 +148,7 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: true, // back 버튼 표시
-        centerTitle: true, // 이 속성으로 제목을 가운데로 정렬
+        centerTitle: true, // 제목을 가운데로 정렬
         title: Text(
           'Schedule',
           style: TextStyle(
@@ -123,7 +159,7 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
         ),
         leading: IconButton(
           icon: Icon(Icons.add, color: Colors.black),
-          onPressed: _addSchedule,
+          onPressed: _addSchedule, // 수정된 부분: 일정 추가 함수 호출
         ),
         actions: [
           IconButton(
@@ -234,7 +270,14 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
   }
 
   Widget _buildRecommendedItem(
-      BuildContext context, String date, String title, String location, String imageUrl, Animation<double> animation, bool isExpanded, int index) {
+      BuildContext context,
+      String date,
+      String title,
+      String location,
+      String imageUrl,
+      Animation<double> animation,
+      bool isExpanded,
+      int index) {
     return SizeTransition(
       sizeFactor: animation,
       child: GestureDetector(
@@ -268,7 +311,8 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.calendar_today, size: 14, color: Colors.grey),
+                              Icon(Icons.calendar_today,
+                                  size: 14, color: Colors.grey),
                               SizedBox(width: 4),
                               Text(
                                 date,
