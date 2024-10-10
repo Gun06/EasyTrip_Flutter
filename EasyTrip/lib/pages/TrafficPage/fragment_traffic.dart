@@ -201,7 +201,7 @@ class _TrafficFragmentState extends State<TrafficFragment> {
   void _toggleExpanded() {
     setState(() {
       _isExpanded = !_isExpanded;
-      _containerHeight = _isExpanded ? 400 : 140;
+      _containerHeight = _isExpanded ? 350 : 140;
     });
   }
 
