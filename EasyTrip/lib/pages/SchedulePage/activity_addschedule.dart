@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'activity_DdayBottomSheet.dart';
 
 class AddSchedulePage extends StatefulWidget {
   @override
@@ -29,9 +30,9 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
       return;
     }
 
-    _showLoadingDialog(context); // 로딩 화면 표시
+    _showLoadingDialog(context);
 
-    // 로딩이 끝난 후 실행될 코드 (로딩 화면 숨기기)
+    // 로딩 후 추가된 일정 및 BottomSheet 표시
     Future.delayed(Duration(seconds: 2), () {
       Navigator.of(context).pop(); // 로딩 화면 닫기
 
@@ -45,12 +46,23 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
 
       Navigator.of(context).pop(); // 일정 추가 페이지 닫기
 
-      // 하단에 추가된 일정 보여주는 화면 표시
-      _showBottomSheet(context);
+      // 분리된 BottomSheet 호출
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => DdayBottomSheet(
+          startDate: _startDate,
+          onClose: () => Navigator.of(context).pop(),
+        ),
+      );
     });
   }
 
-  // 로딩 화면을 표시하는 함수
+  void _cancel() {
+    Navigator.of(context).pop();
+  }
+
   void _showLoadingDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -81,101 +93,144 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
     );
   }
 
-  // 새 페이지에서 보여줄 BottomSheet를 생성하는 함수
-  void _showBottomSheet(BuildContext context) {
-    showModalBottomSheet(
+  Future<void> _pickCustomStartDate(BuildContext context) async {
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        expand: false,
-        builder: (context, scrollController) {
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Theme(
+            data: ThemeData.light().copyWith(
+              hintColor: Colors.lightBlue,
+              colorScheme: ColorScheme.light(
+                primary: Colors.blue,
+                onSurface: Colors.black,
+              ),
+              textButtonTheme: TextButtonThemeData(
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.blue,
+                ),
+              ),
             ),
-            padding: EdgeInsets.all(16),
-            child: SingleChildScrollView(
-              controller: scrollController,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              width: MediaQuery.of(context).size.width,
+              height: 400,
+              padding: EdgeInsets.all(16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'D-day',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        '시작 날짜 선택',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       IconButton(
                         icon: Icon(Icons.close),
-                        onPressed: () => Navigator.of(context).pop(),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
                       ),
                     ],
                   ),
                   SizedBox(height: 16),
-                  Text('Enter a date and add a description'),
-                  SizedBox(height: 16),
-                  _buildDateDisplay(),
-                  SizedBox(height: 16),
-                  TextField(
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Enter a description',
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Icon(Icons.check_circle, color: Colors.green),
-                      SizedBox(width: 8),
-                      Text("1 day from the setting date"),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text('Complete'),
+                  Expanded(
+                    child: CalendarDatePicker(
+                      initialDate: _startDate,
+                      firstDate: DateTime(DateTime.now().year - 5),
+                      lastDate: DateTime(DateTime.now().year + 5),
+                      onDateChanged: (DateTime newDate) {
+                        setState(() {
+                          _startDate = newDate;
+                          _isStartDateSelected = true;
+                        });
+                        Navigator.of(context).pop();
+                      },
                     ),
                   ),
                 ],
               ),
             ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildDateDisplay() {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.calendar_today),
-          SizedBox(width: 8),
-          Text(
-            DateFormat('yyyy/MM/dd').format(_startDate),
-            style: TextStyle(fontSize: 16),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  void _cancel() {
-    Navigator.of(context).pop();
+  Future<void> _pickCustomEndDate(BuildContext context) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Theme(
+            data: ThemeData.light().copyWith(
+              hintColor: Colors.lightBlue,
+              colorScheme: ColorScheme.light(
+                primary: Colors.blue,
+                onSurface: Colors.black,
+              ),
+              textButtonTheme: TextButtonThemeData(
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.blue,
+                ),
+              ),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              width: MediaQuery.of(context).size.width,
+              height: 400,
+              padding: EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '종료 날짜 선택',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 16),
+                  Expanded(
+                    child: CalendarDatePicker(
+                      initialDate: _endDate,
+                      firstDate: _startDate,
+                      lastDate: DateTime(DateTime.now().year + 5),
+                      onDateChanged: (DateTime newDate) {
+                        setState(() {
+                          _endDate = newDate;
+                          _isStartDateSelected = false;
+                        });
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _selectPriceRange(String? priceRange) {
@@ -364,146 +419,6 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
           ),
         );
       }).toList(),
-    );
-  }
-
-  Future<void> _pickCustomStartDate(BuildContext context) async {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Theme(
-            data: ThemeData.light().copyWith(
-              hintColor: Colors.lightBlue,
-              colorScheme: ColorScheme.light(
-                primary: Colors.blue,
-                onSurface: Colors.black,
-              ),
-              textButtonTheme: TextButtonThemeData(
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.blue,
-                ),
-              ),
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              width: MediaQuery.of(context).size.width,
-              height: 400,
-              padding: EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '시작 날짜 선택',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.close),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Expanded(
-                    child: CalendarDatePicker(
-                      initialDate: _startDate,
-                      firstDate: DateTime(DateTime.now().year - 5),
-                      lastDate: DateTime(DateTime.now().year + 5),
-                      onDateChanged: (DateTime newDate) {
-                        setState(() {
-                          _startDate = newDate;
-                          _isStartDateSelected = true;
-                        });
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _pickCustomEndDate(BuildContext context) async {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Theme(
-            data: ThemeData.light().copyWith(
-              hintColor: Colors.lightBlue,
-              colorScheme: ColorScheme.light(
-                primary: Colors.blue,
-                onSurface: Colors.black,
-              ),
-              textButtonTheme: TextButtonThemeData(
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.blue,
-                ),
-              ),
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              width: MediaQuery.of(context).size.width,
-              height: 400,
-              padding: EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '종료 날짜 선택',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.close),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Expanded(
-                    child: CalendarDatePicker(
-                      initialDate: _endDate,
-                      firstDate: _startDate,
-                      lastDate: DateTime(DateTime.now().year + 5),
-                      onDateChanged: (DateTime newDate) {
-                        setState(() {
-                          _endDate = newDate;
-                          _isStartDateSelected = false;
-                        });
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }
