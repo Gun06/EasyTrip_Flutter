@@ -42,6 +42,7 @@ import org.json.JSONObject
 import org.json.JSONArray
 import java.io.IOException
 import java.net.URLEncoder
+import java.util.concurrent.TimeUnit
 import java.security.MessageDigest
 
 class MainActivity : FlutterActivity() {
@@ -401,9 +402,14 @@ class MainActivity : FlutterActivity() {
 
   // 검색 기능 구현
   private fun searchPlaces(keyword: String, result: MethodChannel.Result) {
-    val client = OkHttpClient()
+    val client = OkHttpClient.Builder()
+      .connectTimeout(10, TimeUnit.SECONDS)
+      .writeTimeout(10, TimeUnit.SECONDS)
+      .readTimeout(10, TimeUnit.SECONDS)
+      .build()
+
     val url = "https://dapi.kakao.com/v2/local/search/keyword.json?query=${URLEncoder.encode(keyword, "UTF-8")}"
-    val apiKey = "06458f1a2d01e02bb731d2a37cfa6c85"  // 여기에 본인의 REST API 키를 입력하세요
+    val apiKey = "0a3f9a07d485e8599a680ad551136301"  // 여기에 본인의 REST API 키를 입력하세요
     val request = Request.Builder()
       .url(url)
       .addHeader("Authorization", "KakaoAK $apiKey")
@@ -428,7 +434,7 @@ class MainActivity : FlutterActivity() {
             result.success(responseData)
           } else {
             Log.e("searchPlaces", "Response failed: ${response.message}")
-            result.error("ERROR", "Failed to get response", null)
+            result.error("ERROR", "Failed with status code ${response.code}", response.message)
           }
         }
       }
@@ -542,7 +548,7 @@ class MainActivity : FlutterActivity() {
 
       val request = Request.Builder()
         .url(url)
-        .addHeader("Authorization", "KakaoAK 06458f1a2d01e02bb731d2a37cfa6c85")
+        .addHeader("Authorization", "KakaoAK 0a3f9a07d485e8599a680ad551136301")
         .build()
 
       client.newCall(request).enqueue(object : okhttp3.Callback {
@@ -594,7 +600,7 @@ class MainActivity : FlutterActivity() {
       val body = jsonBody.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
       val request = Request.Builder()
         .url("https://apis-navi.kakaomobility.com/v1/waypoints/directions")
-        .addHeader("Authorization", "KakaoAK 06458f1a2d01e02bb731d2a37cfa6c85")
+        .addHeader("Authorization", "KakaoAK 0a3f9a07d485e8599a680ad551136301")
         .post(body)
         .build()
 
@@ -697,7 +703,7 @@ class MainActivity : FlutterActivity() {
 
       val request = Request.Builder()
         .url(url)
-        .addHeader("Authorization", "KakaoAK 06458f1a2d01e02bb731d2a37cfa6c85")
+        .addHeader("Authorization", "KakaoAK 0a3f9a07d485e8599a680ad551136301")
         .build()
 
       client.newCall(request).enqueue(object : okhttp3.Callback {
@@ -749,7 +755,7 @@ class MainActivity : FlutterActivity() {
       val body = jsonBody.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
       val request = Request.Builder()
         .url("https://apis-navi.kakaomobility.com/v1/waypoints/directions")
-        .addHeader("Authorization", "KakaoAK 06458f1a2d01e02bb731d2a37cfa6c85")
+        .addHeader("Authorization", "KakaoAK 0a3f9a07d485e8599a680ad551136301")
         .post(body)
         .build()
 
@@ -850,7 +856,7 @@ class MainActivity : FlutterActivity() {
 
       val request = Request.Builder()
         .url(url)
-        .addHeader("Authorization", "KakaoAK 06458f1a2d01e02bb731d2a37cfa6c85")
+        .addHeader("Authorization", "KakaoAK 0a3f9a07d485e8599a680ad551136301")
         .build()
 
       client.newCall(request).enqueue(object : okhttp3.Callback {
@@ -902,7 +908,7 @@ class MainActivity : FlutterActivity() {
       val body = jsonBody.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
       val request = Request.Builder()
         .url("https://apis-navi.kakaomobility.com/v1/waypoints/directions")
-        .addHeader("Authorization", "KakaoAK 06458f1a2d01e02bb731d2a37cfa6c85")
+        .addHeader("Authorization", "KakaoAK 0a3f9a07d485e8599a680ad551136301")
         .post(body)
         .build()
 
