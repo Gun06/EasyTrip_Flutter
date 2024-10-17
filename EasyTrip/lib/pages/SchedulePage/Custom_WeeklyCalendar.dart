@@ -16,8 +16,8 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
 
   final DatabaseHelper _dbHelper = DatabaseHelper.instance; // DatabaseHelper 인스턴스 생성
 
-  // 총 금액 항목 추가
-  Map<DateTime, List<Map<String, String>>> _events = {}; // Map 타입을 String으로 유지
+  // 일정 정보만을 담은 Map
+  Map<DateTime, List<Map<String, String>>> _schedules = {};
 
   @override
   void initState() {
@@ -26,32 +26,38 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToSelectedDate();
     });
-    _loadEventsFromDatabase(); // 데이터베이스에서 이벤트 불러오기
+    _loadSchedulesFromDatabase(); // DB에서 일정 불러오기
   }
 
-  // 데이터베이스에서 이벤트 불러오기
-  Future<void> _loadEventsFromDatabase() async {
+  // DB에서 일정 불러오기
+  Future<void> _loadSchedulesFromDatabase() async {
     final int userId = 1; // 사용자의 ID를 설정해야 합니다.
     final List<Map<String, dynamic>> schedules = await _dbHelper.getScheduleWithRecommendations(userId);
 
-    Map<DateTime, List<Map<String, String>>> events = {};
+    Map<DateTime, List<Map<String, String>>> scheduleEvents = {};
 
     for (var schedule in schedules) {
       DateTime date = DateTime.parse(schedule['date']);
-      List<Map<String, dynamic>> recommendations = schedule['recommendations'];
 
-      // dynamic 타입을 String으로 변환
-      events[date] = recommendations.map((recommendation) {
-        return {
-          'title': (recommendation['placeName'] ?? '') as String,
-          'total': (recommendation['price'] ?? '') as String,
-        };
-      }).toList();
+      // 일정 정보를 불러옴
+      scheduleEvents[date] = [
+        {
+          'scheduleId': schedule['id'].toString(),
+          'scheduleName': (schedule['scheduleName'] ?? '') as String,
+          'allPrice': (schedule['allPrice'] ?? '') as String,
+        }
+      ];
     }
 
     setState(() {
-      _events = events; // 불러온 이벤트를 _events에 저장
+      _schedules = scheduleEvents; // 불러온 일정 정보를 _schedules에 저장
     });
+  }
+
+  // DB에서 일정 삭제 (추천 리스트도 함께 삭제)
+  Future<void> _deleteScheduleFromDatabase(int scheduleId) async {
+    await _dbHelper.deleteSchedule(scheduleId); // 일정 및 관련 추천 리스트 삭제
+    await _loadSchedulesFromDatabase(); // 삭제 후 일정 목록 다시 로드
   }
 
   double _calculateInitialScrollOffset(BuildContext context, DateTime date) {
@@ -170,7 +176,7 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
                         },
                       ),
                     ),
-                    // 선택된 날짜의 이벤트를 표시하는 영역
+                    // 선택된 날짜의 일정 정보를 표시하는 영역
                     Container(
                       height: 320, // 적절한 높이로 설정
                       color: Colors.white, // 배경색 설정
@@ -193,7 +199,7 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
                                       fontWeight: FontWeight.bold),
                                 ),
                                 Text(
-                                  '${_events[_tempSelectedDate]?.length ?? 0}개',
+                                  '${_schedules[_tempSelectedDate]?.length ?? 0}개',
                                   style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 15,
@@ -206,41 +212,45 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
                           Expanded(
                             child: ListView.builder(
                               key: ValueKey(_tempSelectedDate),
-                              itemCount: _events[_tempSelectedDate]?.length ?? 0,
+                              itemCount: _schedules[_tempSelectedDate]?.length ?? 0,
                               itemBuilder: (context, index) {
-                                final event = _events[_tempSelectedDate]?[index];
+                                final schedule = _schedules[_tempSelectedDate]?[index];
+                                final int scheduleId = int.parse(schedule?['scheduleId'] ?? '0'); // scheduleId 파싱
                                 return Card(
                                   margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
-                                  elevation: 2.0, // 이 부분에서 elevation을 설정합니다.
+                                  elevation: 2.0,
                                   child: ListTile(
                                     tileColor: Colors.white,
                                     shape: RoundedRectangleBorder(
                                       side: BorderSide(
-                                          color: Colors.grey.shade400, width: 1), // 테두리 설정
+                                          color: Colors.grey.shade400, width: 1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    // 이벤트 색상, 제목, 총 금액 표시
-                                    leading: Container(
-                                      width: 10,
-                                      height: 10,
-                                      decoration: BoxDecoration(
-                                        color: _getEventColor(event?['color'] ?? 'grey'), // 이벤트 색상
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
+                                    // 일정 이름과 총 금액 표시
                                     title: Text(
-                                      event?['title'] ?? '',
+                                      schedule?['scheduleName'] ?? '',
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
-                                    trailing: Text(
-                                      event?['total'] ?? '', // 총 금액 표시
+                                    subtitle: Text(
+                                      schedule?['allPrice'] ?? '', // 총 금액 표시
                                       style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.black,
+                                        fontSize: 14,
+                                        color: Colors.grey,
                                       ),
+                                    ),
+                                    trailing: IconButton(
+                                      icon: Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () async {
+                                        // 삭제 버튼 누르는 즉시 삭제
+                                        await _deleteScheduleFromDatabase(scheduleId);
+                                        // UI 즉시 업데이트
+                                        setState(() {
+                                          _schedules[_tempSelectedDate]?.removeAt(index);
+                                        });
+                                      },
                                     ),
                                   ),
                                 );
@@ -367,7 +377,7 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: weekDates.map((date) {
                 bool isSelected = isSameDate(date, _selectedDate);
-                bool hasEvent = _events.keys.any((eventDate) => isSameDate(eventDate, date));
+                bool hasEvent = _schedules.keys.any((eventDate) => isSameDate(eventDate, date));
                 return GestureDetector(
                   onTap: () {
                     _selectDate(date);

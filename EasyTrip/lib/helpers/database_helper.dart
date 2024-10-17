@@ -130,7 +130,6 @@ class DatabaseHelper {
   }
 
   // 추천 리스트 추가
-// 추천 리스트 추가
   Future<void> insertRecommendations(int scheduleId, List<Map<String, dynamic>> recommendations) async {
     final db = await database;
 
@@ -155,6 +154,35 @@ class DatabaseHelper {
     await db.update(
       'schedule_entries',
       {'scheduleName': newScheduleName},
+      where: 'id = ?',
+      whereArgs: [scheduleId],
+    );
+  }
+
+  // 추천 리스트에서 특정 장소 삭제
+  Future<void> deleteRecommendation(int scheduleId, String placeName) async {
+    final db = await database;
+    await db.delete(
+      'recommendation_entries',
+      where: 'scheduleId = ? AND placeName = ?',
+      whereArgs: [scheduleId, placeName],
+    );
+  }
+
+  // 일정 삭제 (추천 리스트도 함께 삭제)
+  Future<void> deleteSchedule(int scheduleId) async {
+    final db = await database;
+
+    // 일정에 속한 추천 리스트 삭제
+    await db.delete(
+      'recommendation_entries',
+      where: 'scheduleId = ?',
+      whereArgs: [scheduleId],
+    );
+
+    // 일정 삭제
+    await db.delete(
+      'schedule_entries',
       where: 'id = ?',
       whereArgs: [scheduleId],
     );
