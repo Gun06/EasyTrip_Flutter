@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'dart:ui';
+import '../../helpers/database_helper.dart';
 
 class CustomWeeklyCalendar extends StatefulWidget {
   @override
@@ -14,17 +14,10 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
   late ScrollController _scrollController; // ScrollController 선언
   final double _dateWidth = 45.0; // 날짜 아이템의 너비를 정의하는 상수
 
-  Map<DateTime, List<Map<String, String>>> _events = {
-    DateTime(2024, 7, 2): [
-      {'time': '10:00', 'title': '프로그래밍 공부하기', 'color': 'red'},
-      {'time': '12:00', 'title': '점심식사', 'color': 'orange'},
-      {'time': '13:00', 'title': 'GitHub 이슈관리 및 커뮤니티 활동', 'color': 'purple'},
-    ],
-    DateTime(2024, 7, 3): [
-      {'time': '09:00', 'title': '아침운동', 'color': 'green'},
-      {'time': '11:00', 'title': '회의 참석', 'color': 'blue'},
-    ]
-  };
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance; // DatabaseHelper 인스턴스 생성
+
+  // 총 금액 항목 추가
+  Map<DateTime, List<Map<String, String>>> _events = {}; // Map 타입을 String으로 유지
 
   @override
   void initState() {
@@ -32,6 +25,32 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
     _scrollController = ScrollController(); // ScrollController 초기화
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToSelectedDate();
+    });
+    _loadEventsFromDatabase(); // 데이터베이스에서 이벤트 불러오기
+  }
+
+  // 데이터베이스에서 이벤트 불러오기
+  Future<void> _loadEventsFromDatabase() async {
+    final int userId = 1; // 사용자의 ID를 설정해야 합니다.
+    final List<Map<String, dynamic>> schedules = await _dbHelper.getScheduleWithRecommendations(userId);
+
+    Map<DateTime, List<Map<String, String>>> events = {};
+
+    for (var schedule in schedules) {
+      DateTime date = DateTime.parse(schedule['date']);
+      List<Map<String, dynamic>> recommendations = schedule['recommendations'];
+
+      // dynamic 타입을 String으로 변환
+      events[date] = recommendations.map((recommendation) {
+        return {
+          'title': (recommendation['placeName'] ?? '') as String,
+          'total': (recommendation['price'] ?? '') as String,
+        };
+      }).toList();
+    }
+
+    setState(() {
+      _events = events; // 불러온 이벤트를 _events에 저장
     });
   }
 
@@ -49,26 +68,29 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
   }
 
   void _scrollToSelectedDate() {
-    double targetOffset = _calculateInitialScrollOffset(context, _selectedDate);
-    _scrollController.animateTo(
-      targetOffset,
-      duration: Duration(milliseconds: 300), // 애니메이션 시간 조절 가능
-      curve: Curves.easeInOut, // 애니메이션 곡선
-    );
+    // 선택된 날짜를 기준으로 해당 주의 일요일을 찾음
+    DateTime sunday = _selectedDate.subtract(Duration(days: _selectedDate.weekday % 7));
+  }
+
+  bool isSameDate(DateTime date1, DateTime date2) {
+    return date1.year == date2.year &&
+        date1.month == date2.month &&
+        date1.day == date2.day;
   }
 
   void _selectDate(DateTime date) {
     setState(() {
-      _selectedDate = date;
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToSelectedDate();
+      _selectedDate = DateTime(date.year, date.month, date.day); // 선택한 날짜 업데이트
+      _tempSelectedDate = _selectedDate; // 임시 날짜와 동기화
     });
   }
 
   void _goToToday() {
     DateTime today = DateTime.now();
-    _selectDate(today);
+    _selectDate(today);  // 오늘 날짜로 선택
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToSelectedDate();  // 오늘 날짜를 화면 가운데로 스크롤
+    });
   }
 
   void _showMonthlyCalendar(BuildContext context) {
@@ -84,10 +106,11 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, StateSetter setState) {
-            // 날짜 선택 시 처리 로직
+            // 날짜 선택 시 즉시 이벤트를 업데이트
             void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
               setState(() {
                 _tempSelectedDate = selectedDay; // 임시 선택된 날짜 업데이트
+                _selectDate(selectedDay); // 선택된 날짜 즉시 반영
               });
             }
 
@@ -123,7 +146,7 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
                           return isSameDay(_tempSelectedDate, day);
                         },
                         onDaySelected: (selectedDay, focusedDay) {
-                          _onDaySelected(selectedDay, focusedDay);
+                          _onDaySelected(selectedDay, focusedDay); // 날짜 선택 시 즉시 반영
                         },
                         headerStyle: HeaderStyle(
                           formatButtonVisible: false,
@@ -183,43 +206,41 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
                           Expanded(
                             child: ListView.builder(
                               key: ValueKey(_tempSelectedDate),
-                              itemCount:
-                              _events[_tempSelectedDate]?.length ?? 0,
+                              itemCount: _events[_tempSelectedDate]?.length ?? 0,
                               itemBuilder: (context, index) {
-                                final event =
-                                _events[_tempSelectedDate]?[index];
+                                final event = _events[_tempSelectedDate]?[index];
                                 return Card(
-                                  margin: EdgeInsets.symmetric(
-                                      vertical: 8.0, horizontal: 10.0),
-                                  elevation: 4.0, // 이 부분에서 elevation을 설정합니다.
+                                  margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
+                                  elevation: 2.0, // 이 부분에서 elevation을 설정합니다.
                                   child: ListTile(
                                     tileColor: Colors.white,
-                                    // 배경색 설정
                                     shape: RoundedRectangleBorder(
                                       side: BorderSide(
-                                          color: Colors.blue, width: 1),
+                                          color: Colors.grey.shade400, width: 1), // 테두리 설정
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    leading: Column(
-                                      mainAxisAlignment:
-                                      MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          event?['time'] ?? '',
-                                          style: TextStyle(
-                                              fontSize: 16,
-                                              color: Colors.blue),
-                                        ),
-                                      ],
+                                    // 이벤트 색상, 제목, 총 금액 표시
+                                    leading: Container(
+                                      width: 10,
+                                      height: 10,
+                                      decoration: BoxDecoration(
+                                        color: _getEventColor(event?['color'] ?? 'grey'), // 이벤트 색상
+                                        shape: BoxShape.circle,
+                                      ),
                                     ),
                                     title: Text(
                                       event?['title'] ?? '',
-                                      style: TextStyle(fontSize: 16),
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
-                                    trailing: Icon(
-                                      Icons.circle,
-                                      color: _getEventColor(
-                                          event?['color'] ?? 'grey'),
+                                    trailing: Text(
+                                      event?['total'] ?? '', // 총 금액 표시
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.black,
+                                      ),
                                     ),
                                   ),
                                 );
@@ -247,6 +268,10 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
         return Colors.orange;
       case 'purple':
         return Colors.purple;
+      case 'green':
+        return Colors.green;
+      case 'blue':
+        return Colors.blue;
       default:
         return Colors.grey;
     }
@@ -265,11 +290,13 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
   }
 
   void _previousWeek() {
-    _scrollByWeek(-1);
+    DateTime previousWeek = _selectedDate.subtract(Duration(days: 7));
+    _selectDate(previousWeek); // 이전 주로 이동
   }
 
   void _nextWeek() {
-    _scrollByWeek(1);
+    DateTime nextWeek = _selectedDate.add(Duration(days: 7));
+    _selectDate(nextWeek); // 다음 주로 이동
   }
 
   String _getDayLetter(DateTime date) {
@@ -277,122 +304,133 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
     return weekDays[date.weekday % 7];
   }
 
+  List<DateTime> _getWeekDates(DateTime selectedDate) {
+    // 선택된 날짜 기준 해당 주의 일요일부터 토요일까지 날짜 리스트 생성
+    DateTime sunday = selectedDate.subtract(Duration(days: selectedDate.weekday % 7));
+    return List.generate(7, (index) => sunday.add(Duration(days: index)));
+  }
+
   Widget _buildWeeklyCalendar(BuildContext context) {
     double containerWidth = _dateWidth;
     double containerHeight = 80.0;
 
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            GestureDetector(
-              onTap: () => _showMonthlyCalendar(context),
-              child: Text(
-                DateFormat('yyyy/MM/dd').format(_selectedDate),
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            Row(
-              children: [
-                IconButton(
-                  icon: Icon(Icons.chevron_left),
-                  onPressed: _previousWeek,
-                ),
-                GestureDetector(
-                  onTap: _goToToday,
-                  child: Text(
-                    DateFormat('MMM').format(_selectedDate),
-                    style: TextStyle(fontSize: 18),
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.chevron_right),
-                  onPressed: _nextWeek,
-                ),
-              ],
-            ),
-          ],
-        ),
-        SizedBox(height: 10),
-        Container(
-          height: containerHeight,
-          child: Stack(
+    // 현재 주의 일요일부터 토요일까지의 날짜 계산
+    List<DateTime> weekDates = _getWeekDates(_selectedDate);
+
+    return GestureDetector(
+      onHorizontalDragEnd: (DragEndDetails details) {
+        if (details.primaryVelocity! < 0) {
+          // 오른쪽으로 스와이프 -> 다음 주
+          _nextWeek();
+        } else if (details.primaryVelocity! > 0) {
+          // 왼쪽으로 스와이프 -> 이전 주
+          _previousWeek();
+        }
+      },
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              ListView.builder(
-                controller: _scrollController,
-                scrollDirection: Axis.horizontal,
-                itemCount: 365,
-                itemBuilder: (context, index) {
-                  DateTime date =
-                  DateTime(2024, 1, 1).add(Duration(days: index));
-                  bool isSelected = DateFormat('yyyy-MM-dd').format(date) ==
-                      DateFormat('yyyy-MM-dd').format(_selectedDate);
-                  bool hasEvent = _events[date]?.isNotEmpty ?? false;
-                  return GestureDetector(
-                    onTap: () {
-                      _selectDate(date);
-                    },
-                    child: Container(
-                      width: containerWidth,
-                      margin: EdgeInsets.symmetric(horizontal: 2.0),
-                      padding: EdgeInsets.all(4.0),
-                      decoration: BoxDecoration(
-                        gradient: isSelected
-                            ? LinearGradient(
-                          colors: [Colors.blue, Colors.purple],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        )
-                            : null,
-                        color: isSelected ? null : Colors.white,
-                        border: Border.all(
-                            color: isSelected ? Colors.blue : Colors.grey),
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            _getDayLetter(date),
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.black,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                          ),
-                          Text(
-                            DateFormat('d').format(date),
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.black,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                          ),
-                          if (hasEvent)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2.0),
-                              child: Container(
-                                width: 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  color: Colors.orange,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
+              GestureDetector(
+                onTap: () => _showMonthlyCalendar(context),
+                child: Text(
+                  DateFormat('yyyy/MM/dd').format(_selectedDate),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.chevron_left),
+                    onPressed: _previousWeek,
+                  ),
+                  GestureDetector(
+                    onTap: _goToToday,
+                    child: Text(
+                      DateFormat('MMM').format(_selectedDate),
+                      style: TextStyle(fontSize: 18),
                     ),
-                  );
-                },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.chevron_right),
+                    onPressed: _nextWeek,
+                  ),
+                ],
               ),
             ],
           ),
-        ),
-      ],
+          SizedBox(height: 10),
+          Container(
+            height: containerHeight,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: weekDates.map((date) {
+                bool isSelected = isSameDate(date, _selectedDate);
+                bool hasEvent = _events.keys.any((eventDate) => isSameDate(eventDate, date));
+                return GestureDetector(
+                  onTap: () {
+                    _selectDate(date);
+                  },
+                  child: Container(
+                    width: containerWidth,
+                    margin: EdgeInsets.symmetric(horizontal: 2.0),
+                    padding: EdgeInsets.all(4.0),
+                    decoration: BoxDecoration(
+                      gradient: isSelected
+                          ? LinearGradient(
+                        colors: [Colors.blue, Colors.purple],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      )
+                          : null,
+                      color: isSelected ? null : Colors.white,
+                      border: Border.all(
+                          color: isSelected ? Colors.blue : Colors.grey),
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _getDayLetter(date),
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.black,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        Text(
+                          DateFormat('d').format(date),
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.black,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        if (hasEvent)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2.0),
+                            child: Container(
+                              width: 6,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: Colors.orange,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

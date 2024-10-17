@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../helpers/database_helper.dart';
 import 'activity_DdayBottomSheet.dart';
 
 class AddSchedulePage extends StatefulWidget {
@@ -11,6 +12,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
   DateTime _selectedDate = DateTime.now();
   String _selectedPriceRange = '';
   List<Map<String, dynamic>> _schedules = [];
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance; // DatabaseHelper 인스턴스 생성
 
   final List<String> _priceRanges = [
     '5만원 이하',
@@ -20,32 +22,39 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
     '30만원 이상',
   ];
 
-  void _submitForm() {
+  void _submitForm() async {
     _showLoadingDialog(context);
 
-    Future.delayed(Duration(seconds: 2), () {
-      Navigator.of(context).pop(); // 로딩 화면 닫기
+    // 일정 데이터 저장
+    final scheduleId = await _dbHelper.insertSchedule(
+        1, // 로그인한 사용자의 userId (이 부분은 실제 로그인 사용자 ID로 대체해야 합니다)
+        DateFormat('yyyy-MM-dd').format(_selectedDate),
+        _selectedPriceRange,
+        'AI 추천 일정' // 일정 이름은 DdayBottomSheet에서 입력받아야 함
+    );
 
-      setState(() {
-        _schedules.add({
-          'selectedDate': _selectedDate,
-          'priceRange': _selectedPriceRange,
-        });
+    Navigator.of(context).pop(); // 로딩 화면 닫기
+
+    setState(() {
+      _schedules.add({
+        'selectedDate': _selectedDate,
+        'priceRange': _selectedPriceRange,
       });
-
-      Navigator.of(context).pop(); // 일정 추가 페이지 닫기
-
-      // 분리된 BottomSheet 호출
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (context) => DdayBottomSheet(
-          startDate: _selectedDate,
-          onClose: () => Navigator.of(context).pop(),
-        ),
-      );
     });
+
+    Navigator.of(context).pop(); // 일정 추가 페이지 닫기
+
+    // 분리된 BottomSheet 호출 (추천 리스트에서 데이터 수집 후 저장)
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DdayBottomSheet(
+        startDate: _selectedDate,
+        scheduleId: scheduleId, // 저장된 일정 ID 전달
+        onClose: () => Navigator.of(context).pop(),
+      ),
+    );
   }
 
   void _cancel() {

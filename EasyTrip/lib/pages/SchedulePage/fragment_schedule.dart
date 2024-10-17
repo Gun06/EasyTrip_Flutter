@@ -14,13 +14,13 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
   final List<Map<String, String>> recommendedItems = [
     {
-      'date': '2023-06-25',
+      'date': '2023-10-16',
       'title': '북한산',
       'location': 'Panjer, South Denpasar',
       'imageUrl': 'assets/150.png'
     },
     {
-      'date': '2023-06-26',
+      'date': '2023-10-16',
       'title': '정동진 해변',
       'location': 'Sanur, South Denpasar',
       'imageUrl': 'assets/150.png'

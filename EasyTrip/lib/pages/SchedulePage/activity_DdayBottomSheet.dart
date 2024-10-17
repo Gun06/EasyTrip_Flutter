@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../helpers/database_helper.dart';
 
 class DdayBottomSheet extends StatefulWidget {
   final DateTime startDate;
+  final int scheduleId; // AddSchedulePage에서 전달된 scheduleId
   final VoidCallback onClose;
 
-  DdayBottomSheet({required this.startDate, required this.onClose});
+  DdayBottomSheet({
+    required this.startDate,
+    required this.scheduleId, // 일정 ID 받아옴
+    required this.onClose,
+  });
 
   @override
   _DdayBottomSheetState createState() => _DdayBottomSheetState();
@@ -16,9 +22,30 @@ class _DdayBottomSheetState extends State<DdayBottomSheet> {
     {'title': '북한산', 'location': '서울, 대한민국', 'price': '₩4,000', 'imageUrl': 'https://via.placeholder.com/150'},
     {'title': '정동진 해변', 'location': '강릉, 대한민국', 'price': '₩4,000', 'imageUrl': 'https://via.placeholder.com/150'},
     {'title': '한라산', 'location': '제주도, 대한민국', 'price': '₩4,000', 'imageUrl': 'https://via.placeholder.com/150'},
-    {'title': '한라산', 'location': '제주도, 대한민국', 'price': '₩4,000', 'imageUrl': 'https://via.placeholder.com/150'},
-    {'title': '한라산', 'location': '제주도, 대한민국', 'price': '₩4,000', 'imageUrl': 'https://via.placeholder.com/150'},
   ];
+
+  final TextEditingController _scheduleNameController = TextEditingController();
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance; // DatabaseHelper 인스턴스 생성
+
+  @override
+  void dispose() {
+    _scheduleNameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveRecommendations() async {
+    // 일정 이름 가져오기
+    final scheduleName = _scheduleNameController.text;
+
+    // 일정 이름 업데이트 (해당 scheduleId에 대한 이름을 업데이트합니다)
+    await _dbHelper.updateScheduleName(widget.scheduleId, scheduleName);
+
+    // 추천 리스트를 데이터베이스에 저장
+    await _dbHelper.insertRecommendations(widget.scheduleId, recommendations);
+
+    // 저장 후 닫기
+    widget.onClose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +85,7 @@ class _DdayBottomSheetState extends State<DdayBottomSheet> {
                 _buildDateDisplay(), // 선택된 날짜만 표시하는 함수
                 SizedBox(height: 16),
                 TextField(
+                  controller: _scheduleNameController,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
                     labelText: '일정 이름을 입력하세요',
@@ -79,7 +107,7 @@ class _DdayBottomSheetState extends State<DdayBottomSheet> {
                   width: double.infinity,
                   height: 45, // 버튼의 높이 설정
                   child: ElevatedButton(
-                    onPressed: widget.onClose,
+                    onPressed: _saveRecommendations, // 저장 후 완료
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
                       elevation: 8,
@@ -113,7 +141,7 @@ class _DdayBottomSheetState extends State<DdayBottomSheet> {
           Icon(Icons.calendar_today, color: Colors.black),
           SizedBox(width: 8),
           Text(
-            DateFormat('yyyy/MM/dd').format(widget.startDate), // 시작 날짜만 표시
+            DateFormat('yyyy/MM/dd').format(widget.startDate),
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
           ),
         ],
@@ -172,10 +200,9 @@ class _DdayBottomSheetState extends State<DdayBottomSheet> {
                 fit: BoxFit.cover,
               ),
             ),
-            // 드래그 중일 때의 배경색 변경
             tileColor: Colors.white,
             selectedTileColor: Colors.blue.shade100, // 드래그 시 배경색
-            selected: false, // 필요 시 드래그 선택 상태를 조정
+            selected: false,
           ),
         );
       }),

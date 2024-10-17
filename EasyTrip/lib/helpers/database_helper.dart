@@ -19,11 +19,10 @@ class DatabaseHelper {
 
   // 데이터베이스 초기화 및 생성
   Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath(); // 데이터베이스 경로를 가져옴
-    final path = join(dbPath, filePath); // 경로와 파일명을 합침
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, filePath);
 
-    return await openDatabase(path,
-        version: 6, onCreate: _createDB, onUpgrade: _upgradeDB);
+    return await openDatabase(path, version: 7, onCreate: _createDB, onUpgrade: _upgradeDB);
   }
 
   // 데이터베이스 생성
@@ -59,14 +58,138 @@ class DatabaseHelper {
       FOREIGN KEY (userId) REFERENCES users (id)
     )
     ''');
+
+    // 일정 테이블 생성
+    await db.execute('''
+    CREATE TABLE schedule_entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      userId INTEGER NOT NULL,
+      date TEXT NOT NULL,
+      allPrice TEXT NOT NULL,
+      scheduleName TEXT NOT NULL,
+      FOREIGN KEY (userId) REFERENCES users (id)
+    )
+    ''');
+
+    // 추천된 장소 테이블 생성
+    await db.execute('''
+    CREATE TABLE recommendation_entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      scheduleId INTEGER NOT NULL,
+      placeName TEXT NOT NULL,
+      price TEXT NOT NULL,
+      location TEXT NOT NULL,
+      sortOrder INTEGER NOT NULL,
+      FOREIGN KEY (scheduleId) REFERENCES schedule_entries (id)
+    )
+    ''');
   }
 
-  // 데이터베이스 업그레이드 (버전 변경 시 호출)
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 6) {
-      await db.execute(
-          'ALTER TABLE messages ADD COLUMN isRead INTEGER NOT NULL DEFAULT 0');
+    if (oldVersion < 7) {
+      // 일정 테이블 추가
+      await db.execute('''
+      CREATE TABLE schedule_entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        allPrice TEXT NOT NULL,
+        scheduleName TEXT NOT NULL,
+        FOREIGN KEY (userId) REFERENCES users (id)
+      )
+      ''');
+
+      // 추천된 장소 테이블 추가
+      await db.execute('''
+      CREATE TABLE recommendation_entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        scheduleId INTEGER NOT NULL,
+        placeName TEXT NOT NULL,
+        price TEXT NOT NULL,
+        location TEXT NOT NULL,
+        sortOrder INTEGER NOT NULL,
+        FOREIGN KEY (scheduleId) REFERENCES schedule_entries (id)
+      )
+      ''');
     }
+  }
+
+  // 일정 추가
+  Future<int> insertSchedule(int userId, String date, String allPrice, String scheduleName) async {
+    final db = await database;
+    return await db.insert(
+      'schedule_entries',
+      {
+        'userId': userId,
+        'date': date,
+        'allPrice': allPrice,
+        'scheduleName': scheduleName,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  // 추천 리스트 추가
+// 추천 리스트 추가
+  Future<void> insertRecommendations(int scheduleId, List<Map<String, dynamic>> recommendations) async {
+    final db = await database;
+
+    for (int i = 0; i < recommendations.length; i++) {
+      await db.insert(
+        'recommendation_entries',
+        {
+          'scheduleId': scheduleId,
+          'placeName': recommendations[i]['title'],  // 'title' 키가 맞는지 확인하세요.
+          'price': recommendations[i]['price'],
+          'location': recommendations[i]['location'],
+          'sortOrder': i,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+  }
+
+  // 일정 이름 업데이트
+  Future<void> updateScheduleName(int scheduleId, String newScheduleName) async {
+    final db = await database;
+    await db.update(
+      'schedule_entries',
+      {'scheduleName': newScheduleName},
+      where: 'id = ?',
+      whereArgs: [scheduleId],
+    );
+  }
+
+  // 일정 및 추천 장소 조회
+  Future<List<Map<String, dynamic>>> getScheduleWithRecommendations(int userId) async {
+    final db = await database;
+
+    final List<Map<String, dynamic>> schedules = await db.query(
+      'schedule_entries',
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
+
+    List<Map<String, dynamic>> resultSchedules = [];
+
+    for (var schedule in schedules) {
+      // 새로 Map 객체 생성
+      Map<String, dynamic> scheduleCopy = Map<String, dynamic>.from(schedule);
+
+      final List<Map<String, dynamic>> recommendations = await db.query(
+        'recommendation_entries',
+        where: 'scheduleId = ?',
+        whereArgs: [schedule['id']],
+        orderBy: 'sortOrder ASC',
+      );
+
+      // 새롭게 복사한 객체에 추천 정보를 추가
+      scheduleCopy['recommendations'] = recommendations;
+
+      resultSchedules.add(scheduleCopy); // 복사한 객체를 리스트에 추가
+    }
+
+    return resultSchedules;
   }
 
   // 사용자 차단
@@ -74,7 +197,7 @@ class DatabaseHelper {
     final db = await database;
     await db.update(
       'users',
-      {'isBlocked': 1}, // isBlocked를 1로 업데이트
+      {'isBlocked': 1},
       where: 'id = ?',
       whereArgs: [userId],
     );
@@ -85,7 +208,7 @@ class DatabaseHelper {
     final db = await database;
     await db.update(
       'users',
-      {'isBlocked': 0}, // isBlocked를 0으로 업데이트
+      {'isBlocked': 0},
       where: 'id = ?',
       whereArgs: [userId],
     );
