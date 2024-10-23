@@ -19,6 +19,7 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
   List<bool> _expanded = [];
   bool showAll = false;
   bool isEmptySchedule = false; // 일정이 비어있는지 여부를 확인하는 변수
+  List<List<Map<String, String>>> recommendations = []; // 추천 일정 리스트
 
   @override
   void initState() {
@@ -37,14 +38,27 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
         .map((item) => {
       'date': item['date'] as String,
       'title': item['scheduleName'] as String,
-      'allPrice': item['allPrice'] as String, // 총 금액을 표시
+      'location': item['allPrice'] as String, // 총 금액으로 변경
       'imageUrl': 'assets/150.png' // 이미지 URL은 임의로 설정
     })
+        .toList();
+
+    // 추천 일정 데이터 설정
+    final List<List<Map<String, String>>> newRecommendations = schedules
+        .where((item) => item['date'] == formattedDate)
+        .map((item) => (item['recommendations'] as List)
+        .map<Map<String, String>>((rec) => {
+      'placeName': rec['placeName'] as String,
+      'price': rec['price'] as String,
+      'location': rec['location'] as String,
+    })
+        .toList())
         .toList();
 
     // List<Map<String, dynamic>>에서 List<Map<String, String>>으로 변환
     setState(() {
       displayedItems = filteredItems.cast<Map<String, String>>();
+      recommendations = newRecommendations;
       _expanded = List.generate(displayedItems.length, (index) => false);
       isEmptySchedule = displayedItems.isEmpty; // 일정이 비어있는지 확인
     });
@@ -214,7 +228,7 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
                     context,
                     displayedItems[index]['date']!,
                     displayedItems[index]['title']!,
-                    displayedItems[index]['allPrice']!, // 총 금액을 표시
+                    displayedItems[index]['location']!,
                     displayedItems[index]['imageUrl']!,
                     animation,
                     _expanded[index],
@@ -233,11 +247,12 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
       BuildContext context,
       String date,
       String title,
-      String allPrice, // 총 금액으로 변경
+      String location,
       String imageUrl,
       Animation<double> animation,
       bool isExpanded,
-      int index) {
+      int index,
+      ) {
     return SizeTransition(
       sizeFactor: animation,
       child: GestureDetector(
@@ -271,13 +286,33 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
                         children: [
                           Text(date, style: TextStyle(fontSize: 14, color: Colors.grey)),
                           Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                          Text(allPrice, style: TextStyle(fontSize: 14, color: Colors.grey)), // 총 금액을 표시
+                          Text(location, style: TextStyle(fontSize: 14, color: Colors.grey)),
                         ],
                       ),
                     ),
                     Icon(isExpanded ? Icons.expand_less : Icons.expand_more, color: Colors.grey),
                   ],
                 ),
+                if (isExpanded)
+                  Column(
+                    children: recommendations[index]
+                        .map((rec) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Row(
+                        children: [
+                          Icon(Icons.place, size: 16, color: Colors.blue),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '${rec['placeName']} - ${rec['price']}원',
+                              style: TextStyle(fontSize: 14, color: Colors.black),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ))
+                        .toList(),
+                  ),
               ],
             ),
           ),
