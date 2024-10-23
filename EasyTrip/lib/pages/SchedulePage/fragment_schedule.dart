@@ -37,7 +37,7 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
         .map((item) => {
       'date': item['date'] as String,
       'title': item['scheduleName'] as String,
-      'location': item['recommendations'].isNotEmpty ? item['recommendations'][0]['location'] as String : '',
+      'allPrice': item['allPrice'] as String, // 총 금액을 표시
       'imageUrl': 'assets/150.png' // 이미지 URL은 임의로 설정
     })
         .toList();
@@ -214,7 +214,7 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
                     context,
                     displayedItems[index]['date']!,
                     displayedItems[index]['title']!,
-                    displayedItems[index]['location']!,
+                    displayedItems[index]['allPrice']!, // 총 금액을 표시
                     displayedItems[index]['imageUrl']!,
                     animation,
                     _expanded[index],
@@ -233,7 +233,7 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
       BuildContext context,
       String date,
       String title,
-      String location,
+      String allPrice, // 총 금액으로 변경
       String imageUrl,
       Animation<double> animation,
       bool isExpanded,
@@ -271,7 +271,7 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
                         children: [
                           Text(date, style: TextStyle(fontSize: 14, color: Colors.grey)),
                           Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                          Text(location, style: TextStyle(fontSize: 14, color: Colors.grey)),
+                          Text(allPrice, style: TextStyle(fontSize: 14, color: Colors.grey)), // 총 금액을 표시
                         ],
                       ),
                     ),
