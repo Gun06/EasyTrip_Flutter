@@ -4,9 +4,14 @@ import 'package:table_calendar/table_calendar.dart';
 import '../../helpers/database_helper.dart';
 
 class CustomWeeklyCalendar extends StatefulWidget {
+  final Future<void> Function(DateTime) onDateSelected; // 날짜 선택 콜백 추가
   final VoidCallback? onScheduleUpdated; // 외부에서 호출 가능한 콜백 추가
 
-  CustomWeeklyCalendar({Key? key, this.onScheduleUpdated}) : super(key: key); // key 추가
+  CustomWeeklyCalendar({
+    Key? key,
+    required this.onDateSelected,
+    this.onScheduleUpdated,
+  }) : super(key: key);
 
   @override
   CustomWeeklyCalendarState createState() => CustomWeeklyCalendarState();
@@ -87,19 +92,6 @@ class CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
     }
   }
 
-  double _calculateInitialScrollOffset(BuildContext context, DateTime date) {
-    DateTime baseDate = DateTime(2024, 1, 1); // 기준 날짜
-    int targetIndex = date.difference(baseDate).inDays;
-    double offset = targetIndex * _dateWidth;
-
-    double additionalOffset = 740.0;
-    double centeredOffset = offset -
-        (MediaQuery.of(context).size.width / 2 - _dateWidth / 3.5) +
-        additionalOffset;
-
-    return centeredOffset;
-  }
-
   void _scrollToSelectedDate() {
     // 선택된 날짜를 기준으로 해당 주의 일요일을 찾음
     DateTime sunday = _selectedDate.subtract(Duration(days: _selectedDate.weekday % 7));
@@ -116,6 +108,8 @@ class CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
       _selectedDate = DateTime(date.year, date.month, date.day); // 선택한 날짜 업데이트
       _tempSelectedDate = _selectedDate; // 임시 날짜와 동기화
     });
+
+    widget.onDateSelected(_selectedDate); // 날짜 선택 후 onDateSelected 호출
   }
 
   void _goToToday() {
@@ -214,8 +208,7 @@ class CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
                             color: Colors.blue.withOpacity(0.85), // 배경색 설정
                             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
                             child: Row(
-                              mainAxisAlignment:
-                              MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
                                   DateFormat('yyyy년 MM월 dd일')
@@ -297,18 +290,6 @@ class CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
     );
   }
 
-  void _scrollByWeek(int weeks) {
-    double currentOffset = _scrollController.offset;
-    double weekOffset = weeks * _dateWidth * 7;
-    double targetOffset = currentOffset + weekOffset;
-
-    _scrollController.animateTo(
-      targetOffset,
-      duration: Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-  }
-
   void _previousWeek() {
     DateTime previousWeek = _selectedDate.subtract(Duration(days: 7));
     _selectDate(previousWeek); // 이전 주로 이동
@@ -317,11 +298,6 @@ class CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
   void _nextWeek() {
     DateTime nextWeek = _selectedDate.add(Duration(days: 7));
     _selectDate(nextWeek); // 다음 주로 이동
-  }
-
-  String _getDayLetter(DateTime date) {
-    const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-    return weekDays[date.weekday % 7];
   }
 
   List<DateTime> _getWeekDates(DateTime selectedDate) {
@@ -413,7 +389,7 @@ class CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          _getDayLetter(date),
+                          DateFormat.E().format(date), // 요일 이름
                           style: TextStyle(
                             color: isSelected ? Colors.white : Colors.black,
                             fontWeight: isSelected
@@ -422,7 +398,7 @@ class CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
                           ),
                         ),
                         Text(
-                          DateFormat('d').format(date),
+                          DateFormat.d().format(date), // 날짜
                           style: TextStyle(
                             color: isSelected ? Colors.white : Colors.black,
                             fontWeight: isSelected
