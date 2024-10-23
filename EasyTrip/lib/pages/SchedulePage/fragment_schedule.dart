@@ -298,17 +298,24 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
                     children: recommendations[index]
                         .map((rec) => Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Row(
-                        children: [
-                          Icon(Icons.place, size: 16, color: Colors.blue),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              '${rec['placeName']} - ${rec['price']}원',
-                              style: TextStyle(fontSize: 14, color: Colors.black),
-                            ),
+                      child: Card(
+                        color: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 4,
+                        child: ListTile(
+                          leading: Icon(Icons.place, color: Colors.blue),
+                          title: Text(
+                            rec['placeName']!,
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                           ),
-                        ],
+                          subtitle: Text(rec['location']!),
+                          trailing: Text(
+                            '${rec['price']}원',
+                            style: TextStyle(fontSize: 14, color: Colors.black),
+                          ),
+                        ),
                       ),
                     ))
                         .toList(),
