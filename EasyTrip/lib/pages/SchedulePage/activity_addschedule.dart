@@ -4,6 +4,10 @@ import '../../helpers/database_helper.dart';
 import 'activity_DdayBottomSheet.dart';
 
 class AddSchedulePage extends StatefulWidget {
+  final VoidCallback? onScheduleAdded;
+
+  AddSchedulePage({this.onScheduleAdded});
+
   @override
   _AddSchedulePageState createState() => _AddSchedulePageState();
 }
@@ -11,8 +15,10 @@ class AddSchedulePage extends StatefulWidget {
 class _AddSchedulePageState extends State<AddSchedulePage> {
   DateTime _selectedDate = DateTime.now();
   String _selectedPriceRange = '';
-  List<Map<String, dynamic>> _schedules = [];
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance; // DatabaseHelper 인스턴스 생성
+  String? _selectedLocation;
+  List<Map<String, dynamic>> _schedules = []; // 일정 목록
+  bool _isDropdownOpen = false; // 드롭다운 열림/닫힘 상태
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   final List<String> _priceRanges = [
     '5만원 이하',
@@ -22,43 +28,88 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
     '30만원 이상',
   ];
 
+  final List<String> _locations = [
+    '공덕역',
+    '광흥창역',
+    '대흥역',
+    '디지털미디어시티역',
+    '마포구청역',
+    '마포역',
+    '망원역',
+    '상수역',
+    '서강대역',
+    '신촌역',
+    '아현역',
+    '애오개역',
+    '월드컵경기장역',
+    '이대역',
+    '합정역',
+    '홍대입구역'
+  ]..sort();
+
   void _submitForm() async {
     _showLoadingDialog(context);
-
-    // 일정 데이터 저장
     final scheduleId = await _dbHelper.insertSchedule(
-        1, // 로그인한 사용자의 userId (이 부분은 실제 로그인 사용자 ID로 대체해야 합니다)
+        1,
         DateFormat('yyyy-MM-dd').format(_selectedDate),
         _selectedPriceRange,
-        'AI 추천 일정' // 일정 이름은 DdayBottomSheet에서 입력받아야 함
+        'AI 추천 일정'
     );
 
-    Navigator.of(context).pop(); // 로딩 화면 닫기
+    if (!mounted) return;
+    Navigator.of(context).pop();
 
-    setState(() {
-      _schedules.add({
-        'selectedDate': _selectedDate,
-        'priceRange': _selectedPriceRange,
+    if (mounted) {
+      setState(() {
+        _schedules.add({
+          'selectedDate': _selectedDate,
+          'priceRange': _selectedPriceRange,
+          'location': _selectedLocation,
+        });
       });
-    });
 
-    Navigator.of(context).pop(); // 일정 추가 페이지 닫기
+      if (widget.onScheduleAdded != null) {
+        widget.onScheduleAdded!();
+      }
 
-    // 분리된 BottomSheet 호출 (추천 리스트에서 데이터 수집 후 저장)
+      Navigator.of(context).pop();
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => DdayBottomSheet(
         startDate: _selectedDate,
-        scheduleId: scheduleId, // 저장된 일정 ID 전달
+        scheduleId: scheduleId,
         onClose: () => Navigator.of(context).pop(),
+        onUpdate: () {
+          if (mounted) {
+            setState(() {
+              if (widget.onScheduleAdded != null) {
+                widget.onScheduleAdded!();
+              }
+            });
+          }
+        },
       ),
     );
   }
 
   void _cancel() {
     Navigator.of(context).pop();
+  }
+
+  void _selectPriceRange(String? priceRange) {
+    setState(() {
+      _selectedPriceRange = priceRange ?? '';
+    });
+  }
+
+  void _toggleDropdown() {
+    setState(() {
+      _isDropdownOpen = !_isDropdownOpen;
+    });
   }
 
   void _showLoadingDialog(BuildContext context) {
@@ -160,12 +211,6 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
     );
   }
 
-  void _selectPriceRange(String? priceRange) {
-    setState(() {
-      _selectedPriceRange = priceRange ?? '';
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -218,7 +263,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      width: double.infinity, // 넓이를 화면에 맞게 설정
+                      width: double.infinity,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -231,6 +276,59 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                       ),
                     ),
                   ),
+                  SizedBox(height: 20),
+                  Text(
+                    '장소 선택',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: _toggleDropdown,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Colors.lightBlue,
+                        ),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      width: double.infinity,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _selectedLocation ?? '장소를 선택하세요',
+                            style: TextStyle(fontSize: 16, color: Colors.black87),
+                          ),
+                          Icon(_isDropdownOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (_isDropdownOpen)
+                    Container(
+                      height: 200,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.lightBlue),
+                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.white,
+                      ),
+                      child: ListView.builder(
+                        itemCount: _locations.length,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            title: Text(_locations[index]),
+                            onTap: () {
+                              setState(() {
+                                _selectedLocation = _locations[index];
+                                _isDropdownOpen = false;
+                              });
+                            },
+                          );
+                        },
+                      ),
+                    ),
                   SizedBox(height: 20),
                   Divider(
                     color: Colors.grey.shade200,
@@ -248,7 +346,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: _selectedPriceRange.isNotEmpty ? _submitForm : null,
+                      onPressed: _selectedPriceRange.isNotEmpty && _selectedLocation != null ? _submitForm : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.lightBlue.shade500,
                         foregroundColor: Colors.white,

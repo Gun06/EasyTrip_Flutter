@@ -6,11 +6,13 @@ class DdayBottomSheet extends StatefulWidget {
   final DateTime startDate;
   final int scheduleId; // AddSchedulePage에서 전달된 scheduleId
   final VoidCallback onClose;
+  final Function onUpdate; // 새로운 onUpdate 콜백 추가
 
   DdayBottomSheet({
     required this.startDate,
     required this.scheduleId, // 일정 ID 받아옴
     required this.onClose,
+    required this.onUpdate, // onUpdate 콜백 전달
   });
 
   @override
@@ -34,16 +36,12 @@ class _DdayBottomSheetState extends State<DdayBottomSheet> {
   }
 
   Future<void> _saveRecommendations() async {
-    // 일정 이름 가져오기
     final scheduleName = _scheduleNameController.text;
 
-    // 일정 이름 업데이트 (해당 scheduleId에 대한 이름을 업데이트합니다)
     await _dbHelper.updateScheduleName(widget.scheduleId, scheduleName);
-
-    // 추천 리스트를 데이터베이스에 저장
     await _dbHelper.insertRecommendations(widget.scheduleId, recommendations);
 
-    // 저장 후 닫기
+    widget.onUpdate(); // 부모 위젯의 UI 업데이트를 트리거
     widget.onClose();
   }
 

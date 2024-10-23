@@ -1,9 +1,7 @@
-// ScheduleFragment.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'Custom_WeeklyCalendar.dart';
-import 'activity_addschedule.dart'; // 추가
+import 'activity_addschedule.dart';
 
 class ScheduleFragment extends StatefulWidget {
   @override
@@ -12,6 +10,8 @@ class ScheduleFragment extends StatefulWidget {
 
 class _ScheduleFragmentState extends State<ScheduleFragment> {
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
+  final GlobalKey<CustomWeeklyCalendarState> _calendarKey = GlobalKey<CustomWeeklyCalendarState>(); // 수정된 부분
+
   final List<Map<String, String>> recommendedItems = [
     {
       'date': '2023-10-16',
@@ -100,7 +100,6 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
   }
 
   void _addSchedule() {
-    // 모달이 상단에서 나타나도록 showGeneralDialog 사용
     showGeneralDialog(
       context: context,
       barrierDismissible: true, // 배리어를 누르면 닫히도록 설정
@@ -134,12 +133,14 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
           child: child,
         );
       },
-    );
+    ).then((_) {
+      // 일정 추가 후 CustomWeeklyCalendar의 일정을 업데이트
+      _calendarKey.currentState?.updateSchedules();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    // 전체보기 버튼 활성화 여부 결정
     bool isSeeAllEnabled = recommendedItems.length > 4;
 
     return Scaffold(
@@ -159,7 +160,7 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
         ),
         leading: IconButton(
           icon: Icon(Icons.add, color: Colors.black),
-          onPressed: _addSchedule, // 수정된 부분: 일정 추가 함수 호출
+          onPressed: _addSchedule, // 일정 추가 함수 호출
         ),
         actions: [
           IconButton(
@@ -202,7 +203,9 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
           children: [
             SizedBox(
               height: 200, // 원하는 높이로 고정
-              child: CustomWeeklyCalendar(), // CustomWeeklyCalendar 위젯 사용
+              child: CustomWeeklyCalendar(
+                key: _calendarKey, // CustomWeeklyCalendar의 키 설정
+              ),
             ),
             SizedBox(height: 16),
             Row(

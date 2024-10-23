@@ -4,11 +4,21 @@ import 'package:table_calendar/table_calendar.dart';
 import '../../helpers/database_helper.dart';
 
 class CustomWeeklyCalendar extends StatefulWidget {
+  final VoidCallback? onScheduleUpdated; // 외부에서 호출 가능한 콜백 추가
+
+  CustomWeeklyCalendar({Key? key, this.onScheduleUpdated}) : super(key: key); // key 추가
+
   @override
-  _CustomWeeklyCalendarState createState() => _CustomWeeklyCalendarState();
+  CustomWeeklyCalendarState createState() => CustomWeeklyCalendarState();
+
+  // 외부에서 updateSchedules 메서드를 호출할 수 있도록 합니다.
+  void updateSchedules() {
+    final state = CustomWeeklyCalendarState();
+    state.updateSchedules();
+  }
 }
 
-class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
+class CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
   DateTime _selectedDate = DateTime.now(); // 주간 달력에서 표시할 선택된 날짜
   DateTime _tempSelectedDate = DateTime.now(); // 월간 달력에서 임시로 선택한 날짜
   late ScrollController _scrollController; // ScrollController 선언
@@ -29,6 +39,11 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
     _loadSchedulesFromDatabase(); // DB에서 일정 불러오기
   }
 
+  // 외부에서 호출 가능하도록 업데이트 메서드 추가
+  void updateSchedules() {
+    _loadSchedulesFromDatabase();
+  }
+
   // DB에서 일정 불러오기
   Future<void> _loadSchedulesFromDatabase() async {
     final int userId = 1; // 사용자의 ID를 설정해야 합니다.
@@ -40,13 +55,21 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
       DateTime date = DateTime.parse(schedule['date']);
 
       // 일정 정보를 불러옴
-      scheduleEvents[date] = [
-        {
+      if (scheduleEvents.containsKey(date)) {
+        scheduleEvents[date]!.add({
           'scheduleId': schedule['id'].toString(),
           'scheduleName': (schedule['scheduleName'] ?? '') as String,
           'allPrice': (schedule['allPrice'] ?? '') as String,
-        }
-      ];
+        });
+      } else {
+        scheduleEvents[date] = [
+          {
+            'scheduleId': schedule['id'].toString(),
+            'scheduleName': (schedule['scheduleName'] ?? '') as String,
+            'allPrice': (schedule['allPrice'] ?? '') as String,
+          }
+        ];
+      }
     }
 
     setState(() {
@@ -58,6 +81,10 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
   Future<void> _deleteScheduleFromDatabase(int scheduleId) async {
     await _dbHelper.deleteSchedule(scheduleId); // 일정 및 관련 추천 리스트 삭제
     await _loadSchedulesFromDatabase(); // 삭제 후 일정 목록 다시 로드
+    // 일정 삭제 시 외부 콜백 실행
+    if (widget.onScheduleUpdated != null) {
+      widget.onScheduleUpdated!();
+    }
   }
 
   double _calculateInitialScrollOffset(BuildContext context, DateTime date) {
@@ -270,23 +297,6 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
     );
   }
 
-  Color _getEventColor(String color) {
-    switch (color) {
-      case 'red':
-        return Colors.red;
-      case 'orange':
-        return Colors.orange;
-      case 'purple':
-        return Colors.purple;
-      case 'green':
-        return Colors.green;
-      case 'blue':
-        return Colors.blue;
-      default:
-        return Colors.grey;
-    }
-  }
-
   void _scrollByWeek(int weeks) {
     double currentOffset = _scrollController.offset;
     double weekOffset = weeks * _dateWidth * 7;
@@ -452,7 +462,3 @@ class _CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
     );
   }
 }
-
-void main() => runApp(MaterialApp(
-  home: CustomWeeklyCalendar(),
-));
