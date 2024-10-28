@@ -53,6 +53,7 @@ class _ActivityPreferenceEditPageState extends State<ActivityPreferenceEditPage>
         nickname: _user!.nickname,
         birthDate: _user!.birthDate,
         phoneNumber: _user!.phoneNumber,
+        email: _user!.email, // 이메일 필드 추가
         profileImage: _user!.profileImage,
         isBlocked: _user!.isBlocked,
         age: _user!.age,

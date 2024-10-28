@@ -5,6 +5,7 @@ class User {
   final String nickname;
   final String birthDate;
   final String phoneNumber;
+  final String email; // 이메일 필드 추가
   final String? profileImage;
   final int isBlocked;
   final int age;
@@ -20,6 +21,7 @@ class User {
     required this.nickname,
     required this.birthDate,
     required this.phoneNumber,
+    required this.email, // 이메일 필드 추가
     this.profileImage,
     this.isBlocked = 0,
     required this.age,
@@ -37,6 +39,7 @@ class User {
       'nickname': nickname,
       'birthDate': birthDate,
       'phoneNumber': phoneNumber,
+      'email': email, // 이메일 필드 추가
       'profileImage': profileImage,
       'isBlocked': isBlocked,
       'age': age,
@@ -55,6 +58,7 @@ class User {
       nickname: map['nickname'],
       birthDate: map['birthDate'],
       phoneNumber: map['phoneNumber'],
+      email: map['email'], // 이메일 필드 추가
       profileImage: map['profileImage'],
       isBlocked: map['isBlocked'],
       age: map['age'],

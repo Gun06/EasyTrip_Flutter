@@ -39,6 +39,7 @@ class AdminMemberDetailPage extends StatelessWidget {
       ),
       body: SingleChildScrollView(
         child: Padding(
+          // 패딩 추가
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,8 +50,8 @@ class AdminMemberDetailPage extends StatelessWidget {
                     CircleAvatar(
                       radius: 50,
                       backgroundImage: profileImage != null && profileImage.isNotEmpty
-                          ? NetworkImage(profileImage)
-                          : AssetImage(defaultProfileImage) as ImageProvider,
+                          ? AssetImage(profileImage)
+                          : AssetImage(defaultProfileImage),
                     ),
                     SizedBox(height: 10),
                     Text(
@@ -75,6 +76,8 @@ class AdminMemberDetailPage extends StatelessWidget {
               _buildDetailRow('생년월일', user.birthDate),
               SizedBox(height: 20),
               _buildDetailRow('전화번호', user.phoneNumber),
+              SizedBox(height: 20),
+              _buildDetailRow('이메일', user.email), // 이메일 필드 추가
               SizedBox(height: 20),
               _buildDetailRow('나이', user.age.toString()),
               SizedBox(height: 20),
@@ -188,7 +191,7 @@ class AdminMemberDetailPage extends StatelessWidget {
                   Chip(
                     label: Text(
                       preference,
-                      style: TextStyle(fontSize: 12,color: Colors.black),
+                      style: TextStyle(fontSize: 12, color: Colors.black),
                     ),
                     backgroundColor: Colors.grey[100],
                     shape: RoundedRectangleBorder(

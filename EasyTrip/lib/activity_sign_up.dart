@@ -27,6 +27,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
   final TextEditingController _birthController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController(); // 이메일 컨트롤러 추가
   bool _isPushChecked = false;
   bool _isInformChecked = false;
 
@@ -40,6 +41,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
   bool _isPasswordValid = false;
   bool _isPasswordConfirmValid = false;
   bool _isPhoneNumberValid = false;
+  bool _isEmailValid = false; // 이메일 유효성 검사 변수 추가
 
   String? _idCheckMessage;
   String? _nicknameCheckMessage;
@@ -90,6 +92,9 @@ class _SignUpActivityState extends State<SignUpActivity> {
     _phoneController.addListener(() {
       _formatPhoneNumber();
       _checkPhoneNumber(_phoneController.text);
+    });
+    _emailController.addListener(() {
+      _checkEmail(_emailController.text); // 이메일 유효성 검사 호출
     });
   }
 
@@ -207,6 +212,12 @@ class _SignUpActivityState extends State<SignUpActivity> {
     });
   }
 
+  void _checkEmail(String value) {
+    setState(() {
+      _isEmailValid = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value);
+    });
+  }
+
   void _calculateAge(String birthDate) {
     if (_isValidDate(birthDate)) {
       final now = DateTime.now();
@@ -314,7 +325,8 @@ class _SignUpActivityState extends State<SignUpActivity> {
         _isNameValid &&
         _isNicknameValid &&
         _isBirthDateValid &&
-        _isPhoneNumberValid) {
+        _isPhoneNumberValid &&
+        _isEmailValid) { // 이메일 유효성 검사 추가
       User newUser = User(
         id: int.parse(_idController.text),
         password: _passwordController.text,
@@ -322,6 +334,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
         nickname: _nicknameController.text,
         birthDate: _birthController.text,
         phoneNumber: _phoneController.text,
+        email: _emailController.text, // 이메일 정보 추가
         profileImage: 'assets/ph_profile_img_01.jpg', // 기본 프로필 이미지 설정
         isBlocked: 0, // 차단 상태 초기화
         age: _age,
@@ -591,6 +604,9 @@ class _SignUpActivityState extends State<SignUpActivity> {
 
               SizedBox(height: 15),
               _buildPhoneNumberField(),
+              SizedBox(height: 15),
+              _buildTextField(_emailController, '이메일', TextInputType.emailAddress,
+                  isValid: _isEmailValid), // 이메일 입력 필드 추가
               SizedBox(height: 30),
               CheckboxListTile(
                 title: Text('Push 알림에 동의합니다. (선택)'),

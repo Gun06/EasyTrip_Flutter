@@ -22,7 +22,12 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 7, onCreate: _createDB, onUpgrade: _upgradeDB);
+    return await openDatabase(
+      path,
+      version: 8, // 버전 업그레이드
+      onCreate: _createDB,
+      onUpgrade: _upgradeDB,
+    );
   }
 
   // 데이터베이스 생성
@@ -36,6 +41,7 @@ class DatabaseHelper {
       nickname TEXT NOT NULL,
       birthDate TEXT NOT NULL,
       phoneNumber TEXT NOT NULL,
+      email TEXT NOT NULL, // 이메일 필드 추가
       profileImage TEXT,
       isBlocked INTEGER NOT NULL DEFAULT 0,
       age INTEGER NOT NULL,
@@ -86,6 +92,11 @@ class DatabaseHelper {
   }
 
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 8) {
+      // users 테이블에 email 컬럼 추가
+      await db.execute('ALTER TABLE users ADD COLUMN email TEXT NOT NULL DEFAULT "";');
+    }
+
     if (oldVersion < 7) {
       // 일정 테이블 추가
       await db.execute('''
@@ -138,7 +149,7 @@ class DatabaseHelper {
         'recommendation_entries',
         {
           'scheduleId': scheduleId,
-          'placeName': recommendations[i]['title'],  // 'title' 키가 맞는지 확인하세요.
+          'placeName': recommendations[i]['title'],
           'price': recommendations[i]['price'],
           'location': recommendations[i]['location'],
           'sortOrder': i,
@@ -201,7 +212,6 @@ class DatabaseHelper {
     List<Map<String, dynamic>> resultSchedules = [];
 
     for (var schedule in schedules) {
-      // 새로 Map 객체 생성
       Map<String, dynamic> scheduleCopy = Map<String, dynamic>.from(schedule);
 
       final List<Map<String, dynamic>> recommendations = await db.query(
@@ -211,10 +221,9 @@ class DatabaseHelper {
         orderBy: 'sortOrder ASC',
       );
 
-      // 새롭게 복사한 객체에 추천 정보를 추가
       scheduleCopy['recommendations'] = recommendations;
 
-      resultSchedules.add(scheduleCopy); // 복사한 객체를 리스트에 추가
+      resultSchedules.add(scheduleCopy);
     }
 
     return resultSchedules;
@@ -323,6 +332,7 @@ class DatabaseHelper {
         'nickname',
         'birthDate',
         'phoneNumber',
+        'email', // 이메일 필드 추가
         'profileImage',
         'isBlocked',
         'age',
@@ -354,6 +364,7 @@ class DatabaseHelper {
         'nickname',
         'birthDate',
         'phoneNumber',
+        'email', // 이메일 필드 추가
         'profileImage',
         'isBlocked',
         'age',
@@ -400,7 +411,7 @@ class DatabaseHelper {
     );
   }
 
-  // 특정 사용자의 특정 발신자로부터의 읽지 않은 메시지 개수 조회
+  // 읽지 않은 메시지 개수 조회
   Future<int> getUnreadMessagesCount(int userId, String sender) async {
     final db = await database;
     return Sqflite.firstIntValue(await db.rawQuery(
@@ -409,7 +420,7 @@ class DatabaseHelper {
         0;
   }
 
-  // 특정 사용자의 특정 발신자로부터의 메시지를 읽음으로 표시
+  // 메시지를 읽음으로 표시
   Future<void> markMessagesAsRead(int userId, String sender) async {
     final db = await database;
     await db.update(

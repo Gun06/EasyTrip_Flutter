@@ -23,6 +23,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController _confirmPasswordController;
   late TextEditingController _phoneController;
   late TextEditingController _birthController;
+  late TextEditingController _emailController; // 이메일 컨트롤러 추가
   late int _selectedAge;
   late String _selectedGender;
   String? _profileImage;
@@ -36,6 +37,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   bool _isPasswordValid = true;
   bool _isPasswordConfirmValid = true;
   bool _isPhoneNumberValid = true;
+  bool _isEmailValid = true; // 이메일 유효성 검사 변수 추가
   String? _nicknameCheckMessage;
   String? _idCheckMessage;
 
@@ -49,9 +51,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _confirmPasswordController = TextEditingController();
     _phoneController = TextEditingController();
     _birthController = TextEditingController();
+    _emailController = TextEditingController(); // 이메일 컨트롤러 초기화
     _selectedGender = '남성'; // Default value
     _selectedAge = 18; // Default value
     _initializeUserData();
+
+    // 이메일 입력 리스너 추가
+    _emailController.addListener(() {
+      _checkEmail(_emailController.text);
+    });
   }
 
   Future<void> _initializeUserData() async {
@@ -67,6 +75,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         _confirmPasswordController.text = _user!.password;
         _phoneController.text = _user!.phoneNumber;
         _birthController.text = _user!.birthDate;
+        _emailController.text = _user!.email; // 이메일 설정
         _selectedGender = _user!.gender;
         _selectedAge = _user!.age;
         _profileImage = _user!.profileImage;
@@ -116,6 +125,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return true;
   }
 
+  void _checkEmail(String value) {
+    setState(() {
+      _isEmailValid = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value);
+    });
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -125,6 +140,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _confirmPasswordController.dispose();
     _phoneController.dispose();
     _birthController.dispose();
+    _emailController.dispose(); // 이메일 컨트롤러 해제
     super.dispose();
   }
 
@@ -150,6 +166,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final String confirmPassword = _confirmPasswordController.text.trim();
     final String phone = _phoneController.text.trim();
     final String birthDate = _birthController.text.trim();
+    final String email = _emailController.text.trim(); // 이메일 추가
     final String gender = _selectedGender;
     final int age = _calculateAge(birthDate);
 
@@ -162,7 +179,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         password.isEmpty ||
         confirmPassword.isEmpty ||
         phone.isEmpty ||
-        birthDate.isEmpty) {
+        birthDate.isEmpty ||
+        email.isEmpty) {
       Fluttertoast.showToast(msg: '모든 필드를 입력하세요.');
       return;
     }
@@ -182,6 +200,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
       return;
     }
 
+    if (!_isEmailValid) {
+      Fluttertoast.showToast(msg: '유효한 이메일을 입력하세요.');
+      return;
+    }
+
     final dbHelper = DatabaseHelper.instance;
     final updatedUser = User(
       id: widget.userId,
@@ -190,6 +213,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       nickname: _nicknameController.text.trim(),
       birthDate: birthDate,
       phoneNumber: phone,
+      email: email, // 이메일 추가
       profileImage: _profileImage ?? _user!.profileImage,
       isBlocked: _user!.isBlocked,
       age: age,
@@ -374,65 +398,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            _buildTextField(_studentIdController,
-                                '아이디(학번)', '아이디(학번)',
-                                isValid: _isIdValid, enabled: false), // Disabled
-                            if (_isIdValid)
-                              Positioned(
-                                right: 10,
-                                top: 20,
-                                child: Icon(
-                                  Icons.check,
-                                  color: Colors.green,
-                                  size: 24.0,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                  _buildTextField(_studentIdController, '아이디(학번)', '아이디(학번)',
+                      isValid: _isIdValid, enabled: false), // Disabled
                 ],
               ),
               SizedBox(height: 20),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            _buildTextField(_passwordController, '비밀번호', '비밀번호',
-                                obscureText: true, isValid: _isPasswordValid, enabled: false), // Disabled
-                            if (!_isPasswordValid)
-                              Positioned(
-                                right: 10,
-                                top: 20,
-                                child: Icon(
-                                  Icons.info_outline,
-                                  color: Colors.red,
-                                  size: 24.0,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+              _buildTextField(_passwordController, '비밀번호', '비밀번호',
+                  obscureText: true,
+                  isValid: _isPasswordValid,
+                  enabled: false), // Disabled
               SizedBox(height: 20),
-              _buildTextField(
-                  _confirmPasswordController, '비밀번호 확인', '비밀번호 확인',
-                  obscureText: true, isValid: _isPasswordConfirmValid, enabled: false), // Disabled
+              _buildTextField(_confirmPasswordController, '비밀번호 확인', '비밀번호 확인',
+                  obscureText: true,
+                  isValid: _isPasswordConfirmValid,
+                  enabled: false), // Disabled
               SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.only(left: 8.0),
@@ -443,22 +422,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   _birthController, '생년월일 (YYYYMMDD)', '생년월일',
                   isValid: _isBirthDateValid, onChanged: (value) {
                 _onBirthDateChanged(value);
-                if (!_validateBirthDate(value)) {
-                  setState(() {
-                    _isBirthDateValid = false;
-                  });
-                } else {
-                  setState(() {
-                    _isBirthDateValid = true;
-                  });
-                }
               }, formattedText: _formattedBirthDate),
               SizedBox(height: 20),
               _buildAgeGenderField(),
               SizedBox(height: 20),
-              _buildTextField(
-                  _phoneController, '전화번호 (ex.010-1234-5678)', '전화번호',
+              _buildTextField(_phoneController, '전화번호 (ex.010-1234-5678)', '전화번호',
                   isValid: _isPhoneNumberValid),
+              SizedBox(height: 20),
+              _buildTextField(
+                  _emailController, '이메일', '이메일',
+                  isValid: _isEmailValid),
               SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
@@ -489,7 +462,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         _isPasswordValid &&
         _isPasswordConfirmValid &&
         _isPhoneNumberValid &&
-        _isBirthDateValid;
+        _isBirthDateValid &&
+        _isEmailValid; // 이메일 유효성 검사 추가
   }
 
   Widget _buildTextField(
