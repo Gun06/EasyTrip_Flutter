@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'activity_search.dart';
 import 'pages/activity_main.dart';
 import 'admin_pages/admin.dart';
 import 'helpers/database_helper.dart';
 import 'activity_preference_1.dart';
-import 'activity_search.dart';
 import 'models/user.dart';
 
 class LoginActivity extends StatefulWidget {
@@ -87,10 +87,15 @@ class _LoginActivityState extends State<LoginActivity> {
     );
   }
 
-  void _navigateToSearchActivity() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => SearchActivity()),
+  // 비밀번호 찾기 모달 창 띄우기
+  void _showPasswordRecoveryModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // 키보드가 올라올 때 화면 조절
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => PasswordRecoveryModal(),
     );
   }
 
@@ -176,7 +181,7 @@ class _LoginActivityState extends State<LoginActivity> {
                   onPressed: _handleLogin,
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.all(15.0),
-                    backgroundColor: Colors.blue, // primary 대신 backgroundColor 사용
+                    backgroundColor: Colors.blue,
                   ),
                   child: Text(
                     '로그인',
@@ -189,7 +194,7 @@ class _LoginActivityState extends State<LoginActivity> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   GestureDetector(
-                    onTap: _navigateToSearchActivity,
+                    onTap: _showPasswordRecoveryModal, // 비밀번호 찾기 모달 띄우기
                     child: Text(
                       '아이디 • 비밀번호 찾기',
                       style: TextStyle(color: Colors.orange, fontSize: 16),
