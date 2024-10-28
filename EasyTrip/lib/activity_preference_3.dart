@@ -12,7 +12,7 @@ class PreferencePage3 extends StatefulWidget {
 
 class _PreferencePage3State extends State<PreferencePage3> {
   final List<int> selectedImages = [];
-  final List<String> preferenceLabels = ['한식', '중식', '일식', '양식', '디저트'];
+  final List<String> preferenceLabels = ['한식', '중식', '일식', '양식']; // 디저트 제거
 
   void _handleSelection(int index) {
     setState(() {
@@ -41,7 +41,7 @@ class _PreferencePage3State extends State<PreferencePage3> {
           children: <Widget>[
             SizedBox(height: 40),
             TweenAnimationBuilder<double>(
-              tween: Tween<double>(begin: 0.50, end: 0.75),
+              tween: Tween<double>(begin: 0.25, end: 0.50),
               duration: Duration(seconds: 1),
               builder: (context, value, _) => LinearProgressIndicator(
                 value: value,
@@ -50,7 +50,6 @@ class _PreferencePage3State extends State<PreferencePage3> {
               ),
             ),
             SizedBox(height: 16),
-            // 뒤로가기 버튼과 로그인 페이지로 나가는 버튼
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -91,7 +90,7 @@ class _PreferencePage3State extends State<PreferencePage3> {
                   ),
                   SizedBox(height: 16),
                   Container(
-                    height: 40, // 텍스트가 들어갈 공간 확보
+                    height: 40,
                     child: Center(child: _buildSelectedText()),
                   ),
                 ],
@@ -111,21 +110,17 @@ class _PreferencePage3State extends State<PreferencePage3> {
                         Expanded(
                           child: _buildPreferenceOption(1, '중식', 'assets/ph_china_food.jpeg', 3 / 4),
                         ),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: _buildPreferenceOption(2, '일식', 'assets/ph_dessert.jpeg', 3 / 4),
-                        ),
                       ],
                     ),
                     SizedBox(height: 8),
                     Row(
                       children: [
                         Expanded(
-                          child: _buildPreferenceOption(3, '양식', 'assets/ph_italy_food.jpeg', 3 / 4),
+                          child: _buildPreferenceOption(2, '일식', 'assets/ph_japan_food.webp', 3 / 4),
                         ),
                         SizedBox(width: 8),
                         Expanded(
-                          child: _buildPreferenceOption(4, '디저트', 'assets/ph_japan_food.webp', 3 / 4),
+                          child: _buildPreferenceOption(3, '양식', 'assets/ph_italy_food.jpeg', 3 / 4),
                         ),
                       ],
                     ),
@@ -136,7 +131,7 @@ class _PreferencePage3State extends State<PreferencePage3> {
             Container(
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton(
-                onPressed: selectedImages.length >= 5
+                onPressed: selectedImages.length >= 4
                     ? () {
                   Navigator.push(
                     context,
@@ -156,7 +151,7 @@ class _PreferencePage3State extends State<PreferencePage3> {
                 }
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: selectedImages.length >= 5 ? Colors.blue : Colors.grey,
+                  backgroundColor: selectedImages.length >= 4 ? Colors.blue : Colors.grey,
                   padding: EdgeInsets.all(12),
                 ),
                 child: Center(
@@ -204,9 +199,7 @@ class _PreferencePage3State extends State<PreferencePage3> {
         ),
       );
       if (i < selectedImages.length - 1) {
-        widgets.add(
-          SizedBox(width: 8), // 간격 추가
-        );
+        widgets.add(SizedBox(width: 8));
         widgets.add(
           Align(
             alignment: Alignment.center,
@@ -220,9 +213,7 @@ class _PreferencePage3State extends State<PreferencePage3> {
             ),
           ),
         );
-        widgets.add(
-          SizedBox(width: 8), // 간격 추가
-        );
+        widgets.add(SizedBox(width: 8));
       }
     }
     return SingleChildScrollView(
@@ -242,26 +233,15 @@ class _PreferencePage3State extends State<PreferencePage3> {
         onTap: () => _handleSelection(index),
         child: Container(
           decoration: BoxDecoration(
-            border: isSelected
-                ? Border.all(
-              color: Colors.blue,
-              width: 3.0,
-            )
-                : null,
+            border: isSelected ? Border.all(color: Colors.blue, width: 3.0) : null,
           ),
           child: Stack(
             alignment: Alignment.bottomCenter,
             children: <Widget>[
               ColorFiltered(
                 colorFilter: isSelected
-                    ? ColorFilter.mode(
-                  Colors.grey,
-                  BlendMode.saturation,
-                )
-                    : ColorFilter.mode(
-                  Colors.transparent,
-                  BlendMode.saturation,
-                ),
+                    ? ColorFilter.mode(Colors.grey, BlendMode.saturation)
+                    : ColorFilter.mode(Colors.transparent, BlendMode.saturation),
                 child: Image.asset(
                   imagePath,
                   width: double.infinity,
