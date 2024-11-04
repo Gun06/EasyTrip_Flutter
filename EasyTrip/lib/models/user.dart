@@ -1,3 +1,5 @@
+// user.dart
+
 class User {
   final int? id;
   final String password;
@@ -5,7 +7,7 @@ class User {
   final String nickname;
   final String birthDate;
   final String phoneNumber;
-  final String email; // 이메일 필드 추가
+  final String email;
   final String? profileImage;
   final int isBlocked;
   final int age;
@@ -21,7 +23,7 @@ class User {
     required this.nickname,
     required this.birthDate,
     required this.phoneNumber,
-    required this.email, // 이메일 필드 추가
+    required this.email,
     this.profileImage,
     this.isBlocked = 0,
     required this.age,
@@ -39,7 +41,7 @@ class User {
       'nickname': nickname,
       'birthDate': birthDate,
       'phoneNumber': phoneNumber,
-      'email': email, // 이메일 필드 추가
+      'email': email,
       'profileImage': profileImage,
       'isBlocked': isBlocked,
       'age': age,
@@ -51,6 +53,7 @@ class User {
   }
 
   factory User.fromMap(Map<String, dynamic> map) {
+    print("User.fromMap 호출됨: $map"); // 디버깅 로그 추가
     return User(
       id: map['id'],
       password: map['password'],
@@ -58,7 +61,7 @@ class User {
       nickname: map['nickname'],
       birthDate: map['birthDate'],
       phoneNumber: map['phoneNumber'],
-      email: map['email'], // 이메일 필드 추가
+      email: map['email'],
       profileImage: map['profileImage'],
       isBlocked: map['isBlocked'],
       age: map['age'],

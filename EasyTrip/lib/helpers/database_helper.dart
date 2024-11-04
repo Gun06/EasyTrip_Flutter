@@ -24,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 8, // 버전 업그레이드
+      version: 8,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -32,7 +32,6 @@ class DatabaseHelper {
 
   // 데이터베이스 생성
   Future _createDB(Database db, int version) async {
-    // 사용자 테이블 생성
     await db.execute('''
     CREATE TABLE users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,7 +40,7 @@ class DatabaseHelper {
       nickname TEXT NOT NULL,
       birthDate TEXT NOT NULL,
       phoneNumber TEXT NOT NULL,
-      email TEXT NOT NULL, // 이메일 필드 추가
+      email TEXT NOT NULL,
       profileImage TEXT,
       isBlocked INTEGER NOT NULL DEFAULT 0,
       age INTEGER NOT NULL,
@@ -52,7 +51,6 @@ class DatabaseHelper {
     )
     ''');
 
-    // 메시지 테이블 생성
     await db.execute('''
     CREATE TABLE messages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -65,7 +63,6 @@ class DatabaseHelper {
     )
     ''');
 
-    // 일정 테이블 생성
     await db.execute('''
     CREATE TABLE schedule_entries (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -77,7 +74,6 @@ class DatabaseHelper {
     )
     ''');
 
-    // 추천된 장소 테이블 생성
     await db.execute('''
     CREATE TABLE recommendation_entries (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -93,12 +89,10 @@ class DatabaseHelper {
 
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 8) {
-      // users 테이블에 email 컬럼 추가
       await db.execute('ALTER TABLE users ADD COLUMN email TEXT NOT NULL DEFAULT "";');
     }
 
     if (oldVersion < 7) {
-      // 일정 테이블 추가
       await db.execute('''
       CREATE TABLE schedule_entries (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -110,7 +104,6 @@ class DatabaseHelper {
       )
       ''');
 
-      // 추천된 장소 테이블 추가
       await db.execute('''
       CREATE TABLE recommendation_entries (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -122,6 +115,67 @@ class DatabaseHelper {
         FOREIGN KEY (scheduleId) REFERENCES schedule_entries (id)
       )
       ''');
+    }
+  }
+
+  // 테스트 사용자 추가 메서드
+  Future<int> insertTestUser() async {
+    final db = await database;
+    int userId = await db.insert(
+      'users',
+      {
+        'password': 'testpass',
+        'name': '테스트 사용자',
+        'nickname': '테스트닉네임',
+        'birthDate': '1990-01-01',
+        'phoneNumber': '010-1234-5678',
+        'email': 'test@example.com',
+        'profileImage': null,
+        'isBlocked': 0,
+        'age': 30,
+        'gender': '남성',
+        'activityPreferences': '등산,여행',
+        'foodPreferences': '한식,일식',
+        'accommodationPreferences': '호텔,모텔'
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    print("테스트 사용자 삽입 완료, userId: $userId"); // 삽입된 ID 확인
+    return userId;
+  }
+
+  // 특정 사용자 조회
+  Future<User?> getUser(int id) async {
+    final db = await database;
+    final maps = await db.query(
+      'users',
+      columns: [
+        'id',
+        'password',
+        'name',
+        'nickname',
+        'birthDate',
+        'phoneNumber',
+        'email',
+        'profileImage',
+        'isBlocked',
+        'age',
+        'gender',
+        'activityPreferences',
+        'foodPreferences',
+        'accommodationPreferences'
+      ],
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    print("getUser 쿼리 결과: $maps"); // 디버깅 로그 추가
+
+    if (maps.isNotEmpty) {
+      return User.fromMap(maps.first);
+    } else {
+      print("사용자를 찾을 수 없음");
+      return null;
     }
   }
 
@@ -321,37 +375,6 @@ class DatabaseHelper {
   }
 
   // 특정 사용자 조회
-  Future<User?> getUser(int id) async {
-    final db = await database;
-    final maps = await db.query(
-      'users',
-      columns: [
-        'id',
-        'password',
-        'name',
-        'nickname',
-        'birthDate',
-        'phoneNumber',
-        'email', // 이메일 필드 추가
-        'profileImage',
-        'isBlocked',
-        'age',
-        'gender',
-        'activityPreferences',
-        'foodPreferences',
-        'accommodationPreferences'
-      ],
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-
-    if (maps.isNotEmpty) {
-      return User.fromMap(maps.first);
-    } else {
-      return null;
-    }
-  }
-
   Future<User?> getUserById(String id) async {
     final db = await instance.database;
 
@@ -364,7 +387,7 @@ class DatabaseHelper {
         'nickname',
         'birthDate',
         'phoneNumber',
-        'email', // 이메일 필드 추가
+        'email',
         'profileImage',
         'isBlocked',
         'age',

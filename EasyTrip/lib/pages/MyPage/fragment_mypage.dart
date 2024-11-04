@@ -33,9 +33,15 @@ class _MyPageFragmentState extends State<MyPageFragment> {
 
   Future<void> _loadUserData() async {
     final dbHelper = DatabaseHelper.instance;
-    _user = await dbHelper.getUser(widget.userId);
-    _unreadMessagesCount = await dbHelper.getUnreadMessagesCount(widget.userId, 'admin');
-    setState(() {});
+    try {
+      print("데이터 로딩 시작");
+      _user = await dbHelper.getUser(widget.userId);
+      _unreadMessagesCount = await dbHelper.getUnreadMessagesCount(widget.userId, 'admin');
+      print("데이터 로딩 완료, _user: $_user, _unreadMessagesCount: $_unreadMessagesCount");
+      setState(() {});
+    } catch (e) {
+      print("오류 발생: $e");
+    }
   }
 
   void _addMenuItems() {
@@ -105,6 +111,7 @@ class _MyPageFragmentState extends State<MyPageFragment> {
 
   @override
   Widget build(BuildContext context) {
+    print("빌드 함수 호출, _user: $_user");
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
