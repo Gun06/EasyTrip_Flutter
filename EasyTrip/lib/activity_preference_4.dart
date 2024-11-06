@@ -14,6 +14,7 @@ class PreferencePage4 extends StatefulWidget {
 class _PreferencePage4State extends State<PreferencePage4> {
   final List<int> selectedOptions = [];
   final List<String> preferenceLabels = ['호텔', '모텔', '게스트 하우스'];
+  String? selectedAccommodationCode; // 최종 선택된 첫 번째 숙박 코드
 
   void _handleSelection(int index) {
     setState(() {
@@ -25,10 +26,39 @@ class _PreferencePage4State extends State<PreferencePage4> {
     });
   }
 
-  void _removeSelection(int index) {
-    setState(() {
-      selectedOptions.remove(index);
-    });
+  void _finalizeSelection() {
+    // 첫 번째 선택된 숙박 코드 설정
+    if (selectedOptions.isNotEmpty) {
+      selectedAccommodationCode = 'B${selectedOptions.first + 1}';
+    }
+
+    // activityPreferences를 복사하여 최종 순서 리스트 생성
+    List<String> finalPreferences = List<String>.from(widget.activityPreferences);
+
+    // 'B1' 위치를 찾아 selectedAccommodationCode로 대체
+    if (selectedAccommodationCode != null) {
+      int accommodationIndex = finalPreferences.indexOf('B1');
+      if (accommodationIndex != -1) {
+        finalPreferences[accommodationIndex] = selectedAccommodationCode!;
+      }
+    }
+
+    // 선택된 숙박 코드만 전달 (텍스트 설명 제외)
+    List<String> accommodationCodes = selectedOptions.map((index) => 'B${index + 1}').toList();
+
+    // 최종 대체된 순서 로그 출력 (예: D1B2E1A1C1 형태로 출력)
+    print('Final replaced order: ${finalPreferences.join()}');
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SignUpActivity(
+          activityPreferences: finalPreferences,
+          foodPreferences: widget.foodPreferences,
+          accommodationPreferences: accommodationCodes, // 코드만 포함
+        ),
+      ),
+    );
   }
 
   @override
@@ -115,22 +145,9 @@ class _PreferencePage4State extends State<PreferencePage4> {
             Container(
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton(
-                onPressed: selectedOptions.length >= 3
-                    ? () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SignUpActivity(
-                        activityPreferences: widget.activityPreferences,
-                        foodPreferences: widget.foodPreferences,
-                        accommodationPreferences: selectedOptions.map((index) => preferenceLabels[index]).toList(),
-                      ),
-                    ),
-                  );
-                }
-                    : null,
+                onPressed: selectedOptions.isNotEmpty ? _finalizeSelection : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: selectedOptions.length >= 3 ? Colors.blue : Colors.grey,
+                  backgroundColor: selectedOptions.isNotEmpty ? Colors.blue : Colors.grey,
                   padding: EdgeInsets.all(12),
                 ),
                 child: Center(
@@ -234,5 +251,11 @@ class _PreferencePage4State extends State<PreferencePage4> {
         ),
       ),
     );
+  }
+
+  void _removeSelection(int index) {
+    setState(() {
+      selectedOptions.remove(index);
+    });
   }
 }

@@ -12,7 +12,8 @@ class PreferencePage3 extends StatefulWidget {
 
 class _PreferencePage3State extends State<PreferencePage3> {
   final List<int> selectedImages = [];
-  final List<String> preferenceLabels = ['한식', '중식', '일식', '양식']; // 디저트 제거
+  final List<String> preferenceLabels = ['한식', '중식', '일식', '양식'];
+  String? selectedFoodCode; // 최종 선택된 첫 번째 음식 코드
 
   void _handleSelection(int index) {
     setState(() {
@@ -24,10 +25,44 @@ class _PreferencePage3State extends State<PreferencePage3> {
     });
   }
 
-  void _removeSelection(int index) {
-    setState(() {
-      selectedImages.remove(index);
-    });
+  void _finalizeSelection() {
+    // 첫 번째 선택된 음식 코드 설정
+    if (selectedImages.isNotEmpty) {
+      selectedFoodCode = 'A${selectedImages.first + 1}';
+    }
+
+    // activityPreferences를 복사하여 최종 순서 리스트 생성
+    List<String> finalPreferences = List<String>.from(widget.activityPreferences);
+
+    // 'A1' 위치를 찾아 selectedFoodCode로 대체
+    if (selectedFoodCode != null) {
+      int foodIndex = finalPreferences.indexOf('A1');
+      if (foodIndex != -1) {
+        finalPreferences[foodIndex] = selectedFoodCode!;
+      }
+    }
+
+    // 선택된 음식 코드만 전달 (텍스트 설명 제외)
+    List<String> foodCodes = selectedImages.map((index) => 'A${index + 1}').toList();
+
+    // 최종 대체된 순서 로그 출력 (예: D1B1E1A4C1 형태로 출력)
+    print('Final replaced order: ${finalPreferences.join()}');
+
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => PreferencePage4(
+          activityPreferences: finalPreferences,
+          foodPreferences: foodCodes,
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -131,27 +166,9 @@ class _PreferencePage3State extends State<PreferencePage3> {
             Container(
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton(
-                onPressed: selectedImages.length >= 4
-                    ? () {
-                  Navigator.push(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (context, animation, secondaryAnimation) => PreferencePage4(
-                        activityPreferences: widget.activityPreferences,
-                        foodPreferences: selectedImages.map((index) => preferenceLabels[index]).toList(),
-                      ),
-                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                        return FadeTransition(
-                          opacity: animation,
-                          child: child,
-                        );
-                      },
-                    ),
-                  );
-                }
-                    : null,
+                onPressed: selectedImages.isNotEmpty ? _finalizeSelection : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: selectedImages.length >= 4 ? Colors.blue : Colors.grey,
+                  backgroundColor: selectedImages.isNotEmpty ? Colors.blue : Colors.grey,
                   padding: EdgeInsets.all(12),
                 ),
                 child: Center(
@@ -265,5 +282,11 @@ class _PreferencePage3State extends State<PreferencePage3> {
         ),
       ),
     );
+  }
+
+  void _removeSelection(int index) {
+    setState(() {
+      selectedImages.remove(index);
+    });
   }
 }

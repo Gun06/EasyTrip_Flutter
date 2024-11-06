@@ -1,7 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'helpers/database_helper.dart';
-import 'models/user.dart';
+import 'package:http/http.dart' as http;
 
 class SignUpActivity extends StatefulWidget {
   final List<String> activityPreferences;
@@ -21,13 +21,15 @@ class SignUpActivity extends StatefulWidget {
 class _SignUpActivityState extends State<SignUpActivity> {
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _nicknameController = TextEditingController();
   final TextEditingController _birthController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController(); // 이메일 컨트롤러 추가
+  final TextEditingController _emailController =
+      TextEditingController(); // 이메일 컨트롤러 추가
   bool _isPushChecked = false;
   bool _isInformChecked = false;
 
@@ -45,6 +47,8 @@ class _SignUpActivityState extends State<SignUpActivity> {
 
   String? _idCheckMessage;
   String? _nicknameCheckMessage;
+  String? _emailCheckMessage;
+  String _selectedEmailDomain = 'gmail.com';
   String? _passwordMessage;
 
   OverlayEntry? _tooltip; // Tooltip overlay entry
@@ -54,11 +58,23 @@ class _SignUpActivityState extends State<SignUpActivity> {
   OverlayEntry? _genderOverlayEntry;
   OverlayEntry? _ageOverlayEntry;
 
+  // 이메일 관련 컨트롤러와 변수들
+  final TextEditingController _emailPrefixController = TextEditingController();
+
   bool _termsViewed1 = false;
   bool _termsViewed2 = false;
 
   ScrollController _scrollController = ScrollController();
   bool _exposureAppBar = true;
+
+// 이메일 도메인 리스트
+  final List<String> _emailDomains = [
+    'gmail.com',
+    'naver.com',
+    'daum.net',
+    'hotmail.com',
+    'yahoo.com'
+  ];
 
   @override
   void initState() {
@@ -66,14 +82,14 @@ class _SignUpActivityState extends State<SignUpActivity> {
     _scrollController.addListener(_scrollListener);
     _idController.addListener(() {
       setState(() {
-        _idCheckMessage = null; // 입력 중에는 메시지 사라지도록 설정
-        _isIdValid = false; // 입력 중에는 유효성 체크 아이콘 제거
+        _idCheckMessage = null;
+        _isIdValid = false;
       });
     });
     _nicknameController.addListener(() {
       setState(() {
-        _nicknameCheckMessage = null; // 입력 중에는 메시지 사라지도록 설정
-        _isNicknameValid = false; // 입력 중에는 유효성 체크 아이콘 제거
+        _nicknameCheckMessage = null;
+        _isNicknameValid = false;
       });
     });
     _birthController.addListener(() {
@@ -94,20 +110,20 @@ class _SignUpActivityState extends State<SignUpActivity> {
       _checkPhoneNumber(_phoneController.text);
     });
     _emailController.addListener(() {
-      _checkEmail(_emailController.text); // 이메일 유효성 검사 호출
+      _checkEmail(_emailController.text);
     });
   }
 
   void _formatPhoneNumber() {
     String text = _phoneController.text;
-    text = text.replaceAll(RegExp(r'\D'), ''); // 숫자 이외의 문자 제거
+    text = text.replaceAll(RegExp(r'\D'), '');
 
     if (text.length > 3 && text.length <= 7) {
       text = text.replaceFirstMapped(
           RegExp(r'(\d{3})(\d+)'), (Match m) => '${m[1]}-${m[2]}');
     } else if (text.length > 7) {
       text = text.replaceFirstMapped(RegExp(r'(\d{3})(\d{4})(\d+)'),
-              (Match m) => '${m[1]}-${m[2]}-${m[3]}');
+          (Match m) => '${m[1]}-${m[2]}-${m[3]}');
     }
 
     _phoneController.value = TextEditingValue(
@@ -139,7 +155,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
   }
 
   bool _isValidNickname(String str) {
-    return RegExp(r'^[a-z0-9가-힣]+$').hasMatch(str); // 한글, 영어 소문자, 숫자만 허용
+    return RegExp(r'^[a-z0-9가-힣]+$').hasMatch(str);
   }
 
   bool _isValidDate(String value) {
@@ -167,14 +183,11 @@ class _SignUpActivityState extends State<SignUpActivity> {
       12: 31
     };
 
-    if ((year) % 4 == 0 &&
-        ((year) % 100 != 0 || (year) % 400 == 0)) {
-      daysInMonth[2] = 29; // 윤년 처리
+    if (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)) {
+      daysInMonth[2] = 29;
     }
 
-    if (day < 1 || day > daysInMonth[month]!) return false;
-
-    return true;
+    return day >= 1 && day <= daysInMonth[month]!;
   }
 
   void _checkBirthDate(String value) {
@@ -192,11 +205,11 @@ class _SignUpActivityState extends State<SignUpActivity> {
   void _checkPassword(String value) {
     setState(() {
       final pwCheck =
-      RegExp(r'^(?=.*\d)(?=.*[~`!@#$%^&*()-])(?=.*[a-zA-Z]).{8,16}$')
-          .hasMatch(value);
+          RegExp(r'^(?=.*\d)(?=.*[~`!@#$%^&*()-])(?=.*[a-zA-Z]).{8,16}$')
+              .hasMatch(value);
       _isPasswordValid = pwCheck;
       _passwordMessage =
-      pwCheck ? null : '비밀번호는 8자 이상의 숫자와 영문, 특수문자 조합이어야 합니다.';
+          pwCheck ? null : '8자 이상의 숫자와 영문, 특수문자 조합이어야 합니다.';
     });
   }
 
@@ -226,7 +239,8 @@ class _SignUpActivityState extends State<SignUpActivity> {
       final birthDay = int.parse(birthDate.substring(6, 8));
       DateTime birthdayThisYear = DateTime(now.year, birthMonth, birthDay);
 
-      if (birthdayThisYear.isBefore(now) || birthdayThisYear.isAtSameMomentAs(now)) {
+      if (birthdayThisYear.isBefore(now) ||
+          birthdayThisYear.isAtSameMomentAs(now)) {
         setState(() {
           _age = now.year - birthYear;
         });
@@ -244,81 +258,117 @@ class _SignUpActivityState extends State<SignUpActivity> {
     }
   }
 
-  Future<void> _checkDuplicate(
-      String type, TextEditingController controller) async {
+  Future<void> _checkDuplicate(String type) async {
     String? message;
     bool isUnique = false;
-    final dbHelper = DatabaseHelper.instance;
-    final users = await dbHelper.getAllUsers(); // 모든 사용자 포함
+
+    // 검사할 값을 지정
+    String valueToCheck;
+    String url;
 
     if (type == 'id') {
-      if (!_isNumeric(controller.text)) {
-        message = '아이디는 숫자로만 이루어져야 합니다.';
-      } else {
-        isUnique = !users.any((user) => user.id.toString() == controller.text);
-        message = isUnique ? null : '아이디가 이미 사용 중입니다.';
-        _isIdValid = isUnique;
-      }
-      setState(() {
-        _idCheckMessage = message;
-      });
+      valueToCheck = _idController.text;
+      url = 'http://44.214.72.11:8080/eztrip/check-username';
     } else if (type == 'nickname') {
-      if (!_isValidNickname(controller.text)) {
-        message = '영어 대문자, 특수문자, 한글(자음,모음) 분리는 불가합니다.';
+      valueToCheck = _nicknameController.text;
+      url = 'http://44.214.72.11:8080/eztrip/check-nickname';
+    } else if (type == 'email') {
+      valueToCheck = '${_emailPrefixController.text}@$_selectedEmailDomain';
+      url = 'http://44.214.72.11:8080/eztrip/check-email';
+    } else {
+      return; // 잘못된 type이면 중단
+    }
+
+    print("중복검사 버튼 클릭 - 서버에 요청을 보냅니다: $type = $valueToCheck");
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'username': valueToCheck}),
+      );
+
+      if (response.statusCode == 200) {
+        print("서버 응답 body: ${response.body}");
+        if (response.body.isNotEmpty) {
+          final result = jsonDecode(response.body);
+          isUnique = result['isUnique'];
+          setState(() {
+            if (type == 'id') {
+              _isIdValid = isUnique;
+              _idCheckMessage = isUnique ? null : '아이디가 이미 사용 중입니다.';
+            } else if (type == 'nickname') {
+              _isNicknameValid = isUnique;
+              _nicknameCheckMessage = isUnique ? null : '닉네임이 이미 사용 중입니다.';
+            } else if (type == 'email') {
+              _isEmailValid = isUnique;
+              _emailCheckMessage = isUnique ? null : '이 이메일은 이미 사용 중입니다.';
+            }
+          });
+        } else {
+          // 빈 응답일 때는 사용 가능으로 간주
+          print("빈 응답이므로 사용 가능한 것으로 간주합니다.");
+          setState(() {
+            if (type == 'id') {
+              _isIdValid = true;
+              _idCheckMessage = null; // 사용 가능하므로 메시지 초기화
+            } else if (type == 'nickname') {
+              _isNicknameValid = true;
+              _nicknameCheckMessage = null;
+            } else if (type == 'email') {
+              _isEmailValid = true;
+              _emailCheckMessage = null;
+            }
+          });
+        }
       } else {
-        isUnique = !users.any((user) => user.nickname == controller.text);
-        message = isUnique ? null : '닉네임이 이미 사용 중입니다.';
-        _isNicknameValid = isUnique;
+        print("서버 오류: 상태 코드 ${response.statusCode}");
+        setState(() {
+          if (type == 'id') {
+            _idCheckMessage = '서버 오류가 발생했습니다.';
+          } else if (type == 'nickname') {
+            _nicknameCheckMessage = '서버 오류가 발생했습니다.';
+          } else if (type == 'email') {
+            _emailCheckMessage = '서버 오류가 발생했습니다.';
+          }
+        });
       }
+    } catch (error) {
+      print("네트워크 오류 - 중복 확인 요청 실패: $error");
       setState(() {
-        _nicknameCheckMessage = message;
+        if (type == 'id') {
+          _idCheckMessage = '네트워크 오류가 발생했습니다.';
+        } else if (type == 'nickname') {
+          _nicknameCheckMessage = '네트워크 오류가 발생했습니다.';
+        } else if (type == 'email') {
+          _emailCheckMessage = '네트워크 오류가 발생했습니다.';
+        }
       });
     }
   }
 
-  void _showCustomTooltip(BuildContext context, String message) {
-    _removeTooltip();
-    _tooltip = OverlayEntry(
-      builder: (context) => Positioned(
-        top: MediaQuery.of(context).size.height / 2,
-        left: MediaQuery.of(context).size.width / 4,
-        right: MediaQuery.of(context).size.width / 4,
-        child: Material(
-          color: Colors.transparent,
-          child: Container(
-            padding: EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  message,
-                  style: TextStyle(color: Colors.white),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: _removeTooltip,
-                  child: Text('확인'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-
-    Overlay.of(context)?.insert(_tooltip!);
-  }
-
-  void _removeTooltip() {
-    _tooltip?.remove();
-    _tooltip = null;
-  }
 
   Future<void> _saveUser() async {
+    // 전달된 preferences를 코드 형식의 문자열로 병합 후 앞 10자리만 사용
+    final String categories = (widget.activityPreferences.join() +
+        widget.foodPreferences.join() +
+        widget.accommodationPreferences.join()).substring(0, 10);
+
+    // 로그에 각 입력 값과 categories의 앞 10자리 출력
+    print('회원가입 데이터 확인:');
+    print('아이디: ${_idController.text}');
+    print('이메일: ${_emailPrefixController.text}@$_selectedEmailDomain');
+    print('비밀번호: ${_passwordController.text}');
+    print('닉네임: ${_nicknameController.text}');
+    print('전화번호: ${_phoneController.text}');
+    print('이미지 경로: assets/ph_profile_img_01.jpg');
+    print('생년월일: ${_birthController.text}');
+    print('성별: $_gender');
+    print('나이: $_age');
+    print('Push 동의: $_isPushChecked');
+    print('정보제공 동의: $_isInformChecked');
+    print('카테고리 코드: $categories'); // 앞 10자리 코드 형식만 출력
+
     if (_isIdValid &&
         _isPasswordValid &&
         _isPasswordConfirmValid &&
@@ -326,32 +376,37 @@ class _SignUpActivityState extends State<SignUpActivity> {
         _isNicknameValid &&
         _isBirthDateValid &&
         _isPhoneNumberValid &&
-        _isEmailValid) { // 이메일 유효성 검사 추가
-      User newUser = User(
-        id: int.parse(_idController.text),
-        password: _passwordController.text,
-        name: _nameController.text,
-        nickname: _nicknameController.text,
-        birthDate: _birthController.text,
-        phoneNumber: _phoneController.text,
-        email: _emailController.text, // 이메일 정보 추가
-        profileImage: 'assets/ph_profile_img_01.jpg', // 기본 프로필 이미지 설정
-        isBlocked: 0, // 차단 상태 초기화
-        age: _age,
-        gender: _gender,
-        activityPreferences: widget.activityPreferences,
-        foodPreferences: widget.foodPreferences,
-        accommodationPreferences: widget.accommodationPreferences,
+        _isEmailValid) {
+      final url = Uri.parse('http://44.214.72.11:8080/eztrip/join');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'username': _idController.text,
+          'email': '${_emailPrefixController.text}@$_selectedEmailDomain',
+          'password': _passwordController.text,
+          'nickname': _nicknameController.text,
+          'phoneNumber': _phoneController.text,
+          'image': 'assets/ph_profile_img_01.jpg',
+          'birth': _birthController.text,
+          'gender': _gender,
+          'age': _age,
+          'push': _isPushChecked,
+          'information': _isInformChecked,
+          'categories': categories, // 앞 10자리 코드 형식 문자열 전송
+        }),
       );
 
-      DatabaseHelper dbHelper = DatabaseHelper.instance;
-      await dbHelper.insertUser(newUser);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('회원가입이 완료되었습니다.')),
-      );
-
-      Navigator.pushNamed(context, '/login');
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('회원가입이 완료되었습니다.')),
+        );
+        Navigator.pushNamed(context, '/login');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('회원가입에 실패했습니다.')),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('모든 필드를 올바르게 입력해주세요.')),
@@ -365,22 +420,22 @@ class _SignUpActivityState extends State<SignUpActivity> {
       backgroundColor: Colors.white,
       appBar: _exposureAppBar
           ? AppBar(
-        title: Text('회원가입'),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.close),
-            onPressed: () {
-              Navigator.pushNamed(context, '/login');
-            },
-          ),
-        ],
-      )
+              title: Text('회원가입'),
+              centerTitle: true,
+              backgroundColor: Colors.white,
+              actions: [
+                IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/login');
+                  },
+                ),
+              ],
+            )
           : PreferredSize(
-        preferredSize: Size(0.0, 0.0),
-        child: Container(),
-      ),
+              preferredSize: Size(0.0, 0.0),
+              child: Container(),
+            ),
       body: GestureDetector(
         onTap: _removeOverlay,
         child: SingleChildScrollView(
@@ -445,7 +500,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
                       Column(
                         children: [
                           _buildDuplicateCheckButton('중복검사', () {
-                            _checkDuplicate('id', _idController);
+                            _checkDuplicate('id');
                           }),
                         ],
                       ),
@@ -524,7 +579,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
                       Column(
                         children: [
                           _buildDuplicateCheckButton('중복검사', () {
-                            _checkDuplicate('nickname', _nicknameController);
+                            _checkDuplicate('nickname');
                           }),
                         ],
                       ),
@@ -575,7 +630,8 @@ class _SignUpActivityState extends State<SignUpActivity> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8.0),
                         ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+                        contentPadding: EdgeInsets.symmetric(
+                            horizontal: 20.0, vertical: 20.0),
                         filled: true,
                         fillColor: Colors.white,
                       ),
@@ -584,7 +640,8 @@ class _SignUpActivityState extends State<SignUpActivity> {
                       items: ['남자', '여자'].map((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
-                          child: Text(value, style: TextStyle(color: Colors.black)),
+                          child: Text(value,
+                              style: TextStyle(color: Colors.black)),
                         );
                       }).toList(),
                       onChanged: (newValue) {
@@ -605,8 +662,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
               SizedBox(height: 15),
               _buildPhoneNumberField(),
               SizedBox(height: 15),
-              _buildTextField(_emailController, '이메일', TextInputType.emailAddress,
-                  isValid: _isEmailValid), // 이메일 입력 필드 추가
+              _buildEmailField(), // 새로운 이메일 입력 필드
               SizedBox(height: 30),
               CheckboxListTile(
                 title: Text('Push 알림에 동의합니다. (선택)'),
@@ -693,8 +749,8 @@ class _SignUpActivityState extends State<SignUpActivity> {
           child: ElevatedButton(
             onPressed: _isInformChecked
                 ? () {
-              _saveUser();
-            }
+                    _saveUser();
+                  }
                 : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
@@ -840,6 +896,84 @@ class _SignUpActivityState extends State<SignUpActivity> {
     );
   }
 
+  Widget _buildEmailField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _emailPrefixController,
+                decoration: InputDecoration(
+                  hintText: '이메일',
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0)),
+                  contentPadding: EdgeInsets.all(20.0),
+                ),
+              ),
+            ),
+            SizedBox(width: 8),
+            Text('@', style: TextStyle(fontSize: 18)),
+            SizedBox(width: 8),
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                value: _selectedEmailDomain,
+                items: _emailDomains.map((domain) {
+                  return DropdownMenuItem(
+                    value: domain,
+                    child: Text(domain),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedEmailDomain = value!;
+                  });
+                },
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0)),
+                  contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12.0, vertical: 18.0), // 높이 조절
+                ),
+                dropdownColor: Colors.white, // 드롭다운 배경색
+              ),
+            ),
+          ],
+        ),
+        if (_emailCheckMessage != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Text(
+              _emailCheckMessage!,
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () {
+              _checkDuplicate('email'); // 통합된 메서드를 호출
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              minimumSize: Size(0, 50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+            ),
+            child: Text(
+              '이메일 중복 검사',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildDuplicateCheckButton(String text, VoidCallback onPressed) {
     return Container(
       height: 65,
@@ -866,7 +1000,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
       context,
       _genderLink,
       ['남자', '여자'],
-          (value) {
+      (value) {
         setState(() {
           _gender = value;
         });
@@ -883,7 +1017,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
       _ageLink,
       List<String>.generate(83, (index) => (index + 1).toString()),
       // 1세부터 100세까지 나이로 설정
-          (value) {
+      (value) {
         setState(() {
           _age = value as int;
         });
@@ -933,7 +1067,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
 
   void _showPopupActivity1(BuildContext context) async {
     final String termsText =
-    await DefaultAssetBundle.of(context).loadString('assets/text_1.txt');
+        await DefaultAssetBundle.of(context).loadString('assets/text_1.txt');
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -965,7 +1099,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
 
   void _showPopupActivity2(BuildContext context) async {
     final String policyText =
-    await DefaultAssetBundle.of(context).loadString('assets/text_2.txt');
+        await DefaultAssetBundle.of(context).loadString('assets/text_2.txt');
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -1003,8 +1137,8 @@ class _SignUpActivityState extends State<SignUpActivity> {
     final String tnickname = _nicknameController.text.trim();
     final String tbirth = _birthController.text.trim();
     final bool pwCheck =
-    RegExp(r'^(?=.*\d)(?=.*[~`!@#$%^&*()-])(?=.*[a-zA-Z]).{8,16}$')
-        .hasMatch(tpw);
+        RegExp(r'^(?=.*\d)(?=.*[~`!@#$%^&*()-])(?=.*[a-zA-Z]).{8,16}$')
+            .hasMatch(tpw);
 
     if (tid.isEmpty ||
         tpw.isEmpty ||
@@ -1034,7 +1168,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
 
     if (!pwCheck) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('비밀번호는 8자 이상의 숫자와 영문, 특수문자 조합이어야 합니다!')),
+        SnackBar(content: Text('8자 이상의 숫자와 영문, 특수문자 조합이어야 합니다.')),
       );
       return;
     }

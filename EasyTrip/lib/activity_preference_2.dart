@@ -8,7 +8,15 @@ class PreferencePage2 extends StatefulWidget {
 
 class _PreferencePage2State extends State<PreferencePage2> {
   final List<int> selectedImages = [];
-  final List<String> preferenceLabels = ['음식', '숙박', '문화체험', '관광지', '디저트']; // 디저트 추가
+  final List<String> preferenceLabels = ['음식', '숙박', '문화체험', '관광지', '디저트'];
+  final List<String> preferenceCodes = ['A1', 'B1', 'C1', 'D1', 'E1'];
+
+  // 선택된 순서를 코드 형식으로 변환하여 반환
+  List<String> getSelectionOrder() {
+    List<String> orderedSelections = selectedImages.map((index) => preferenceCodes[index]).toList();
+    print("선택 순서: ${orderedSelections.join()}");  // 예: D1B1E1A1C1 형태
+    return orderedSelections;
+  }
 
   void _handleSelection(int index) {
     setState(() {
@@ -133,21 +141,11 @@ class _PreferencePage2State extends State<PreferencePage2> {
               child: ElevatedButton(
                 onPressed: selectedImages.length >= 4
                     ? () {
+                  List<String> selectionOrder = getSelectionOrder();
                   Navigator.push(
                     context,
-                    PageRouteBuilder(
-                      pageBuilder: (context, animation, secondaryAnimation) => PreferencePage3(
-                        activityPreferences: selectedImages
-                            .map((index) => preferenceLabels[index])
-                            .toList(),
-                      ),
-                      transitionsBuilder:
-                          (context, animation, secondaryAnimation, child) {
-                        return FadeTransition(
-                          opacity: animation,
-                          child: child,
-                        );
-                      },
+                    MaterialPageRoute(
+                      builder: (context) => PreferencePage3(activityPreferences: selectionOrder),
                     ),
                   );
                 }
