@@ -7,6 +7,8 @@ import 'admin_pages/admin.dart';
 import 'helpers/database_helper.dart';
 import 'activity_preference_1.dart';
 import 'models/user.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class LoginActivity extends StatefulWidget {
   @override
@@ -57,26 +59,50 @@ class _LoginActivityState extends State<LoginActivity> {
       return;
     }
 
-    final DatabaseHelper dbHelper = DatabaseHelper.instance;
-    final User? user = await dbHelper.getUserById(id);
+    final url = Uri.parse('http://44.214.72.11:8080/eztrip/login');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'username': id, 'password': pw}),
+      );
 
-    if (user != null && user.password == pw) {
-      Fluttertoast.showToast(msg: '${user.name}님 환영합니다.');
-      _saveAutoLogin(_isAutoLoginChecked);
-      Navigator.pushReplacementNamed(
-        context,
-        '/main',
-        arguments: user.id, // userData 대신 user.id 전달
-      );
-    } else if (id == 'admin' && pw == '1234') {
-      Fluttertoast.showToast(msg: '관리자님 환영합니다.');
-      _saveAutoLogin(_isAutoLoginChecked);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => AdminPage()),
-      );
-    } else {
-      Fluttertoast.showToast(msg: '아이디 또는 비밀번호가 잘못되었습니다!');
+      print('로그인 응답: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+
+        // 닉네임이 null인 경우 username을 사용
+        final userDisplayName = responseData['nickname'] ?? responseData['username'];
+
+        // 관리자 계정 확인
+        if (id == 'admin' && pw == '1234') {
+          Fluttertoast.showToast(msg: '관리자님 환영합니다.');
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => AdminPage()),
+          );
+        } else {
+          Fluttertoast.showToast(msg: '$userDisplayName님 환영합니다.');
+          _saveAutoLogin(_isAutoLoginChecked);
+
+          // 토큰을 SharedPreferences에 저장
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('accessToken', responseData['accessToken']);
+          await prefs.setString('refreshToken', responseData['refreshToken']);
+
+          Navigator.pushReplacementNamed(
+            context,
+            '/main',
+            arguments: responseData['id'],
+          );
+        }
+      } else {
+        Fluttertoast.showToast(msg: '아이디 또는 비밀번호가 잘못되었습니다!');
+      }
+    } catch (error) {
+      print('로그인 요청 오류: $error');
+      Fluttertoast.showToast(msg: '네트워크 오류가 발생했습니다. 다시 시도해주세요.');
     }
   }
 
@@ -91,7 +117,7 @@ class _LoginActivityState extends State<LoginActivity> {
   void _showPasswordRecoveryModal() {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // 키보드가 올라올 때 화면 조절
+      isScrollControlled: true,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -194,7 +220,7 @@ class _LoginActivityState extends State<LoginActivity> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   GestureDetector(
-                    onTap: _showPasswordRecoveryModal, // 비밀번호 찾기 모달 띄우기
+                    onTap: _showPasswordRecoveryModal,
                     child: Text(
                       '아이디 • 비밀번호 찾기',
                       style: TextStyle(color: Colors.orange, fontSize: 16),
