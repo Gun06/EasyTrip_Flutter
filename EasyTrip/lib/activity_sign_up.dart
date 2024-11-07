@@ -87,10 +87,12 @@ class _SignUpActivityState extends State<SignUpActivity> {
       });
     });
     _nicknameController.addListener(() {
-      setState(() {
-        _nicknameCheckMessage = null;
-        _isNicknameValid = false;
-      });
+      if (!_isNicknameValid) {
+        setState(() {
+          _nicknameCheckMessage = null;
+          _isNicknameValid = false;
+        });
+      }
     });
     _birthController.addListener(() {
       _checkBirthDate(_birthController.text);
@@ -311,7 +313,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
           setState(() {
             if (type == 'id') {
               _isIdValid = true;
-              _idCheckMessage = null; // 사용 가능하므로 메시지 초기화
+              _idCheckMessage = null;
             } else if (type == 'nickname') {
               _isNicknameValid = true;
               _nicknameCheckMessage = null;
@@ -896,83 +898,100 @@ class _SignUpActivityState extends State<SignUpActivity> {
     );
   }
 
-  Widget _buildEmailField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _emailPrefixController,
-                decoration: InputDecoration(
-                  hintText: '이메일',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.0)),
-                  contentPadding: EdgeInsets.all(20.0),
+    Widget _buildEmailField() {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _emailPrefixController,
+                      decoration: InputDecoration(
+                        hintText: '이메일',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        contentPadding: EdgeInsets.all(20.0),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Text('@', style: TextStyle(fontSize: 18)),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: _selectedEmailDomain,
+                      items: _emailDomains.map((domain) {
+                        return DropdownMenuItem(
+                          value: domain,
+                          child: Text(domain),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedEmailDomain = value!;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12.0,
+                          vertical: 18.0,
+                        ), // 높이 조절
+                      ),
+                      dropdownColor: Colors.white, // 드롭다운 배경색
+                    ),
+                  ),
+                ],
+              ),
+              Positioned(
+                right: 45,
+                top: 20,
+                child: Icon(
+                  _isEmailValid ? Icons.check : Icons.info_outline,
+                  color: _isEmailValid ? Colors.green : Colors.red,
+                  size: 24.0,
                 ),
               ),
+            ],
+          ),
+          if (_emailCheckMessage != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(
+                _emailCheckMessage!,
+                style: TextStyle(color: Colors.red),
+              ),
             ),
-            SizedBox(width: 8),
-            Text('@', style: TextStyle(fontSize: 18)),
-            SizedBox(width: 8),
-            Expanded(
-              child: DropdownButtonFormField<String>(
-                value: _selectedEmailDomain,
-                items: _emailDomains.map((domain) {
-                  return DropdownMenuItem(
-                    value: domain,
-                    child: Text(domain),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedEmailDomain = value!;
-                  });
-                },
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.0)),
-                  contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12.0, vertical: 18.0), // 높이 조절
+          SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                _checkDuplicate('email'); // 통합된 메서드를 호출
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                minimumSize: Size(0, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
                 ),
-                dropdownColor: Colors.white, // 드롭다운 배경색
+                padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+              ),
+              child: Text(
+                '이메일 중복 검사',
+                style: TextStyle(color: Colors.white),
               ),
             ),
-          ],
-        ),
-        if (_emailCheckMessage != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: Text(
-              _emailCheckMessage!,
-              style: TextStyle(color: Colors.red),
-            ),
           ),
-        SizedBox(height: 8),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: () {
-              _checkDuplicate('email'); // 통합된 메서드를 호출
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              minimumSize: Size(0, 50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
-            ),
-            child: Text(
-              '이메일 중복 검사',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+        ],
+      );
+    }
 
   Widget _buildDuplicateCheckButton(String text, VoidCallback onPressed) {
     return Container(
@@ -1072,6 +1091,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: Text('이용약관'),
           content: Container(
             width: MediaQuery.of(context).size.width * 0.8,
@@ -1104,6 +1124,7 @@ class _SignUpActivityState extends State<SignUpActivity> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: Text('개인정보정책'),
           content: Container(
             width: MediaQuery.of(context).size.width * 0.8,
