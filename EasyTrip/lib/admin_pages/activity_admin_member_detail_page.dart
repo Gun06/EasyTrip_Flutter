@@ -1,17 +1,59 @@
 import 'package:flutter/material.dart';
-import '../models/user.dart';
-import '../helpers/database_helper.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class AdminMemberDetailPage extends StatelessWidget {
-  final User user;
+  final Map<String, dynamic> userData;
+  final String accessToken;
 
-  const AdminMemberDetailPage({Key? key, required this.user}) : super(key: key);
+  AdminMemberDetailPage({required this.userData, required this.accessToken});
+
+  Future<void> _deleteUser(BuildContext context) async {
+    final url = Uri.parse('http://44.214.72.11:8080/api/admin/users/${userData['id']}');
+    try {
+      final response = await http.delete(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        Navigator.pop(context, true); // 삭제 후 업데이트 신호 전달
+      } else {
+        print("Failed to delete user. Status code: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error deleting user: $e");
+    }
+  }
+
+  Future<void> _blockUser(BuildContext context) async {
+    final url = Uri.parse('http://44.214.72.11:8080/api/admin/users/${userData['id']}/block');
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        Navigator.pop(context, true); // 차단 후 업데이트 신호 전달
+      } else {
+        print("Failed to block user. Status code: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error blocking user: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // 기본 프로필 이미지 설정
     final String defaultProfileImage = 'assets/150.png';
-    final String? profileImage = user.profileImage;
+    final String? profileImage = userData['profileImage'] ?? defaultProfileImage;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -26,10 +68,7 @@ class AdminMemberDetailPage extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () async {
-              await DatabaseHelper.instance.deleteUser(user.id!);
-              Navigator.pop(context, true); // 삭제 후 true를 반환하여 업데이트 신호 전달
-            },
+            onPressed: () => _deleteUser(context),
             child: Text(
               '삭제하기',
               style: TextStyle(color: Colors.red, fontSize: 16),
@@ -39,7 +78,6 @@ class AdminMemberDetailPage extends StatelessWidget {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          // 패딩 추가
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,54 +87,49 @@ class AdminMemberDetailPage extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 50,
-                      backgroundImage: profileImage != null && profileImage.isNotEmpty
-                          ? AssetImage(profileImage)
-                          : AssetImage(defaultProfileImage),
+                      backgroundImage: NetworkImage(profileImage ?? defaultProfileImage),
                     ),
                     SizedBox(height: 10),
                     Text(
-                      user.name,
+                      userData['name'] ?? 'N/A',
                       style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 4),
                     Text(
-                      user.id.toString(),
+                      userData['id']?.toString() ?? 'N/A',
                       style: TextStyle(fontSize: 15, color: Colors.grey),
                     ),
                   ],
                 ),
               ),
               SizedBox(height: 20),
-              _buildDetailRow('아이디(학번)', user.id.toString()),
+              _buildDetailRow('아이디(학번)', userData['id']?.toString() ?? 'N/A'),
               SizedBox(height: 20),
-              _buildDetailRow('이름', user.name),
+              _buildDetailRow('이름', userData['name'] ?? 'N/A'),
               SizedBox(height: 20),
-              _buildDetailRow('닉네임', user.nickname),
+              _buildDetailRow('닉네임', userData['nickname'] ?? 'N/A'),
               SizedBox(height: 20),
-              _buildDetailRow('생년월일', user.birthDate),
+              _buildDetailRow('생년월일', userData['birthDate'] ?? 'N/A'),
               SizedBox(height: 20),
-              _buildDetailRow('전화번호', user.phoneNumber),
+              _buildDetailRow('전화번호', userData['phoneNumber'] ?? 'N/A'),
               SizedBox(height: 20),
-              _buildDetailRow('이메일', user.email), // 이메일 필드 추가
+              _buildDetailRow('이메일', userData['email'] ?? 'N/A'),
               SizedBox(height: 20),
-              _buildDetailRow('나이', user.age.toString()),
+              _buildDetailRow('나이', userData['age']?.toString() ?? 'N/A'),
               SizedBox(height: 20),
-              _buildDetailRow('성별', user.gender),
-              Divider(height: 40, thickness: 1), // 경계선 추가
-              _buildPreferenceSection('활동 선호도', user.activityPreferences),
+              _buildDetailRow('성별', userData['gender'] ?? 'N/A'),
+              Divider(height: 40, thickness: 1),
+              _buildPreferenceSection('활동 선호도', userData['activityPreferences'] ?? []),
               SizedBox(height: 20),
-              _buildPreferenceSection('음식 선호도', user.foodPreferences),
+              _buildPreferenceSection('음식 선호도', userData['foodPreferences'] ?? []),
               SizedBox(height: 20),
-              _buildPreferenceSection('숙박 선호도', user.accommodationPreferences),
+              _buildPreferenceSection('숙박 선호도', userData['accommodationPreferences'] ?? []),
               SizedBox(height: 20),
               Row(
                 children: [
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () async {
-                        await DatabaseHelper.instance.deleteUser(user.id!);
-                        Navigator.pop(context, true); // 삭제 후 true를 반환하여 업데이트 신호 전달
-                      },
+                      onPressed: () => _deleteUser(context),
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.all(15.0),
                         backgroundColor: Colors.red,
@@ -110,11 +143,7 @@ class AdminMemberDetailPage extends StatelessWidget {
                   SizedBox(width: 10),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () async {
-                        print('차단하기 버튼 클릭됨: 사용자 ID ${user.id}');
-                        await DatabaseHelper.instance.blockUser(user.id!);
-                        Navigator.pop(context, true); // 차단 후 true를 반환하여 업데이트 신호 전달
-                      },
+                      onPressed: () => _blockUser(context),
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.all(15.0),
                         backgroundColor: Colors.grey,
@@ -139,13 +168,13 @@ class AdminMemberDetailPage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 100, // 레이블의 고정된 넓이
+          width: 100,
           child: Text(
             label,
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ),
-        SizedBox(width: 10), // 간격 조정
+        SizedBox(width: 10),
         Expanded(
           child: Container(
             decoration: BoxDecoration(
@@ -163,7 +192,7 @@ class AdminMemberDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPreferenceSection(String title, List<String> preferences) {
+  Widget _buildPreferenceSection(String title, List<dynamic> preferences) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -182,15 +211,13 @@ class AdminMemberDetailPage extends StatelessWidget {
           child: Wrap(
             spacing: 2.0,
             runSpacing: 2.0,
-            children: preferences.asMap().entries.map((entry) {
-              int index = entry.key;
-              String preference = entry.value;
+            children: preferences.map<Widget>((preference) {
               return Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Chip(
                     label: Text(
-                      preference,
+                      preference.toString(),
                       style: TextStyle(fontSize: 12, color: Colors.black),
                     ),
                     backgroundColor: Colors.grey[100],
@@ -199,14 +226,13 @@ class AdminMemberDetailPage extends StatelessWidget {
                       side: BorderSide(color: Colors.grey),
                     ),
                   ),
-                  if (index < preferences.length - 1)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 3.0),
-                      child: Text(
-                        '>',
-                        style: TextStyle(fontSize: 15, color: Colors.black),
-                      ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 3.0),
+                    child: Text(
+                      '>',
+                      style: TextStyle(fontSize: 15, color: Colors.black),
                     ),
+                  ),
                 ],
               );
             }).toList(),
