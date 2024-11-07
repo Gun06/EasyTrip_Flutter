@@ -184,6 +184,7 @@ class _PreferencePage2State extends State<PreferencePage2> {
               fontSize: 16,
             ),
           ),
+          backgroundColor: Colors.white,
           deleteIcon: Icon(
             Icons.close,
             color: Colors.grey,

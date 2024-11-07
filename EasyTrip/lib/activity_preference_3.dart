@@ -201,6 +201,7 @@ class _PreferencePage3State extends State<PreferencePage3> {
               fontSize: 16,
             ),
           ),
+          backgroundColor: Colors.white,
           deleteIcon: Icon(
             Icons.close,
             color: Colors.grey,

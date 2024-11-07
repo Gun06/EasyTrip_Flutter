@@ -180,6 +180,7 @@ class _PreferencePage4State extends State<PreferencePage4> {
               fontSize: 16,
             ),
           ),
+          backgroundColor: Colors.white,
           deleteIcon: Icon(
             Icons.close,
             color: Colors.grey,
