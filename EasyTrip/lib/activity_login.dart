@@ -222,7 +222,7 @@ class _LoginActivityState extends State<LoginActivity> {
                   GestureDetector(
                     onTap: _showPasswordRecoveryModal,
                     child: Text(
-                      '아이디 • 비밀번호 찾기',
+                      '비밀번호 찾기',
                       style: TextStyle(color: Colors.orange, fontSize: 16),
                     ),
                   ),
