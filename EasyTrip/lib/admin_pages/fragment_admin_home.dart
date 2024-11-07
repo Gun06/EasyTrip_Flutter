@@ -3,6 +3,10 @@ import 'activity_admin_blocked_accounts.dart';
 import 'activity_admin_member_info.dart';
 
 class FragmentAdminHome extends StatelessWidget {
+  final String accessToken;
+
+  FragmentAdminHome({required this.accessToken});
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -28,7 +32,7 @@ class FragmentAdminHome extends StatelessWidget {
                 color: Colors.white, // 배경색 추가
                 child: TabBarView(
                   children: [
-                    AdminMemberInfoPage(),
+                    AdminMemberInfoPage(accessToken: accessToken),
                     Center(child: Text('신고리뷰 없음')),
                     Center(child: Text('신고계정 없음')),
                     AdminBlockedAccountsPage(),

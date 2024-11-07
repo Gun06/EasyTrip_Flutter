@@ -23,7 +23,6 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => StartPageActivity(),
         '/login': (context) => LoginActivity(),
-        '/admin': (context) => AdminPage(),
         '/step1': (context) => PreferencePage1(),
         '/step2': (context) => PreferencePage2(),
         '/step3': (context) => PreferencePage3(activityPreferences: []),
@@ -35,6 +34,11 @@ class MyApp extends StatelessWidget {
           final userId = settings.arguments as int;
           return MaterialPageRoute(
             builder: (context) => MainActivity(userId: userId, key: mainActivityKey),
+          );
+        } else if (settings.name == '/admin') {
+          final accessToken = settings.arguments as String; // accessToken을 전달받음
+          return MaterialPageRoute(
+            builder: (context) => AdminPage(accessToken: accessToken),
           );
         }
         return null;

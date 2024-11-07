@@ -18,13 +18,19 @@ class MainActivity extends StatefulWidget {
 class MainActivityState extends State<MainActivity> {
   int _selectedIndex = 2; // Home의 인덱스를 초기 인덱스로 설정
 
-  final List<Widget> _pages = [
-    ReviewFragment(),
-    ScheduleFragment(),
-    HomeFragment(),
-    TrafficFragment(),
-    MyPageFragment(userId: 0),
-  ];
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      ReviewFragment(),
+      ScheduleFragment(),
+      HomeFragment(),
+      TrafficFragment(),
+      MyPageFragment(userId: widget.userId), // userId 전달
+    ];
+  }
 
   void _onTabItemSelected(int index) {
     setState(() {
@@ -51,7 +57,13 @@ class MainActivityState extends State<MainActivity> {
       bottomNavigationBar: MotionTabBar(
         initialSelectedTab: "Home", // 초기 선택 탭을 Home으로 설정
         labels: ["Review", "Schedule", "Home", "Traffic", "My Page"],
-        icons: [Icons.rate_review, Icons.schedule, Icons.home, Icons.traffic, Icons.person],
+        icons: [
+          Icons.rate_review,
+          Icons.schedule,
+          Icons.home,
+          Icons.traffic,
+          Icons.person
+        ],
         tabSize: 50,
         tabBarHeight: 60,
         textStyle: TextStyle(

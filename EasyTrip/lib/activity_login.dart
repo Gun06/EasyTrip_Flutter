@@ -75,21 +75,23 @@ class _LoginActivityState extends State<LoginActivity> {
         // 닉네임이 null인 경우 username을 사용
         final userDisplayName = responseData['nickname'] ?? responseData['username'];
 
+        // 토큰을 SharedPreferences에 저장
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('accessToken', responseData['accessToken']);
+        await prefs.setString('refreshToken', responseData['refreshToken']);
+
         // 관리자 계정 확인
         if (id == 'admin' && pw == '1234') {
           Fluttertoast.showToast(msg: '관리자님 환영합니다.');
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => AdminPage()),
+            MaterialPageRoute(
+              builder: (context) => AdminPage(accessToken: responseData['accessToken']),
+            ),
           );
         } else {
           Fluttertoast.showToast(msg: '$userDisplayName님 환영합니다.');
           _saveAutoLogin(_isAutoLoginChecked);
-
-          // 토큰을 SharedPreferences에 저장
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('accessToken', responseData['accessToken']);
-          await prefs.setString('refreshToken', responseData['refreshToken']);
 
           Navigator.pushReplacementNamed(
             context,

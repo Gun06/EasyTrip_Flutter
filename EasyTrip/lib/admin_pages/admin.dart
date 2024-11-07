@@ -15,16 +15,16 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: '/login',
-      routes: {
-        '/login': (context) => LoginActivity(),
-        '/admin': (context) => AdminPage(),
-      },
+      home: LoginActivity(), // 로그인 화면을 초기 화면으로 설정
     );
   }
 }
 
 class AdminPage extends StatefulWidget {
+  final String accessToken;
+
+  AdminPage({required this.accessToken});
+
   @override
   _AdminPageState createState() => _AdminPageState();
 }
@@ -32,10 +32,16 @@ class AdminPage extends StatefulWidget {
 class _AdminPageState extends State<AdminPage> {
   int _selectedIndex = 0;
 
-  static List<Widget> _widgetOptions = <Widget>[
-    FragmentAdminHome(),
-    FragmentAdminProfile(),
-  ];
+  late List<Widget> _widgetOptions;
+
+  @override
+  void initState() {
+    super.initState();
+    _widgetOptions = <Widget>[
+      FragmentAdminHome(accessToken: widget.accessToken),
+      FragmentAdminProfile(),
+    ];
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -54,7 +60,10 @@ class _AdminPageState extends State<AdminPage> {
         leading: IconButton(
           icon: Icon(Icons.logout, color: Colors.black),
           onPressed: () {
-            Navigator.pushReplacementNamed(context, '/login');
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => LoginActivity()),
+            );
           },
         ),
         actions: [
