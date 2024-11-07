@@ -166,7 +166,7 @@ class _PreferencePage3State extends State<PreferencePage3> {
             Container(
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton(
-                onPressed: selectedImages.isNotEmpty ? _finalizeSelection : null,
+                onPressed: selectedImages.length == 4 ? _finalizeSelection : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: selectedImages.isNotEmpty ? Colors.blue : Colors.grey,
                   padding: EdgeInsets.all(12),

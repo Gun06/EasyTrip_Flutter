@@ -145,7 +145,7 @@ class _PreferencePage4State extends State<PreferencePage4> {
             Container(
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton(
-                onPressed: selectedOptions.isNotEmpty ? _finalizeSelection : null,
+                onPressed: selectedOptions.length ==3 ? _finalizeSelection : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: selectedOptions.isNotEmpty ? Colors.blue : Colors.grey,
                   padding: EdgeInsets.all(12),

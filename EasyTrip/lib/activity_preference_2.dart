@@ -139,7 +139,7 @@ class _PreferencePage2State extends State<PreferencePage2> {
             Container(
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton(
-                onPressed: selectedImages.length >= 4
+                onPressed: selectedImages.length >= 5
                     ? () {
                   List<String> selectionOrder = getSelectionOrder();
                   Navigator.push(
