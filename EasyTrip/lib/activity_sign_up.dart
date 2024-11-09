@@ -356,63 +356,46 @@ class _SignUpActivityState extends State<SignUpActivity> {
         widget.foodPreferences.join() +
         widget.accommodationPreferences.join()).substring(0, 10);
 
-    // 로그에 각 입력 값과 categories의 앞 10자리 출력
-    print('회원가입 데이터 확인:');
-    print('아이디: ${_idController.text}');
-    print('이메일: ${_emailPrefixController.text}@$_selectedEmailDomain');
-    print('비밀번호: ${_passwordController.text}');
-    print('닉네임: ${_nicknameController.text}');
-    print('전화번호: ${_phoneController.text}');
-    print('이미지 경로: assets/ph_profile_img_01.jpg');
-    print('생년월일: ${_birthController.text}');
-    print('성별: $_gender');
-    print('나이: $_age');
-    print('Push 동의: $_isPushChecked');
-    print('정보제공 동의: $_isInformChecked');
-    print('카테고리 코드: $categories'); // 앞 10자리 코드 형식만 출력
+    // 생일을 YYYY년MM월DD일 형식으로 변환
+    final String birthDate = _birthController.text;
+    final String formattedBirthDate = "${birthDate.substring(0, 4)}년${birthDate.substring(4, 6)}월${birthDate.substring(6, 8)}일";
 
-    if (_isIdValid &&
-        _isPasswordValid &&
-        _isPasswordConfirmValid &&
-        _isNameValid &&
-        _isNicknameValid &&
-        _isBirthDateValid &&
-        _isPhoneNumberValid &&
-        _isEmailValid) {
-      final url = Uri.parse('http://44.214.72.11:8080/eztrip/join');
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'username': _idController.text,
-          'email': '${_emailPrefixController.text}@$_selectedEmailDomain',
-          'password': _passwordController.text,
-          'nickname': _nicknameController.text,
-          'phoneNumber': _phoneController.text,
-          'image': 'assets/ph_profile_img_01.jpg',
-          'birth': _birthController.text,
-          'gender': _gender,
-          'age': _age,
-          'push': _isPushChecked,
-          'information': _isInformChecked,
-          'categories': categories, // 앞 10자리 코드 형식 문자열 전송
-        }),
+    final requestData = {
+      'username': _idController.text,
+      'email': '${_emailPrefixController.text}@$_selectedEmailDomain',
+      'password': _passwordController.text,
+      'name': _nameController.text,
+      'nickname': _nicknameController.text,
+      'phoneNumber': _phoneController.text,
+      'image': 'assets/ph_profile_img_01.jpg',
+      'birth': formattedBirthDate,
+      'gender': _gender,
+      'age': _age,
+      'push': _isPushChecked,
+      'information': _isInformChecked,
+      'categories': categories, // 코드 형식 문자열 전송
+    };
+
+    print("Sending registration data: $requestData"); // JSON 요청 로그 출력
+
+    final url = Uri.parse('http://44.214.72.11:8080/eztrip/join');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(requestData),
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('회원가입이 완료되었습니다.')),
       );
-
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('회원가입이 완료되었습니다.')),
-        );
-        Navigator.pushNamed(context, '/login');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('회원가입에 실패했습니다.')),
-        );
-      }
+      Navigator.pushNamed(context, '/login');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('모든 필드를 올바르게 입력해주세요.')),
+        SnackBar(content: Text('회원가입에 실패했습니다.')),
       );
+      print("Registration failed. Status code: ${response.statusCode}");
+      print("Response body: ${response.body}");
     }
   }
 

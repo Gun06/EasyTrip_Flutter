@@ -72,8 +72,7 @@ class _LoginActivityState extends State<LoginActivity> {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
 
-        // 닉네임이 null인 경우 username을 사용
-        final userDisplayName = responseData['nickname'] ?? responseData['username'];
+        final userDisplayName = responseData['name'] ?? responseData['nickname'] ?? responseData['username'];
 
         // 토큰을 SharedPreferences에 저장
         final prefs = await SharedPreferences.getInstance();

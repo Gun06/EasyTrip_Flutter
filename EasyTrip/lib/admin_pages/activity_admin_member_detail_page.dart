@@ -2,20 +2,58 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-class AdminMemberDetailPage extends StatelessWidget {
-  final Map<String, dynamic> userData;
+class AdminMemberDetailPage extends StatefulWidget {
+  final int userId;
   final String accessToken;
 
-  AdminMemberDetailPage({required this.userData, required this.accessToken});
+  AdminMemberDetailPage({required this.userId, required this.accessToken});
+
+  @override
+  _AdminMemberDetailPageState createState() => _AdminMemberDetailPageState();
+}
+
+class _AdminMemberDetailPageState extends State<AdminMemberDetailPage> {
+  Map<String, dynamic>? userData;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData(); // 사용자 정보 가져오기
+  }
+
+  Future<void> _fetchUserData() async {
+    final url = Uri.parse('http://44.214.72.11:8080/api/admin/users/${widget.userId}');
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${widget.accessToken}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          userData = json.decode(utf8.decode(response.bodyBytes));
+          isLoading = false;
+        });
+      } else {
+        print("Failed to fetch user data. Status code: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error fetching user data: $e");
+    }
+  }
 
   Future<void> _deleteUser(BuildContext context) async {
-    final url = Uri.parse('http://44.214.72.11:8080/api/admin/users/${userData['id']}');
+    final url = Uri.parse('http://44.214.72.11:8080/api/admin/users/${widget.userId}');
     try {
       final response = await http.delete(
         url,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
+          'Authorization': 'Bearer ${widget.accessToken}',
         },
       );
 
@@ -30,13 +68,13 @@ class AdminMemberDetailPage extends StatelessWidget {
   }
 
   Future<void> _blockUser(BuildContext context) async {
-    final url = Uri.parse('http://44.214.72.11:8080/api/admin/users/${userData['id']}/block');
+    final url = Uri.parse('http://44.214.72.11:8080/api/admin/users/${widget.userId}/block');
     try {
       final response = await http.post(
         url,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
+          'Authorization': 'Bearer ${widget.accessToken}',
         },
       );
 
@@ -52,8 +90,12 @@ class AdminMemberDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String defaultProfileImage = 'assets/150.png';
-    final String? profileImage = userData['profileImage'] ?? defaultProfileImage;
+    if (isLoading) {
+      return Center(child: CircularProgressIndicator());
+    }
+
+    final String defaultProfileImage = 'assets/ph_profile_img_01.jpg';
+    final String? profileImage = userData?['profileImage'];
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -87,43 +129,45 @@ class AdminMemberDetailPage extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 50,
-                      backgroundImage: NetworkImage(profileImage ?? defaultProfileImage),
+                      backgroundImage: profileImage != null
+                          ? NetworkImage(profileImage)
+                          : AssetImage(defaultProfileImage) as ImageProvider,
                     ),
                     SizedBox(height: 10),
                     Text(
-                      userData['name'] ?? 'N/A',
+                      userData?['name'] ?? 'N/A',
                       style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 4),
                     Text(
-                      userData['id']?.toString() ?? 'N/A',
+                      userData?['username']?.toString() ?? 'N/A',
                       style: TextStyle(fontSize: 15, color: Colors.grey),
                     ),
                   ],
                 ),
               ),
               SizedBox(height: 20),
-              _buildDetailRow('아이디(학번)', userData['id']?.toString() ?? 'N/A'),
+              _buildDetailRow('아이디(학번)', userData?['username']?.toString() ?? 'N/A'),
               SizedBox(height: 20),
-              _buildDetailRow('이름', userData['name'] ?? 'N/A'),
+              _buildDetailRow('이름', userData?['name'] ?? 'N/A'),
               SizedBox(height: 20),
-              _buildDetailRow('닉네임', userData['nickname'] ?? 'N/A'),
+              _buildDetailRow('닉네임', userData?['nickname'] ?? 'N/A'),
               SizedBox(height: 20),
-              _buildDetailRow('생년월일', userData['birthDate'] ?? 'N/A'),
+              _buildDetailRow('생년월일', userData?['birth'] ?? 'N/A'),
               SizedBox(height: 20),
-              _buildDetailRow('전화번호', userData['phoneNumber'] ?? 'N/A'),
+              _buildDetailRow('전화번호', userData?['phoneNumber'] ?? 'N/A'),
               SizedBox(height: 20),
-              _buildDetailRow('이메일', userData['email'] ?? 'N/A'),
+              _buildDetailRow('이메일', userData?['email'] ?? 'N/A'),
               SizedBox(height: 20),
-              _buildDetailRow('나이', userData['age']?.toString() ?? 'N/A'),
+              _buildDetailRow('나이', userData?['age']?.toString() ?? 'N/A'),
               SizedBox(height: 20),
-              _buildDetailRow('성별', userData['gender'] ?? 'N/A'),
+              _buildDetailRow('성별', userData?['gender'] ?? 'N/A'),
               Divider(height: 40, thickness: 1),
-              _buildPreferenceSection('활동 선호도', userData['activityPreferences'] ?? []),
+              _buildPreferenceSection('활동 선호도', userData?['activityPreferences'] ?? []),
               SizedBox(height: 20),
-              _buildPreferenceSection('음식 선호도', userData['foodPreferences'] ?? []),
+              _buildPreferenceSection('음식 선호도', userData?['foodPreferences'] ?? []),
               SizedBox(height: 20),
-              _buildPreferenceSection('숙박 선호도', userData['accommodationPreferences'] ?? []),
+              _buildPreferenceSection('숙박 선호도', userData?['accommodationPreferences'] ?? []),
               SizedBox(height: 20),
               Row(
                 children: [

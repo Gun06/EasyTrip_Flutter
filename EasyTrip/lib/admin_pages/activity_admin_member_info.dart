@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
 import 'activity_admin_member_detail_page.dart';
 
 class AdminMemberInfoPage extends StatefulWidget {
@@ -33,9 +32,12 @@ class _AdminMemberInfoPageState extends State<AdminMemberInfoPage> {
           'Authorization': 'Bearer ${widget.accessToken}',
         },
       );
+
       if (response.statusCode == 200) {
+        final List<dynamic> users = json.decode(response.body);
+
         setState(() {
-          _users = json.decode(response.body);
+          _users = users;
           _isLoading = false;
         });
       } else {
@@ -52,32 +54,10 @@ class _AdminMemberInfoPageState extends State<AdminMemberInfoPage> {
     }
   }
 
-  Future<Map<String, dynamic>?> _fetchUserDetails(int userId) async {
-    final url = Uri.parse('http://44.214.72.11:8080/api/admin/users/$userId');
-    try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${widget.accessToken}',
-        },
-      );
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        print("Failed to fetch user details. Status code: ${response.statusCode}");
-        return null;
-      }
-    } catch (e) {
-      print("Error fetching user details: $e");
-      return null;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white30,
+      backgroundColor: Colors.white,
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : _users.isEmpty
@@ -99,28 +79,25 @@ class _AdminMemberInfoPageState extends State<AdminMemberInfoPage> {
                 style: TextStyle(fontSize: 20, color: Colors.grey),
               ),
               title: Text(
-                'ID: ${user['username']}',
+                'ID: ${user['username'] ?? "N/A"}',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               subtitle: Text(
-                '이름: ${user['name']}\n닉네임: ${user['nickname']}',
+                '이름: ${user['name'] ?? "N/A"}\n닉네임: ${user['nickname'] ?? "N/A"}',
                 style: TextStyle(color: Colors.grey),
               ),
               trailing: ElevatedButton(
-                onPressed: () async {
+                onPressed: () {
                   final userId = user['id'];
-                  final userData = await _fetchUserDetails(userId);
-                  if (userData != null) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AdminMemberDetailPage(
-                          userData: userData,
-                          accessToken: widget.accessToken,
-                        ),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminMemberDetailPage(
+                        userId: userId,
+                        accessToken: widget.accessToken,
                       ),
-                    );
-                  }
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green.withOpacity(0.7),
