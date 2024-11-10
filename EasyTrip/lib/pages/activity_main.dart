@@ -7,16 +7,17 @@ import 'SchedulePage/fragment_schedule.dart';
 import 'TrafficPage/fragment_traffic.dart';
 
 class MainActivity extends StatefulWidget {
-  final int userId;
+  final String username;
+  final String accessToken;
 
-  MainActivity({required this.userId, Key? key}) : super(key: key);
+  MainActivity({required this.username, required this.accessToken, Key? key}) : super(key: key);
 
   @override
   MainActivityState createState() => MainActivityState();
 }
 
 class MainActivityState extends State<MainActivity> {
-  int _selectedIndex = 2; // Home의 인덱스를 초기 인덱스로 설정
+  int _selectedIndex = 2;
 
   late final List<Widget> _pages;
 
@@ -28,7 +29,7 @@ class MainActivityState extends State<MainActivity> {
       ScheduleFragment(),
       HomeFragment(),
       TrafficFragment(),
-      MyPageFragment(userId: widget.userId), // userId 전달
+      MyPageFragment(username: widget.username, accessToken: widget.accessToken),
     ];
   }
 
@@ -55,7 +56,7 @@ class MainActivityState extends State<MainActivity> {
         },
       ),
       bottomNavigationBar: MotionTabBar(
-        initialSelectedTab: "Home", // 초기 선택 탭을 Home으로 설정
+        initialSelectedTab: "Home",
         labels: ["Review", "Schedule", "Home", "Traffic", "My Page"],
         icons: [
           Icons.rate_review,

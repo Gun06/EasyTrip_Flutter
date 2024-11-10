@@ -31,12 +31,14 @@ class MyApp extends StatelessWidget {
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/main') {
-          final userId = settings.arguments as int;
+          final args = settings.arguments as Map<String, dynamic>;
+          final username = args['username'] as String;
+          final accessToken = args['accessToken'] as String;
           return MaterialPageRoute(
-            builder: (context) => MainActivity(userId: userId, key: mainActivityKey),
+            builder: (context) => MainActivity(username: username, accessToken: accessToken, key: mainActivityKey),
           );
         } else if (settings.name == '/admin') {
-          final accessToken = settings.arguments as String; // accessToken을 전달받음
+          final accessToken = settings.arguments as String;
           return MaterialPageRoute(
             builder: (context) => AdminPage(accessToken: accessToken),
           );
