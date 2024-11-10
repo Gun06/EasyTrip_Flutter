@@ -67,17 +67,18 @@ class _LoginActivityState extends State<LoginActivity> {
         body: jsonEncode({'username': id, 'password': pw}),
       );
 
-      print('로그인 응답: ${response.body}');
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        final decodedResponse = utf8.decode(response.bodyBytes);
+        print('로그인 응답: $decodedResponse');
 
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
+        final responseData = jsonDecode(decodedResponse);
 
         final userDisplayName = responseData['name'] ?? responseData['nickname'] ?? responseData['username'];
 
         // 토큰을 SharedPreferences에 저장
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('accessToken', responseData['accessToken']);
-        await prefs.setString('refreshToken', responseData['refreshToken']);
+        await prefs.setString('accessToken', responseData['accessToken'] ?? '');
+        await prefs.setString('refreshToken', responseData['refreshToken'] ?? '');
 
         // 관리자 계정 확인
         if (id == 'admin' && pw == '1234') {
@@ -95,10 +96,11 @@ class _LoginActivityState extends State<LoginActivity> {
           Navigator.pushReplacementNamed(
             context,
             '/main',
-            arguments: responseData['id'],
+            arguments: {'username': responseData['username'], 'accessToken': responseData['accessToken']},
           );
         }
       } else {
+        print('로그인 실패 응답: ${response.statusCode}');
         Fluttertoast.showToast(msg: '아이디 또는 비밀번호가 잘못되었습니다!');
       }
     } catch (error) {
