@@ -9,8 +9,9 @@ import 'TrafficPage/fragment_traffic.dart';
 class MainActivity extends StatefulWidget {
   final String username;
   final String accessToken;
+  final VoidCallback onLogout;
 
-  MainActivity({required this.username, required this.accessToken, Key? key}) : super(key: key);
+  MainActivity({required this.username, required this.accessToken, required this.onLogout, Key? key}) : super(key: key);
 
   @override
   MainActivityState createState() => MainActivityState();
@@ -18,7 +19,6 @@ class MainActivity extends StatefulWidget {
 
 class MainActivityState extends State<MainActivity> {
   int _selectedIndex = 2;
-
   late final List<Widget> _pages;
 
   @override
@@ -29,7 +29,11 @@ class MainActivityState extends State<MainActivity> {
       ScheduleFragment(),
       HomeFragment(),
       TrafficFragment(),
-      MyPageFragment(username: widget.username, accessToken: widget.accessToken),
+      MyPageFragment(
+        username: widget.username,
+        accessToken: widget.accessToken,
+        onLogout: _handleLogout, // 로그아웃 콜백 전달
+      ),
     ];
   }
 
@@ -43,6 +47,11 @@ class MainActivityState extends State<MainActivity> {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  // 로그아웃 시 로그인 페이지로 이동하는 함수
+  void _handleLogout() {
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
   }
 
   @override

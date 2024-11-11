@@ -35,7 +35,14 @@ class MyApp extends StatelessWidget {
           final username = args['username'] as String;
           final accessToken = args['accessToken'] as String;
           return MaterialPageRoute(
-            builder: (context) => MainActivity(username: username, accessToken: accessToken, key: mainActivityKey),
+            builder: (context) => MainActivity(
+              username: username,
+              accessToken: accessToken,
+              key: mainActivityKey,
+              onLogout: () {
+                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+              },
+            ),
           );
         } else if (settings.name == '/admin') {
           final accessToken = settings.arguments as String;
