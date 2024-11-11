@@ -1,18 +1,24 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import '../../helpers/database_helper.dart';
-import '../../models/user.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import 'activity_contact_admin_page.dart';
 import 'activity_mypage_edit.dart';
 import 'activity_shopping_cart.dart';
 import '../../activity_preference_edit.dart';
 
 class MyPageFragment extends StatefulWidget {
-  final int userId;
+  final String username;
+  final String accessToken;
+  final VoidCallback onLogout; // 로그아웃 콜백 추가
 
-  MyPageFragment({required this.userId});
+  MyPageFragment({
+    required this.username,
+    required this.accessToken,
+    required this.onLogout,
+  });
 
   @override
   _MyPageFragmentState createState() => _MyPageFragmentState();
@@ -21,8 +27,9 @@ class MyPageFragment extends StatefulWidget {
 class _MyPageFragmentState extends State<MyPageFragment> {
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
   final List<Map<String, dynamic>> _menuItems = [];
-  User? _user;
+  Map<String, dynamic>? _userData;
   int _unreadMessagesCount = 0;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -32,15 +39,70 @@ class _MyPageFragmentState extends State<MyPageFragment> {
   }
 
   Future<void> _loadUserData() async {
-    final dbHelper = DatabaseHelper.instance;
+    final url = Uri.parse('http://44.214.72.11:8080/eztrip/my-info');
     try {
-      print("데이터 로딩 시작");
-      _user = await dbHelper.getUser(widget.userId);
-      _unreadMessagesCount = await dbHelper.getUnreadMessagesCount(widget.userId, 'admin');
-      print("데이터 로딩 완료, _user: $_user, _unreadMessagesCount: $_unreadMessagesCount");
-      setState(() {});
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${widget.accessToken}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(utf8.decode(response.bodyBytes));
+        setState(() {
+          _userData = data;
+          _isLoading = false;
+        });
+        print("User data loaded: $_userData");
+      } else {
+        print("Failed to fetch user data. Status code: ${response.statusCode}");
+      }
     } catch (e) {
-      print("오류 발생: $e");
+      print("Error fetching user data: $e");
+    }
+  }
+
+  Future<void> _logout() async {
+    int? userIdToLogout = _userData != null ? _userData!['id'] : null;
+    if (userIdToLogout == null) {
+      Fluttertoast.showToast(msg: '사용자 id를 찾을 수 없습니다.');
+      return;
+    }
+
+    final url = Uri.parse('http://44.214.72.11:8080/eztrip/logout/$userIdToLogout?id=$userIdToLogout');
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${widget.accessToken}',
+        },
+      );
+
+      print("Logout response status: ${response.statusCode}");
+      print("Logout response body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.clear(); // 저장된 모든 데이터 삭제
+
+        Fluttertoast.showToast(msg: '${_userData?['nickname'] ?? '사용자'}님 안녕히가세요.');
+
+        setState(() {
+          _userData = null;
+        });
+
+        widget.onLogout(); // 로그아웃 콜백 호출
+      } else {
+        print("Failed to log out. Status code: ${response.statusCode}");
+        print("Response body on logout failure: ${response.body}");
+        Fluttertoast.showToast(msg: '로그아웃 실패');
+      }
+    } catch (e) {
+      print("Error during logout: $e");
+      Fluttertoast.showToast(msg: '로그아웃 중 오류 발생');
     }
   }
 
@@ -64,23 +126,23 @@ class _MyPageFragmentState extends State<MyPageFragment> {
   }
 
   Future<void> _navigateToEditProfile() async {
-    final updatedUser = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditProfilePage(userId: widget.userId),
-      ),
-    );
+    if (_userData != null) {
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EditProfilePage(
+            userId: _userData!['id'],
+            accessToken: widget.accessToken,
+          ),
+        ),
+      );
 
-    if (updatedUser != null) {
-      setState(() {
-        _user = updatedUser;
-      });
+      if (result != 'logout') {
+        _loadUserData();
+      }
+    } else {
+      Fluttertoast.showToast(msg: '사용자 정보를 불러오는데 실패했습니다.');
     }
-  }
-
-  void _logout() {
-    Fluttertoast.showToast(msg: '${_user?.nickname ?? '사용자'}님 안녕히가세요.');
-    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
   }
 
   void _navigateToShoppingCart() {
@@ -94,7 +156,7 @@ class _MyPageFragmentState extends State<MyPageFragment> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ActivityPreferenceEditPage(userId: widget.userId),
+        builder: (context) => ActivityPreferenceEditPage(username: widget.username, accessToken: widget.accessToken),
       ),
     );
   }
@@ -103,22 +165,22 @@ class _MyPageFragmentState extends State<MyPageFragment> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ContactAdminPage(userId: widget.userId),
+        builder: (context) => ContactAdminPage(username: widget.username, accessToken: widget.accessToken),
       ),
     );
-    _loadUserData(); // Refresh the unread message count after returning from contact page
+    _loadUserData();
   }
 
   @override
   Widget build(BuildContext context) {
-    print("빌드 함수 호출, _user: $_user");
+    print("빌드 함수 호출, _userData: $_userData");
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        automaticallyImplyLeading: false, // back 버튼 제거
-        centerTitle: true, // 이 속성으로 제목을 가운데로 정렬
+        automaticallyImplyLeading: false,
+        centerTitle: true,
         title: Text(
           '프로필',
           style: TextStyle(
@@ -138,152 +200,72 @@ class _MyPageFragmentState extends State<MyPageFragment> {
           ),
         ],
       ),
-      body: _user == null
+      body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-        child: Column(
-          children: [
-            // 프로필 섹션
-            Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundImage: _getUserProfileImage(),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    _user!.nickname,
-                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    _user!.id.toString(), // 회원가입 시 입력한 학번을 표시
-                    style: TextStyle(fontSize: 15, color: Colors.grey),
-                  ),
-                  SizedBox(height: 10),
-                  Container(
-                    margin: EdgeInsets.symmetric(horizontal: 20),
-                    padding: EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.5),
-                          spreadRadius: 1,
-                          blurRadius: 7,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Column(
-                          children: [
-                            Text(
-                              '게시글',
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              '300',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.orangeAccent,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          height: 50,
-                          width: 2,
-                          color: Colors.grey[200],
-                        ),
-                        Column(
-                          children: [
-                            Text(
-                              '팔로워',
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              '238',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.orangeAccent,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          height: 50,
-                          width: 2,
-                          color: Colors.grey[200],
-                        ),
-                        Column(
-                          children: [
-                            Text(
-                              '팔로잉',
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              '473',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.orangeAccent,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+          : _buildUserProfile(),
+    );
+  }
+
+  Widget _buildUserProfile() {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundImage: _getUserProfileImage(),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  _userData?['nickname'] ?? '',
+                  style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  _userData?['username']?.toString() ?? 'N/A',
+                  style: TextStyle(fontSize: 15, color: Colors.grey),
+                ),
+              ],
             ),
-            // 메뉴 섹션
-            AnimatedList(
-              key: _listKey,
-              shrinkWrap: true,
-              initialItemCount: _menuItems.length,
-              itemBuilder: (context, index, animation) {
-                return _buildMenuItem(
-                  icon: _menuItems[index]['icon'],
-                  text: _menuItems[index]['text'],
-                  onTap: () {
-                    if (_menuItems[index]['text'] == "위시리스트") {
-                      _navigateToShoppingCart();
-                    } else if (_menuItems[index]['text'] == "선호도 수정") {
-                      _navigateToActivityPreferenceEdit();
-                    } else if (_menuItems[index]['text'] == "문의하기") {
-                      _navigateToContactAdmin();
-                    }
-                    // 다른 항목 클릭 시 추가 동작
-                  },
-                  animation: animation,
-                  badgeCount: _menuItems[index]['text'] == "문의하기" ? _unreadMessagesCount : 0,
-                );
-              },
-            ),
-          ],
-        ),
+          ),
+          AnimatedList(
+            key: _listKey,
+            shrinkWrap: true,
+            initialItemCount: _menuItems.length,
+            itemBuilder: (context, index, animation) {
+              return _buildMenuItem(
+                icon: _menuItems[index]['icon'],
+                text: _menuItems[index]['text'],
+                onTap: () {
+                  if (_menuItems[index]['text'] == "위시리스트") {
+                    _navigateToShoppingCart();
+                  } else if (_menuItems[index]['text'] == "선호도 수정") {
+                    _navigateToActivityPreferenceEdit();
+                  } else if (_menuItems[index]['text'] == "문의하기") {
+                    _navigateToContactAdmin();
+                  }
+                },
+                animation: animation,
+                badgeCount: _menuItems[index]['text'] == "문의하기" ? _unreadMessagesCount : 0,
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 
   ImageProvider _getUserProfileImage() {
-    if (_user?.profileImage != null) {
-      if (_user!.profileImage!.startsWith('assets/')) {
-        return AssetImage(_user!.profileImage!);
-      } else if (File(_user!.profileImage!).existsSync()) {
-        return FileImage(File(_user!.profileImage!));
-      } else {
-        return NetworkImage(_user!.profileImage!);
-      }
+    final String? profileImage = _userData?['profileImage'];
+    if (profileImage != null && profileImage.startsWith('assets/')) {
+      return AssetImage(profileImage);
+    } else if (profileImage != null && File(profileImage).existsSync()) {
+      return FileImage(File(profileImage));
+    } else if (profileImage != null) {
+      return NetworkImage(profileImage);
     } else {
       return AssetImage('assets/ph_profile_img_01.jpg');
     }
