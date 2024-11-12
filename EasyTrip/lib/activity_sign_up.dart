@@ -264,89 +264,69 @@ class _SignUpActivityState extends State<SignUpActivity> {
     String? message;
     bool isUnique = false;
 
-    // 검사할 값을 지정
     String valueToCheck;
     String url;
+    Map<String, String> requestBody;
 
     if (type == 'id') {
       valueToCheck = _idController.text;
       url = 'http://44.214.72.11:8080/eztrip/check-username';
+      requestBody = {'username': valueToCheck};
     } else if (type == 'nickname') {
       valueToCheck = _nicknameController.text;
       url = 'http://44.214.72.11:8080/eztrip/check-nickname';
+      requestBody = {'nickname': valueToCheck};
     } else if (type == 'email') {
       valueToCheck = '${_emailPrefixController.text}@$_selectedEmailDomain';
       url = 'http://44.214.72.11:8080/eztrip/check-email';
+      requestBody = {'email': valueToCheck};
     } else {
-      return; // 잘못된 type이면 중단
+      return;
     }
 
-    print("중복검사 버튼 클릭 - 서버에 요청을 보냅니다: $type = $valueToCheck");
+    print("중복검사 요청: $type = $valueToCheck");
 
     try {
       final response = await http.post(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'username': valueToCheck}),
+        body: jsonEncode(requestBody),
       );
 
       if (response.statusCode == 200) {
-        print("서버 응답 body: ${response.body}");
+        print("서버 응답: ${response.body}");
+
         if (response.body.isNotEmpty) {
           final result = jsonDecode(response.body);
           isUnique = result['isUnique'];
-          setState(() {
-            if (type == 'id') {
-              _isIdValid = isUnique;
-              _idCheckMessage = isUnique ? null : '아이디가 이미 사용 중입니다.';
-            } else if (type == 'nickname') {
-              _isNicknameValid = isUnique;
-              _nicknameCheckMessage = isUnique ? null : '닉네임이 이미 사용 중입니다.';
-            } else if (type == 'email') {
-              _isEmailValid = isUnique;
-              _emailCheckMessage = isUnique ? null : '이 이메일은 이미 사용 중입니다.';
-            }
-          });
+          message = isUnique ? null : '$type이 이미 사용 중입니다.';
         } else {
-          // 빈 응답일 때는 사용 가능으로 간주
-          print("빈 응답이므로 사용 가능한 것으로 간주합니다.");
-          setState(() {
-            if (type == 'id') {
-              _isIdValid = true;
-              _idCheckMessage = null;
-            } else if (type == 'nickname') {
-              _isNicknameValid = true;
-              _nicknameCheckMessage = null;
-            } else if (type == 'email') {
-              _isEmailValid = true;
-              _emailCheckMessage = null;
-            }
-          });
+          // 빈 응답이므로 사용 가능한 것으로 간주
+          print("서버 응답이 비어 있으므로 사용 가능으로 처리합니다.");
+          isUnique = true;
+          message = null;
         }
       } else {
-        print("서버 오류: 상태 코드 ${response.statusCode}");
-        setState(() {
-          if (type == 'id') {
-            _idCheckMessage = '서버 오류가 발생했습니다.';
-          } else if (type == 'nickname') {
-            _nicknameCheckMessage = '서버 오류가 발생했습니다.';
-          } else if (type == 'email') {
-            _emailCheckMessage = '서버 오류가 발생했습니다.';
-          }
-        });
+        print("서버 오류 - 상태 코드 ${response.statusCode}");
+        message = '서버 오류가 발생했습니다.';
       }
     } catch (error) {
-      print("네트워크 오류 - 중복 확인 요청 실패: $error");
-      setState(() {
-        if (type == 'id') {
-          _idCheckMessage = '네트워크 오류가 발생했습니다.';
-        } else if (type == 'nickname') {
-          _nicknameCheckMessage = '네트워크 오류가 발생했습니다.';
-        } else if (type == 'email') {
-          _emailCheckMessage = '네트워크 오류가 발생했습니다.';
-        }
-      });
+      print("네트워크 오류 - 중복 확인 실패: $error");
+      message = '네트워크 오류가 발생했습니다.';
     }
+
+    setState(() {
+      if (type == 'id') {
+        _isIdValid = isUnique;
+        _idCheckMessage = message;
+      } else if (type == 'nickname') {
+        _isNicknameValid = isUnique;
+        _nicknameCheckMessage = message;
+      } else if (type == 'email') {
+        _isEmailValid = isUnique;
+        _emailCheckMessage = message;
+      }
+    });
   }
 
 
