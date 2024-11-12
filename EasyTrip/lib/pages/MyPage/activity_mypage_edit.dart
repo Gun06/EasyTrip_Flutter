@@ -51,7 +51,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   late final String _username; // username을 수정 불가능한 변수로 선언
 
-
   @override
   void initState() {
     super.initState();
@@ -271,7 +270,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     print('Updating user: $updatedUser'); // 디버깅용 로그 추가
 
     final url =
-    Uri.parse('http://44.214.72.11:8080/eztrip/update/${widget.userId}');
+        Uri.parse('http://44.214.72.11:8080/eztrip/update/${widget.userId}');
 
     try {
       final response = await http.patch(
@@ -371,10 +370,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget _buildTextField(
       TextEditingController controller, String hintText, String labelText,
       {bool obscureText = false,
-        bool isValid = true,
-        Function(String)? onChanged,
-        String? formattedText,
-        bool enabled = true}) {
+      bool isValid = true,
+      Function(String)? onChanged,
+      String? formattedText,
+      bool enabled = true}) {
     return Stack(
       children: [
         TextField(
@@ -511,8 +510,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8.0),
               ),
-              padding:
-              EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+              padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
             ),
             child: Text(
               '이메일 중복 검사',
@@ -532,7 +530,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.blue,
           shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
           padding: EdgeInsets.symmetric(horizontal: 16.0),
         ),
         child: Text(
@@ -553,7 +551,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               child: TextField(
                 enabled: false,
                 controller:
-                TextEditingController(text: _selectedAge.toString()),
+                    TextEditingController(text: _selectedAge.toString()),
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                 ),
@@ -573,14 +571,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.0),
                   ),
-                  contentPadding: EdgeInsets.symmetric(
-                      horizontal: 20.0, vertical: 20.0),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
                   filled: true,
                   fillColor: Colors.white,
                 ),
                 hint: Text('성별'),
                 value: _selectedGender.isNotEmpty &&
-                    ['남성', '여성'].contains(_selectedGender)
+                        ['남성', '여성'].contains(_selectedGender)
                     ? _selectedGender
                     : null,
                 items: ['남성', '여성'].map((String value) {
@@ -615,7 +613,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         centerTitle: true,
-        title: Text('프로필 편집'),
+        title: Text(
+          '프로필 편집',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.white,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
@@ -637,143 +642,145 @@ class _EditProfilePageState extends State<EditProfilePage> {
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    GestureDetector(
-                      onTap: _selectProfileImage,
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundImage: _profileImage != null
-                            ? AssetImage(_profileImage!)
-                            : NetworkImage(
-                            'https://via.placeholder.com/150')
-                        as ImageProvider,
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      _nicknameController.text,
-                      style: TextStyle(
-                          fontSize: 25, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      _username,
-                      style: TextStyle(fontSize: 15, color: Colors.grey),
-                    ),
-                    SizedBox(height: 10),
-                    TextButton(
-                      onPressed: _selectProfileImage,
-                      child: Text(
-                        '프로필 사진 바꾸기',
-                        style:
-                        TextStyle(color: Colors.orange, fontSize: 15),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 20),
-              _buildTextField(_nameController, '이름', '이름',
-                  isValid: _isNameValid),
-              SizedBox(height: 20),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            _buildTextField(
-                                _nicknameController, '닉네임', '닉네임',
-                                isValid: _isNicknameValid),
-                            if (_isNicknameValid)
-                              Positioned(
-                                right: 10,
-                                top: 20,
-                                child: Icon(
-                                  Icons.check,
-                                  color: Colors.green,
-                                  size: 24.0,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Column(
+                    Center(
+                      child: Column(
                         children: [
-                          _buildDuplicateCheckButton('중복검사', () {
-                            _checkDuplicate(
-                                'nickname', _nicknameController);
-                          }),
-                        ],
-                      ),
-                    ],
-                  ),
-                  if (_nicknameCheckMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0, left: 8.0),
-                      child: Row(
-                        children: [
-                          Expanded(
+                          GestureDetector(
+                            onTap: _selectProfileImage,
+                            child: CircleAvatar(
+                              radius: 50,
+                              backgroundImage: _profileImage != null
+                                  ? AssetImage(_profileImage!)
+                                  : NetworkImage(
+                                          'https://via.placeholder.com/150')
+                                      as ImageProvider,
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            _nicknameController.text,
+                            style: TextStyle(
+                                fontSize: 25, fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            _username,
+                            style: TextStyle(fontSize: 15, color: Colors.grey),
+                          ),
+                          SizedBox(height: 10),
+                          TextButton(
+                            onPressed: _selectProfileImage,
                             child: Text(
-                              _nicknameCheckMessage!,
-                              style: TextStyle(color: Colors.red),
+                              '프로필 사진 바꾸기',
+                              style:
+                                  TextStyle(color: Colors.orange, fontSize: 15),
                             ),
                           ),
                         ],
                       ),
                     ),
-                ],
-              ),
-              SizedBox(height: 20),
-              _buildTextField(
-                  TextEditingController(text: _username), // 초기 값으로 기존 username 사용
-                  '아이디(학번)',
-                  '아이디(학번)',
-                  enabled: false), // 수정 불가능
-              SizedBox(height: 20),
-              _buildTextField(
-                  _birthController, '생년월일 (예: 2000년06월26일)', '생년월일',
-                  isValid: _isBirthDateValid, onChanged: (value) {
-                _onBirthDateChanged(value);
-              }, formattedText: _formattedBirthDate),
-              SizedBox(height: 20),
-              _buildAgeGenderField(),
-              SizedBox(height: 20),
-              _buildTextField(_phoneController, '전화번호 (ex.010-1234-5678)', '전화번호',
-                  isValid: _isPhoneNumberValid),
-              SizedBox(height: 20),
-              _buildEmailField(), // 이메일 입력 필드 추가
-              SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isFormValid() ? _saveProfile : null,
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.all(15.0),
-                    backgroundColor:
-                    _isFormValid() ? Colors.blue : Colors.grey,
-                  ),
-                  child: Text(
-                    '완료',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                    SizedBox(height: 20),
+                    _buildTextField(_nameController, '이름', '이름',
+                        isValid: _isNameValid),
+                    SizedBox(height: 20),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Stack(
+                                children: [
+                                  _buildTextField(
+                                      _nicknameController, '닉네임', '닉네임',
+                                      isValid: _isNicknameValid),
+                                  if (_isNicknameValid)
+                                    Positioned(
+                                      right: 10,
+                                      top: 20,
+                                      child: Icon(
+                                        Icons.check,
+                                        color: Colors.green,
+                                        size: 24.0,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Column(
+                              children: [
+                                _buildDuplicateCheckButton('중복검사', () {
+                                  _checkDuplicate(
+                                      'nickname', _nicknameController);
+                                }),
+                              ],
+                            ),
+                          ],
+                        ),
+                        if (_nicknameCheckMessage != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0, left: 8.0),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    _nicknameCheckMessage!,
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                    SizedBox(height: 20),
+                    _buildTextField(
+                        TextEditingController(text: _username),
+                        // 초기 값으로 기존 username 사용
+                        '아이디(학번)',
+                        '아이디(학번)',
+                        enabled: false), // 수정 불가능
+                    SizedBox(height: 20),
+                    _buildTextField(
+                        _birthController, '생년월일 (예: 2000년06월26일)', '생년월일',
+                        isValid: _isBirthDateValid, onChanged: (value) {
+                      _onBirthDateChanged(value);
+                    }, formattedText: _formattedBirthDate),
+                    SizedBox(height: 20),
+                    _buildAgeGenderField(),
+                    SizedBox(height: 20),
+                    _buildTextField(
+                        _phoneController, '전화번호 (ex.010-1234-5678)', '전화번호',
+                        isValid: _isPhoneNumberValid),
+                    SizedBox(height: 20),
+                    _buildEmailField(), // 이메일 입력 필드 추가
+                    SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isFormValid() ? _saveProfile : null,
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.all(15.0),
+                          backgroundColor:
+                              _isFormValid() ? Colors.blue : Colors.grey,
+                        ),
+                        child: Text(
+                          '완료',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }
