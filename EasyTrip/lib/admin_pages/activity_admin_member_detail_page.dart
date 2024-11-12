@@ -38,6 +38,13 @@ class _AdminMemberDetailPageState extends State<AdminMemberDetailPage> {
           userData = json.decode(utf8.decode(response.bodyBytes));
           isLoading = false;
         });
+
+        // preferences의 categoryTitle 값을 로그로 출력
+        final preferences = userData?['preferences'] ?? [];
+        for (var preference in preferences) {
+          final categoryTitle = preference['categoryTitle'] ?? 'Unknown';
+          print("Category: $categoryTitle");
+        }
       } else {
         print("Failed to fetch user data. Status code: ${response.statusCode}");
       }
@@ -163,11 +170,7 @@ class _AdminMemberDetailPageState extends State<AdminMemberDetailPage> {
               SizedBox(height: 20),
               _buildDetailRow('성별', userData?['gender'] ?? 'N/A'),
               Divider(height: 40, thickness: 1),
-              _buildPreferenceSection('활동 선호도', userData?['activityPreferences'] ?? []),
-              SizedBox(height: 20),
-              _buildPreferenceSection('음식 선호도', userData?['foodPreferences'] ?? []),
-              SizedBox(height: 20),
-              _buildPreferenceSection('숙박 선호도', userData?['accommodationPreferences'] ?? []),
+              _buildPreferenceSection(userData?['preferences'] ?? []),
               SizedBox(height: 20),
               Row(
                 children: [
@@ -236,12 +239,12 @@ class _AdminMemberDetailPageState extends State<AdminMemberDetailPage> {
     );
   }
 
-  Widget _buildPreferenceSection(String title, List<dynamic> preferences) {
+  Widget _buildPreferenceSection(List<dynamic> preferences) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          title,
+          '선호도',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         SizedBox(height: 10),
@@ -256,27 +259,16 @@ class _AdminMemberDetailPageState extends State<AdminMemberDetailPage> {
             spacing: 2.0,
             runSpacing: 2.0,
             children: preferences.map<Widget>((preference) {
+              final categoryTitle = preference['categoryTitle'] ?? 'Unknown';
               return Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Chip(
-                    label: Text(
-                      preference.toString(),
-                      style: TextStyle(fontSize: 12, color: Colors.black),
-                    ),
-                    backgroundColor: Colors.grey[100],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                      side: BorderSide(color: Colors.grey),
-                    ),
+                  Text(
+                    categoryTitle,
+                    style: TextStyle(fontSize: 12, color: Colors.black),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 3.0),
-                    child: Text(
-                      '>',
-                      style: TextStyle(fontSize: 15, color: Colors.black),
-                    ),
-                  ),
+                  if (preference != preferences.last)
+                    Text(' > ', style: TextStyle(fontSize: 12, color: Colors.black)),
                 ],
               );
             }).toList(),

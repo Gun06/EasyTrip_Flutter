@@ -34,7 +34,8 @@ class _AdminMemberInfoPageState extends State<AdminMemberInfoPage> {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> users = json.decode(response.body);
+        // UTF-8 디코딩 처리
+        final List<dynamic> users = json.decode(utf8.decode(response.bodyBytes));
 
         setState(() {
           _users = users;
@@ -44,13 +45,13 @@ class _AdminMemberInfoPageState extends State<AdminMemberInfoPage> {
         setState(() {
           _isLoading = false;
         });
-        print("Failed to load users. Status code: ${response.statusCode}");
+        print("사용자 목록을 불러오지 못했습니다. 상태 코드: ${response.statusCode}");
       }
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
-      print("Error fetching users: $e");
+      print("사용자 목록 가져오는 중 오류 발생: $e");
     }
   }
 
@@ -61,7 +62,7 @@ class _AdminMemberInfoPageState extends State<AdminMemberInfoPage> {
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : _users.isEmpty
-          ? Center(child: Text("No users found."))
+          ? Center(child: Text("사용자를 찾을 수 없습니다."))
           : ListView.builder(
         itemCount: _users.length,
         itemBuilder: (context, index) {
@@ -79,7 +80,7 @@ class _AdminMemberInfoPageState extends State<AdminMemberInfoPage> {
                 style: TextStyle(fontSize: 20, color: Colors.grey),
               ),
               title: Text(
-                'ID: ${user['username'] ?? "N/A"}',
+                '아이디: ${user['username'] ?? "N/A"}',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               subtitle: Text(
