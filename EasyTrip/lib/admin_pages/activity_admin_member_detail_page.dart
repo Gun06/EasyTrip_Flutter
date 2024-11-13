@@ -74,27 +74,6 @@ class _AdminMemberDetailPageState extends State<AdminMemberDetailPage> {
     }
   }
 
-  Future<void> _blockUser(BuildContext context) async {
-    final url = Uri.parse('http://44.214.72.11:8080/api/admin/users/${widget.userId}/block');
-    try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${widget.accessToken}',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        Navigator.pop(context, true); // 차단 후 업데이트 신호 전달
-      } else {
-        print("Failed to block user. Status code: ${response.statusCode}");
-      }
-    } catch (e) {
-      print("Error blocking user: $e");
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -172,36 +151,17 @@ class _AdminMemberDetailPageState extends State<AdminMemberDetailPage> {
               Divider(height: 40, thickness: 1),
               _buildPreferenceSection(userData?['preferences'] ?? []),
               SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => _deleteUser(context),
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.all(15.0),
-                        backgroundColor: Colors.red,
-                      ),
-                      child: Text(
-                        '삭제하기',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => _blockUser(context),
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.all(15.0),
-                        backgroundColor: Colors.grey,
-                      ),
-                      child: Text(
-                        '차단하기',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
+              ElevatedButton(
+                onPressed: () => _deleteUser(context),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.all(15.0),
+                  backgroundColor: Colors.red,
+                  minimumSize: Size(double.infinity, 50), // 전체 너비 설정
+                ),
+                child: Text(
+                  '삭제하기',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
@@ -260,15 +220,38 @@ class _AdminMemberDetailPageState extends State<AdminMemberDetailPage> {
             runSpacing: 2.0,
             children: preferences.map<Widget>((preference) {
               final categoryTitle = preference['categoryTitle'] ?? 'Unknown';
+
+              // 실제 코드(A4, D1 등) 추출
+              final code = categoryTitle.split(' ').last;
+              String category;
+
+              // 추출한 코드에 따라 카테고리 이름 변환
+              if (code.startsWith('A')) {
+                category = '음식';
+              } else if (code.startsWith('B')) {
+                category = '숙박';
+              } else if (code.startsWith('C')) {
+                category = '문화체험';
+              } else if (code.startsWith('D')) {
+                category = '관광지';
+              } else if (code.startsWith('E')) {
+                category = '디저트';
+              } else {
+                category = '알 수 없음';
+              }
+
+              // 변환 결과를 로그로 출력
+              print("Original: $categoryTitle, Converted: $category");
+
               return Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    categoryTitle,
-                    style: TextStyle(fontSize: 12, color: Colors.black),
+                    category,
+                    style: TextStyle(fontSize: 18, color: Colors.black),
                   ),
                   if (preference != preferences.last)
-                    Text(' > ', style: TextStyle(fontSize: 12, color: Colors.black)),
+                    Text(' > ', style: TextStyle(fontSize: 15, color: Colors.black)),
                 ],
               );
             }).toList(),
