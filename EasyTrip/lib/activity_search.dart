@@ -238,6 +238,7 @@ class _PasswordRecoveryModalState extends State<PasswordRecoveryModal>
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
                   contentPadding: EdgeInsets.symmetric(horizontal: 10.0),
                 ),
+                dropdownColor: Colors.white,
                 disabledHint: Text(_selectedEmailDomain),
                 isExpanded: true,
                 style: TextStyle(color: Colors.black),
