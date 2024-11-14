@@ -548,7 +548,7 @@ class MainActivity : FlutterActivity() {
 
       val request = Request.Builder()
         .url(url)
-        .addHeader("Authorization", "KakaoAK 0a3f9a07d485e8599a680ad551136301")
+        .addHeader("Authorization", "KakaoAK ㅅ")
         .build()
 
       client.newCall(request).enqueue(object : okhttp3.Callback {
