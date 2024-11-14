@@ -1,67 +1,114 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'Custom_WeeklyCalendar.dart';
+import 'activity_Mappage.dart';
 import 'activity_addschedule.dart';
-import '../../helpers/database_helper.dart'; // DatabaseHelper import 추가
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class ScheduleFragment extends StatefulWidget {
+  final String username;
+  final String accessToken;
+  final int userId;
+
+  ScheduleFragment({
+    required this.username,
+    required this.accessToken,
+    required this.userId,
+  });
+
   @override
   _ScheduleFragmentState createState() => _ScheduleFragmentState();
 }
 
 class _ScheduleFragmentState extends State<ScheduleFragment> {
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
-  final GlobalKey<CustomWeeklyCalendarState> _calendarKey = GlobalKey<CustomWeeklyCalendarState>();
+  final GlobalKey<CustomWeeklyCalendarState> _calendarKey =
+      GlobalKey<CustomWeeklyCalendarState>();
 
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance; // DatabaseHelper 인스턴스 생성
-
-  List<Map<String, String>> displayedItems = [];
+  List<Map<String, dynamic>> displayedItems = [];
   List<bool> _expanded = [];
   bool showAll = false;
-  bool isEmptySchedule = false; // 일정이 비어있는지 여부를 확인하는 변수
-  List<List<Map<String, String>>> recommendations = []; // 추천 일정 리스트
+  bool isEmptySchedule = false;
+  List<List<Map<String, dynamic>>> recommendations = [];
 
   @override
   void initState() {
     super.initState();
-    _loadSchedulesForDate(DateTime.now()); // 현재 날짜의 일정을 불러옵니다.
+    _loadSchedulesForDate(DateTime.now());
   }
 
-  // 날짜에 맞는 일정 데이터를 DB에서 불러오는 메서드
   Future<void> _loadSchedulesForDate(DateTime selectedDate) async {
-    String formattedDate = selectedDate.toIso8601String().split('T').first; // yyyy-MM-dd 형식
+    String formattedDate = selectedDate.toIso8601String().split('T').first;
 
-    // DB에서 일정 데이터를 가져옵니다.
-    final List<Map<String, dynamic>> schedules = await _dbHelper.getScheduleWithRecommendations(1);
-    final filteredItems = schedules
-        .where((item) => item['date'] == formattedDate)
-        .map((item) => {
-      'date': item['date'] as String,
-      'title': item['scheduleName'] as String,
-      'location': item['allPrice'] as String, // 총 금액으로 변경
-      'imageUrl': 'assets/150.png' // 이미지 URL은 임의로 설정
-    })
-        .toList();
+    // 서버 요청
+    final url = Uri.parse('http://44.214.72.11:8080/api/schedules/all/1');
+    print('Requesting schedules from URL: $url');
+    print('Using accessToken: ${widget.accessToken}');
+    print('Formatted Date for filtering: $formattedDate');
 
-    // 추천 일정 데이터 설정
-    final List<List<Map<String, String>>> newRecommendations = schedules
-        .where((item) => item['date'] == formattedDate)
-        .map((item) => (item['recommendations'] as List)
-        .map<Map<String, String>>((rec) => {
-      'placeName': rec['placeName'] as String,
-      'price': rec['price'] as String,
-      'location': rec['location'] as String,
-    })
-        .toList())
-        .toList();
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${widget.accessToken}',
+        },
+      );
 
-    // List<Map<String, dynamic>>에서 List<Map<String, String>>으로 변환
-    setState(() {
-      displayedItems = filteredItems.cast<Map<String, String>>();
-      recommendations = newRecommendations;
-      _expanded = List.generate(displayedItems.length, (index) => false);
-      isEmptySchedule = displayedItems.isEmpty; // 일정이 비어있는지 확인
-    });
+      print('Response status code: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        try {
+          final List<dynamic> schedules =
+              json.decode(utf8.decode(response.bodyBytes));
+          print('Parsed schedules: $schedules');
+
+          // 필터링된 데이터
+          final filteredItems = schedules
+              .where((item) => item['date'] == formattedDate)
+              .map((item) => {
+                    'date': item['date'] ?? 'N/A',
+                    'title': item['title'] ?? 'No Title',
+                    'price': item['price']?.toString() ?? '0',
+                    'imageUrl': item['image'] ?? 'assets/150.png',
+                    'pathDetails': item['pathDetails'] ?? [],
+                  })
+              .toList();
+
+          print('Filtered items for the date $formattedDate: $filteredItems');
+
+          // 세부 경로 데이터 정리
+          final List<List<Map<String, dynamic>>> newRecommendations =
+              filteredItems.map((item) {
+            final List<dynamic> pathDetails = item['pathDetails'];
+            return pathDetails.map<Map<String, dynamic>>((rec) {
+              return {
+                'placeName': rec['placeName'] ?? 'Unknown Place',
+                'price': rec['price']?.toString() ?? '0',
+                'location': rec['address'] ?? 'Unknown Address',
+              };
+            }).toList();
+          }).toList();
+
+          setState(() {
+            displayedItems = filteredItems;
+            recommendations = newRecommendations;
+            _expanded = List.generate(displayedItems.length, (index) => false);
+            isEmptySchedule = displayedItems.isEmpty;
+          });
+          print('Successfully updated displayed items: $displayedItems');
+        } catch (e) {
+          print('Error parsing schedules JSON data: $e');
+        }
+      } else {
+        print('Failed to load schedules. Status code: ${response.statusCode}');
+        print('Error response body: ${response.body}');
+      }
+    } catch (e) {
+      print('Error making schedule request: $e');
+    }
   }
 
   void _toggleShowAll() {
@@ -77,42 +124,7 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
   }
 
   void _addSchedule() {
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-      barrierColor: Colors.black54,
-      transitionDuration: Duration(milliseconds: 300),
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return SafeArea(
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: Material(
-              color: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Container(
-                margin: EdgeInsets.only(top: 20),
-                child: AddSchedulePage(),
-              ),
-            ),
-          ),
-        );
-      },
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        return SlideTransition(
-          position: Tween<Offset>(
-            begin: Offset(0, -1.0),
-            end: Offset(0, 0),
-          ).animate(animation),
-          child: child,
-        );
-      },
-    ).then((_) {
-      _calendarKey.currentState?.updateSchedules(); // CustomWeeklyCalendar의 일정을 업데이트
-      _loadSchedulesForDate(DateTime.now()); // 일정 추가 후 현재 날짜의 일정을 다시 로드
-    });
+    print('Add schedule button pressed');
   }
 
   @override
@@ -179,7 +191,9 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
               height: 200,
               child: CustomWeeklyCalendar(
                 key: _calendarKey,
-                onDateSelected: _loadSchedulesForDate, // 날짜 선택 시 일정 업데이트
+                onDateSelected: _loadSchedulesForDate,
+                userId: widget.userId,
+                accessToken: widget.accessToken,
               ),
             ),
             SizedBox(height: 16),
@@ -215,27 +229,24 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
             Expanded(
               child: isEmptySchedule
                   ? Center(
-                child: Text(
-                  '일정 없음',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-              )
+                      child: Text(
+                        '일정 없음',
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                    )
                   : AnimatedList(
-                key: _listKey,
-                initialItemCount: displayedItems.length,
-                itemBuilder: (context, index, animation) {
-                  return _buildRecommendedItem(
-                    context,
-                    displayedItems[index]['date']!,
-                    displayedItems[index]['title']!,
-                    displayedItems[index]['location']!,
-                    displayedItems[index]['imageUrl']!,
-                    animation,
-                    _expanded[index],
-                    index,
-                  );
-                },
-              ),
+                      key: _listKey,
+                      initialItemCount: displayedItems.length,
+                      itemBuilder: (context, index, animation) {
+                        return _buildRecommendedItem(
+                          context,
+                          displayedItems[index],
+                          animation,
+                          _expanded[index],
+                          index,
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -243,12 +254,38 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
     );
   }
 
+  void _showMapPage(int index) {
+    List<Map<String, String>> routeDetails = [];
+
+    // 출발지 추가
+    routeDetails.add({
+      'placeName': displayedItems[index]['title'] ?? 'Unknown Place',
+      'address': displayedItems[index]['location'] ?? 'Unknown Address',
+    });
+
+    // 경유지 추가
+    routeDetails.addAll(recommendations[index].map((rec) => {
+      'placeName': rec['placeName'] ?? 'Unknown Place',
+      'address': rec['location'] ?? 'Unknown Address',
+    }));
+
+    // 도착지 추가
+    routeDetails.add({
+      'placeName': displayedItems[index]['title'] ?? 'Unknown Place',
+      'address': displayedItems[index]['location'] ?? 'Unknown Address',
+    });
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MapPage(routeDetails: routeDetails),
+      ),
+    );
+  }
+
   Widget _buildRecommendedItem(
       BuildContext context,
-      String date,
-      String title,
-      String location,
-      String imageUrl,
+      Map<String, dynamic> item,
       Animation<double> animation,
       bool isExpanded,
       int index,
@@ -261,64 +298,141 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
           color: Colors.white,
           margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0),
+            borderRadius: BorderRadius.circular(12.0), // 모서리 둥글기 줄이기
           ),
-          elevation: 8.0,
+          elevation: 2.0,
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(12.0),
             child: Column(
               children: [
                 Row(
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(8.0),
-                      child: Image.asset(
-                        imageUrl,
-                        height: 70,
-                        width: 70,
+                      borderRadius: BorderRadius.circular(6.0),
+                      child: item['imageUrl'] != null &&
+                          item['imageUrl'].startsWith('http')
+                          ? Image.network(
+                        item['imageUrl'],
+                        height: 60,
+                        width: 60,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Image.asset(
+                            'assets/150.png',
+                            height: 60,
+                            width: 60,
+                            fit: BoxFit.cover,
+                          );
+                        },
+                      )
+                          : Image.asset(
+                        'assets/150.png', // 기본 이미지 경로 설정
+                        height: 60,
+                        width: 60,
                         fit: BoxFit.cover,
                       ),
                     ),
-                    SizedBox(width: 16),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(date, style: TextStyle(fontSize: 14, color: Colors.grey)),
-                          Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                          Text(location, style: TextStyle(fontSize: 14, color: Colors.grey)),
+                          Text(
+                            item['date'] ?? '',
+                            style: TextStyle(
+                                fontSize: 13, color: Colors.grey.shade600),
+                          ),
+                          Text(
+                            item['title'] ?? 'No Title',
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            '${item['price']}원',
+                            style: TextStyle(
+                                fontSize: 13, color: Colors.grey.shade600),
+                          ),
                         ],
                       ),
                     ),
-                    Icon(isExpanded ? Icons.expand_less : Icons.expand_more, color: Colors.grey),
+                    Icon(
+                      isExpanded ? Icons.expand_less : Icons.expand_more,
+                      color: Colors.grey.shade600,
+                    ),
+                    SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () => _showMapPage(index), // 지도 페이지 호출
+                      child: Text(
+                        '지도보기',
+                        style: TextStyle(color: Colors.black),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade300,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6.0),
+                        ),
+                        padding:
+                        EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      ),
+                    ),
                   ],
                 ),
                 if (isExpanded)
-                  Column(
-                    children: recommendations[index]
-                        .map((rec) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Card(
-                        color: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 4,
-                        child: ListTile(
-                          leading: Icon(Icons.place, color: Colors.blue),
-                          title: Text(
-                            rec['placeName']!,
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: recommendations[index]
+                          .map((rec) => Padding(
+                        padding:
+                        const EdgeInsets.symmetric(vertical: 4.0),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          subtitle: Text(rec['location']!),
-                          trailing: Text(
-                            '${rec['price']}원',
-                            style: TextStyle(fontSize: 14, color: Colors.black),
+                          child: Row(
+                            children: [
+                              Icon(Icons.place,
+                                  color: Colors.blue.shade300, size: 20),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      rec['placeName'] ?? 'Unknown Place',
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                    Text(
+                                      rec['location'] ??
+                                          'Unknown Location',
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                '${rec['price']}원',
+                                style: TextStyle(
+                                    fontSize: 13, color: Colors.black87),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                    ))
-                        .toList(),
+                      ))
+                          .toList(),
+                    ),
                   ),
               ],
             ),
