@@ -34,10 +34,13 @@ class MyApp extends StatelessWidget {
           final args = settings.arguments as Map<String, dynamic>;
           final username = args['username'] as String;
           final accessToken = args['accessToken'] as String;
+          final userId = args['userId'] as int;
+
           return MaterialPageRoute(
             builder: (context) => MainActivity(
               username: username,
               accessToken: accessToken,
+              userId: userId, // Pass userId to MainActivity
               key: mainActivityKey,
               onLogout: () {
                 Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);

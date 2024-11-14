@@ -9,9 +9,10 @@ import 'TrafficPage/fragment_traffic.dart';
 class MainActivity extends StatefulWidget {
   final String username;
   final String accessToken;
+  final int userId; // Add userId parameter
   final VoidCallback onLogout;
 
-  MainActivity({required this.username, required this.accessToken, required this.onLogout, Key? key}) : super(key: key);
+  MainActivity({required this.username, required this.accessToken, required this.userId, required this.onLogout, Key? key}) : super(key: key);
 
   @override
   MainActivityState createState() => MainActivityState();
@@ -26,13 +27,17 @@ class MainActivityState extends State<MainActivity> {
     super.initState();
     _pages = [
       ReviewFragment(),
-      ScheduleFragment(),
+      ScheduleFragment(
+        username: widget.username,
+        accessToken: widget.accessToken,
+        userId: widget.userId, // Pass userId to ScheduleFragment
+      ),
       HomeFragment(),
       TrafficFragment(),
       MyPageFragment(
         username: widget.username,
         accessToken: widget.accessToken,
-        onLogout: _handleLogout, // 로그아웃 콜백 전달
+        onLogout: _handleLogout, // Pass logout callback
       ),
     ];
   }
@@ -49,7 +54,7 @@ class MainActivityState extends State<MainActivity> {
     });
   }
 
-  // 로그아웃 시 로그인 페이지로 이동하는 함수
+  // Handle logout and navigate to login page
   void _handleLogout() {
     Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
   }
