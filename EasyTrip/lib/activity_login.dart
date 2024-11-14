@@ -96,8 +96,13 @@ class _LoginActivityState extends State<LoginActivity> {
           Navigator.pushReplacementNamed(
             context,
             '/main',
-            arguments: {'username': responseData['username'], 'accessToken': responseData['accessToken']},
+            arguments: {
+              'username': responseData['username'],
+              'accessToken': responseData['accessToken'],
+              'userId': responseData['id'],
+            },
           );
+;
         }
       } else {
         print('로그인 실패 응답: ${response.statusCode}');
