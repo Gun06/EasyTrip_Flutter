@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'activity_admin_blocked_accounts.dart';
 import 'activity_admin_member_info.dart';
+import 'activity_admin_user_schedule.dart';
 
 class FragmentAdminHome extends StatelessWidget {
   final String accessToken;
@@ -10,7 +10,7 @@ class FragmentAdminHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
+      length: 3,
       child: Scaffold(
         body: Column(
           children: [
@@ -21,9 +21,8 @@ class FragmentAdminHome extends StatelessWidget {
                 indicatorColor: Colors.blue,
                 tabs: [
                   Tab(text: '회원정보'),
-                  Tab(text: '신고리뷰'),
-                  Tab(text: '신고계정'),
-                  Tab(text: '차단계정'),
+                  Tab(text: '일정정보'),
+                  Tab(text: 'SNS정보'),
                 ],
               ),
             ),
@@ -33,9 +32,8 @@ class FragmentAdminHome extends StatelessWidget {
                 child: TabBarView(
                   children: [
                     AdminMemberInfoPage(accessToken: accessToken),
-                    Center(child: Text('신고리뷰 없음')),
+                    UserSchedulePage(accessToken: accessToken,),
                     Center(child: Text('신고계정 없음')),
-                    AdminBlockedAccountsPage(),
                   ],
                 ),
               ),
