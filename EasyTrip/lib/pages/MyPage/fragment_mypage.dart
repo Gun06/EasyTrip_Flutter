@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'activity_contact_admin_page.dart';
 import 'activity_mypage_edit.dart';
-import 'activity_shopping_cart.dart';
+import 'activity_all_schedule.dart';
 import '../../activity_preference_edit.dart';
 
 class MyPageFragment extends StatefulWidget {
@@ -109,7 +109,7 @@ class _MyPageFragmentState extends State<MyPageFragment> {
   void _addMenuItems() {
     final items = [
       {"icon": Icons.person, "text": "선호도 수정"},
-      {"icon": Icons.shopping_cart, "text": "위시리스트"},
+      {"icon": Icons.shopping_cart, "text": "모든 일정보기"},
       {"icon": Icons.people, "text": "게시글"},
       {"icon": Icons.settings, "text": "문의하기"},
     ];
@@ -148,7 +148,7 @@ class _MyPageFragmentState extends State<MyPageFragment> {
   void _navigateToShoppingCart() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ShoppingCartPage()),
+      MaterialPageRoute(builder: (context) => AllSchedulePage(accessToken: widget.accessToken)),
     );
   }
 
@@ -240,7 +240,7 @@ class _MyPageFragmentState extends State<MyPageFragment> {
                 icon: _menuItems[index]['icon'],
                 text: _menuItems[index]['text'],
                 onTap: () {
-                  if (_menuItems[index]['text'] == "위시리스트") {
+                  if (_menuItems[index]['text'] == "모든 일정보기") {
                     _navigateToShoppingCart();
                   } else if (_menuItems[index]['text'] == "선호도 수정") {
                     _navigateToActivityPreferenceEdit();
