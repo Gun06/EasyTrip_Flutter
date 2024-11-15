@@ -24,7 +24,7 @@ class ScheduleFragment extends StatefulWidget {
 class _ScheduleFragmentState extends State<ScheduleFragment> {
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
   final GlobalKey<CustomWeeklyCalendarState> _calendarKey =
-      GlobalKey<CustomWeeklyCalendarState>();
+  GlobalKey<CustomWeeklyCalendarState>();
 
   List<Map<String, dynamic>> displayedItems = [];
   List<bool> _expanded = [];
@@ -62,26 +62,24 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
       if (response.statusCode == 200) {
         try {
           final List<dynamic> schedules =
-              json.decode(utf8.decode(response.bodyBytes));
+          json.decode(utf8.decode(response.bodyBytes));
           print('Parsed schedules: $schedules');
 
-          // 필터링된 데이터
           final filteredItems = schedules
               .where((item) => item['date'] == formattedDate)
               .map((item) => {
-                    'date': item['date'] ?? 'N/A',
-                    'title': item['title'] ?? 'No Title',
-                    'price': item['price']?.toString() ?? '0',
-                    'imageUrl': item['image'] ?? 'assets/150.png',
-                    'pathDetails': item['pathDetails'] ?? [],
-                  })
+            'date': item['date'] ?? 'N/A',
+            'title': item['title'] ?? 'No Title',
+            'price': item['price']?.toString() ?? '0',
+            'imageUrl': item['image'] ?? 'assets/150.png',
+            'pathDetails': item['pathDetails'] ?? [],
+          })
               .toList();
 
           print('Filtered items for the date $formattedDate: $filteredItems');
 
-          // 세부 경로 데이터 정리
           final List<List<Map<String, dynamic>>> newRecommendations =
-              filteredItems.map((item) {
+          filteredItems.map((item) {
             final List<dynamic> pathDetails = item['pathDetails'];
             return pathDetails.map<Map<String, dynamic>>((rec) {
               return {
@@ -124,7 +122,42 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
   }
 
   void _addSchedule() {
-    print('Add schedule button pressed');
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true, // 모달 외부 터치로 닫기 가능
+      barrierLabel: '',
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return SafeArea(
+          child: Align(
+            alignment: Alignment.topCenter, // 상단에 모달 정렬
+            child: Material(
+              color: Colors.transparent,
+              child: AddSchedulePage(
+                userId: widget.userId,
+                accessToken: widget.accessToken,
+                onScheduleAdded: () {
+                  Navigator.pop(context); // 모달 닫기
+                  _loadSchedulesForDate(DateTime.now()); // 새 일정 데이터 불러오기
+                },
+              ),
+            ),
+          ),
+        );
+      },
+      transitionDuration: Duration(milliseconds: 300), // 애니메이션 지속 시간
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: Offset(0, -1), // 시작 위치: 화면 위쪽 (-1)
+            end: Offset(0, 0), // 끝 위치: 원래 위치 (0)
+          ).animate(CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeInOut, // 부드러운 애니메이션
+          )),
+          child: child,
+        );
+      },
+    );
   }
 
   @override
@@ -229,24 +262,24 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
             Expanded(
               child: isEmptySchedule
                   ? Center(
-                      child: Text(
-                        '일정 없음',
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
-                      ),
-                    )
+                child: Text(
+                  '일정 없음',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              )
                   : AnimatedList(
-                      key: _listKey,
-                      initialItemCount: displayedItems.length,
-                      itemBuilder: (context, index, animation) {
-                        return _buildRecommendedItem(
-                          context,
-                          displayedItems[index],
-                          animation,
-                          _expanded[index],
-                          index,
-                        );
-                      },
-                    ),
+                key: _listKey,
+                initialItemCount: displayedItems.length,
+                itemBuilder: (context, index, animation) {
+                  return _buildRecommendedItem(
+                    context,
+                    displayedItems[index],
+                    animation,
+                    _expanded[index],
+                    index,
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -257,19 +290,16 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
   void _showMapPage(int index) {
     List<Map<String, String>> routeDetails = [];
 
-    // 출발지 추가
     routeDetails.add({
       'placeName': displayedItems[index]['title'] ?? 'Unknown Place',
       'address': displayedItems[index]['location'] ?? 'Unknown Address',
     });
 
-    // 경유지 추가
     routeDetails.addAll(recommendations[index].map((rec) => {
       'placeName': rec['placeName'] ?? 'Unknown Place',
       'address': rec['location'] ?? 'Unknown Address',
     }));
 
-    // 도착지 추가
     routeDetails.add({
       'placeName': displayedItems[index]['title'] ?? 'Unknown Place',
       'address': displayedItems[index]['location'] ?? 'Unknown Address',
@@ -298,7 +328,7 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
           color: Colors.white,
           margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0), // 모서리 둥글기 줄이기
+            borderRadius: BorderRadius.circular(12.0),
           ),
           elevation: 2.0,
           child: Padding(
@@ -326,7 +356,7 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
                         },
                       )
                           : Image.asset(
-                        'assets/150.png', // 기본 이미지 경로 설정
+                        'assets/150.png',
                         height: 60,
                         width: 60,
                         fit: BoxFit.cover,
@@ -364,7 +394,7 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
                     ),
                     SizedBox(width: 8),
                     ElevatedButton(
-                      onPressed: () => _showMapPage(index), // 지도 페이지 호출
+                      onPressed: () => _showMapPage(index),
                       child: Text(
                         '지도보기',
                         style: TextStyle(color: Colors.black),
@@ -399,7 +429,8 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
                           child: Row(
                             children: [
                               Icon(Icons.place,
-                                  color: Colors.blue.shade300, size: 20),
+                                  color: Colors.blue.shade300,
+                                  size: 20),
                               SizedBox(width: 8),
                               Expanded(
                                 child: Column(
@@ -407,7 +438,8 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
                                   CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      rec['placeName'] ?? 'Unknown Place',
+                                      rec['placeName'] ??
+                                          'Unknown Place',
                                       style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500),
@@ -425,7 +457,8 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
                               Text(
                                 '${rec['price']}원',
                                 style: TextStyle(
-                                    fontSize: 13, color: Colors.black87),
+                                    fontSize: 13,
+                                    color: Colors.black87),
                               ),
                             ],
                           ),
