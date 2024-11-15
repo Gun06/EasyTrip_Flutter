@@ -44,6 +44,7 @@ class _UserSchedulePageState extends State<UserSchedulePage> {
           _schedules = schedules.map((schedule) {
             final member = schedule['member'];
             return {
+              'id': schedule['id'], // Schedule ID 추가
               'title': schedule['title'] ?? 'No Title',
               'writer': member != null ? member['username'] ?? 'Unknown Writer' : 'Unknown Writer',
               'details': (schedule['pathDetails'] ?? []).map<Map<String, dynamic>>((detail) {
@@ -69,6 +70,33 @@ class _UserSchedulePageState extends State<UserSchedulePage> {
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  // 일정 삭제 함수
+  Future<void> _deleteSchedule(int index) async {
+    final scheduleId = _schedules[index]['id']; // 해당 일정의 ID 가져오기
+    final url = Uri.parse('http://44.214.72.11:8080/api/admin/schedules/$scheduleId');
+
+    try {
+      final response = await http.delete(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${widget.accessToken}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _schedules.removeAt(index); // 삭제된 일정은 목록에서 제거
+        });
+        print("Schedule with ID $scheduleId deleted successfully.");
+      } else {
+        print("Failed to delete schedule. Status code: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error deleting schedule: $e");
     }
   }
 
@@ -115,22 +143,34 @@ class _UserSchedulePageState extends State<UserSchedulePage> {
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   subtitle: Text('작성자: ${schedule['writer']}'),
-                  trailing: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _expandedIndex = isExpanded ? null : index;
-                      });
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.withOpacity(0.7),
-                    ),
-                    child: Text(
-                      isExpanded ? '닫기' : '상세보기',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _expandedIndex = isExpanded ? null : index;
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.withOpacity(0.7),
+                        ),
+                        child: Text(
+                          isExpanded ? '닫기' : '상세보기',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                          ),
+                        ),
                       ),
-                    ),
+                      SizedBox(width: 8),
+                      IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          _deleteSchedule(index); // 일정 삭제
+                        },
+                      ),
+                    ],
                   ),
                 ),
                 // 세부 일정 표시
