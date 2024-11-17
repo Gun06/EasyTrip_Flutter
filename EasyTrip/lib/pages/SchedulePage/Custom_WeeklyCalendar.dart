@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:http/http.dart' as http;
 
+import 'fragment_schedule.dart';
+
 class CustomWeeklyCalendar extends StatefulWidget {
   final Future<void> Function(DateTime) onDateSelected;
   final VoidCallback? onScheduleUpdated;
@@ -349,31 +351,37 @@ class CustomWeeklyCalendarState extends State<CustomWeeklyCalendar> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              GestureDetector(
-                onTap: () => _showMonthlyCalendar(context),
-                child: Text(
-                  DateFormat('yyyy/MM/dd').format(_selectedDate),
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Padding(
+                padding: const EdgeInsets.only(left: 20.0), // 좌측에 16dp 패딩 추가
+                child: GestureDetector(
+                  onTap: () => _showMonthlyCalendar(context),
+                  child: Text(
+                    DateFormat('yyyy/MM/dd').format(_selectedDate),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.chevron_left),
-                    onPressed: _previousWeek,
-                  ),
-                  GestureDetector(
-                    onTap: _goToToday,
-                    child: Text(
-                      DateFormat('MMM').format(_selectedDate),
-                      style: TextStyle(fontSize: 18),
+              Padding(
+                padding: const EdgeInsets.only(right: 16), // 오른쪽에 16dp 패딩 추가
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.chevron_left),
+                      onPressed: _previousWeek,
                     ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.chevron_right),
-                    onPressed: _nextWeek,
-                  ),
-                ],
+                    GestureDetector(
+                      onTap: _goToToday,
+                      child: Text(
+                        DateFormat('MMM').format(_selectedDate),
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.chevron_right),
+                      onPressed: _nextWeek,
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

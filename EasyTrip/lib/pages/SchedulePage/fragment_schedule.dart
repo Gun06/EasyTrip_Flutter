@@ -31,6 +31,7 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
   bool showAll = false;
   bool isEmptySchedule = false;
   List<List<Map<String, dynamic>>> recommendations = [];
+  bool _isLoadingSchedules = false;
 
   @override
   void initState() {
@@ -41,13 +42,12 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
   Future<void> _loadSchedulesForDate(DateTime selectedDate) async {
     String formattedDate = selectedDate.toIso8601String().split('T').first;
 
-    // 서버 요청
-    final url = Uri.parse('http://44.214.72.11:8080/api/schedules/all/1');
-    print('Requesting schedules from URL: $url');
-    print('Using accessToken: ${widget.accessToken}');
-    print('Formatted Date for filtering: $formattedDate');
+    setState(() {
+      _isLoadingSchedules = true; // 로딩 시작
+    });
 
     try {
+      final url = Uri.parse('http://44.214.72.11:8080/api/schedules/all/1');
       final response = await http.get(
         url,
         headers: {
@@ -56,56 +56,45 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
         },
       );
 
-      print('Response status code: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       if (response.statusCode == 200) {
-        try {
-          final List<dynamic> schedules =
-          json.decode(utf8.decode(response.bodyBytes));
-          print('Parsed schedules: $schedules');
+        final List<dynamic> schedules = json.decode(utf8.decode(response.bodyBytes));
 
-          final filteredItems = schedules
-              .where((item) => item['date'] == formattedDate)
-              .map((item) => {
-            'date': item['date'] ?? 'N/A',
-            'title': item['title'] ?? 'No Title',
-            'price': item['price']?.toString() ?? '0',
-            'imageUrl': item['image'] ?? 'assets/150.png',
-            'pathDetails': item['pathDetails'] ?? [],
-          })
-              .toList();
+        final filteredItems = schedules
+            .where((item) => item['date'] == formattedDate)
+            .map((item) => {
+          'date': item['date'] ?? 'N/A',
+          'title': item['title'] ?? 'No Title',
+          'price': item['price']?.toString() ?? '0',
+          'imageUrl': item['image'] ?? 'assets/150.png',
+          'pathDetails': item['pathDetails'] ?? [],
+        })
+            .toList();
 
-          print('Filtered items for the date $formattedDate: $filteredItems');
+        final List<List<Map<String, dynamic>>> newRecommendations = filteredItems
+            .map((item) => (item['pathDetails'] as List<dynamic>)
+            .map((rec) => {
+          'placeName': rec['placeName'] ?? 'Unknown Place',
+          'price': rec['price']?.toString() ?? '0',
+          'location': rec['address'] ?? 'Unknown Address',
+        })
+            .toList())
+            .toList();
 
-          final List<List<Map<String, dynamic>>> newRecommendations =
-          filteredItems.map((item) {
-            final List<dynamic> pathDetails = item['pathDetails'];
-            return pathDetails.map<Map<String, dynamic>>((rec) {
-              return {
-                'placeName': rec['placeName'] ?? 'Unknown Place',
-                'price': rec['price']?.toString() ?? '0',
-                'location': rec['address'] ?? 'Unknown Address',
-              };
-            }).toList();
-          }).toList();
-
-          setState(() {
-            displayedItems = filteredItems;
-            recommendations = newRecommendations;
-            _expanded = List.generate(displayedItems.length, (index) => false);
-            isEmptySchedule = displayedItems.isEmpty;
-          });
-          print('Successfully updated displayed items: $displayedItems');
-        } catch (e) {
-          print('Error parsing schedules JSON data: $e');
-        }
+        setState(() {
+          displayedItems = filteredItems;
+          recommendations = newRecommendations;
+          _expanded = List.generate(displayedItems.length, (index) => false);
+          isEmptySchedule = displayedItems.isEmpty;
+        });
       } else {
         print('Failed to load schedules. Status code: ${response.statusCode}');
-        print('Error response body: ${response.body}');
       }
     } catch (e) {
       print('Error making schedule request: $e');
+    } finally {
+      setState(() {
+        _isLoadingSchedules = false; // 로딩 종료
+      });
     }
   }
 
@@ -216,73 +205,86 @@ class _ScheduleFragmentState extends State<ScheduleFragment> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
+      body: Column(
+        children: [
+          SizedBox(
+            height: 180,
+            child: CustomWeeklyCalendar(
+              key: _calendarKey,
+              onDateSelected: (date) async {
+                setState(() {
+                  _isLoadingSchedules = true; // 날짜 변경 시 로딩 시작
+                });
+                await _loadSchedulesForDate(date); // 새 데이터 로드
+                setState(() {
+                  _isLoadingSchedules = false; // 로딩 종료
+                });
+              },
+              userId: widget.userId,
+              accessToken: widget.accessToken,
+            ),
+          ),
+          SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            SizedBox(
-              height: 200,
-              child: CustomWeeklyCalendar(
-                key: _calendarKey,
-                onDateSelected: _loadSchedulesForDate,
-                userId: widget.userId,
-                accessToken: widget.accessToken,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0), // 좌우 여백 추가
+              child: Text(
+                '내 일정',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-            SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: Text(
-                    '내 일정',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: isSeeAllEnabled ? _toggleShowAll : null,
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: Text(
-                      showAll ? '간편보기' : '전체보기',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: isSeeAllEnabled ? Colors.blue : Colors.grey,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 8),
-            Expanded(
-              child: isEmptySchedule
-                  ? Center(
+            GestureDetector(
+              onTap: isSeeAllEnabled ? _toggleShowAll : null,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0), // 좌우 여백 추가
                 child: Text(
-                  '일정 없음',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                  showAll ? '간편보기' : '전체보기',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isSeeAllEnabled ? Colors.blue : Colors.grey,
+                  ),
                 ),
-              )
-                  : AnimatedList(
-                key: _listKey,
-                initialItemCount: displayedItems.length,
-                itemBuilder: (context, index, animation) {
-                  return _buildRecommendedItem(
-                    context,
-                    displayedItems[index],
-                    animation,
-                    _expanded[index],
-                    index,
-                  );
-                },
               ),
             ),
           ],
         ),
+
+          SizedBox(height: 8),
+      Expanded(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0), // 좌우 여백 추가
+          child: _isLoadingSchedules
+              ? Center(
+            child: CircularProgressIndicator(), // 로딩 화면 표시
+          )
+              : isEmptySchedule
+              ? Center(
+            child: Text(
+              '일정 없음',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          )
+              : AnimatedList(
+            key: _listKey,
+            initialItemCount: displayedItems.length,
+            itemBuilder: (context, index, animation) {
+              return _buildRecommendedItem(
+                context,
+                displayedItems[index],
+                animation,
+                _expanded[index],
+                index,
+              );
+            },
+          ),
+        ),
+      ),
+        ],
       ),
     );
   }
