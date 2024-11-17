@@ -167,7 +167,7 @@ class _UserSchedulePageState extends State<UserSchedulePage> {
                       IconButton(
                         icon: Icon(Icons.delete, color: Colors.red),
                         onPressed: () {
-                          _deleteSchedule(index); // 일정 삭제
+                          _deleteSchedule(index); // 일정 삭제 후 실시간 반영
                         },
                       ),
                     ],
