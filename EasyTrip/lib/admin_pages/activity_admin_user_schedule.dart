@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'admin.dart';
 
 class UserSchedulePage extends StatefulWidget {
   final String accessToken;
@@ -98,6 +99,10 @@ class _UserSchedulePageState extends State<UserSchedulePage> {
     } catch (e) {
       print("Error deleting schedule: $e");
     }
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => AdminPage(accessToken: widget.accessToken)),
+    );
   }
 
   @override
