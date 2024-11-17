@@ -40,8 +40,8 @@ class _AllSchedulePageState extends State<AllSchedulePage> {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> cartItemsList =
-        json.decode(utf8.decode(response.bodyBytes));
+        final List<dynamic> cartItemsList = json.decode(utf8.decode(response.bodyBytes));
+
         setState(() {
           _cartItems = cartItemsList
               .map((item) => CartItem.fromJson(item))
@@ -61,11 +61,11 @@ class _AllSchedulePageState extends State<AllSchedulePage> {
           _cartItems.sort((a, b) => a.date.compareTo(b.date));
           _isLoading = false;
         });
+
         print('Loaded cart items: $_cartItems');
         print('Loaded recommendations: $recommendations');
       } else {
-        print(
-            'Failed to load cart items. Status code: ${response.statusCode}');
+        print('Failed to load cart items. Status code: ${response.statusCode}');
         setState(() {
           _isLoading = false;
         });
@@ -84,12 +84,43 @@ class _AllSchedulePageState extends State<AllSchedulePage> {
     });
   }
 
-  void _removeCartItem(int index) {
-    setState(() {
-      _cartItems.removeAt(index);
-      recommendations.removeAt(index);
-      _isExpanded.removeAt(index);
-    });
+// 일정 삭제 함수
+  Future<void> _removeCartItem(int index) async {
+    final scheduleId = _cartItems[index].id; // CartItem 객체에서 id를 직접 가져오기
+    final url = Uri.parse('http://44.214.72.11:8080/api/schedules/$scheduleId');
+
+    try {
+      final response = await http.delete(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${widget.accessToken}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print("Schedule with ID $scheduleId deleted successfully.");
+        // 성공적으로 삭제된 후 애니메이션과 함께 삭제 처리
+        setState(() {
+          _cartItems.removeAt(index); // 삭제된 일정은 목록에서 제거
+          recommendations.removeAt(index); // 추천 정보도 함께 제거
+          _isExpanded.removeAt(index); // 해당 일정의 확장 상태도 제거
+        });
+        // AnimatedList에서 항목 삭제
+        _listKey.currentState?.removeItem(
+          index,
+              (context, animation) => SizedBox.shrink(), // 삭제된 항목은 숨기기
+        );
+      } else {
+        print("Failed to delete schedule. Status code: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error deleting schedule: $e");
+    }
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => AllSchedulePage(accessToken: widget.accessToken)),
+    );
   }
 
   @override
@@ -223,6 +254,7 @@ class _AllSchedulePageState extends State<AllSchedulePage> {
                         (rec) => Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4.0),
                       child: Container(
+                        width: MediaQuery.of(context).size.width * 0.9, // 90% of screen width
                         padding: EdgeInsets.all(8.0),
                         decoration: BoxDecoration(
                           color: Colors.grey.shade100,
@@ -231,24 +263,28 @@ class _AllSchedulePageState extends State<AllSchedulePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              rec['placeName']!,
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 12.0), // 왼쪽 패딩 추가
+                              child: Text(
+                                rec['placeName']!,
+                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                              ),
                             ),
                             SizedBox(height: 4),
-                            Text(
-                              rec['location']!,
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 12.0), // 왼쪽 패딩 추가
+                              child: Text(
+                                rec['location']!,
+                                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                              ),
                             ),
                             SizedBox(height: 4),
-                            Text(
-                              '${rec['price']}원',
-                              style: TextStyle(
-                                  fontSize: 13, color: Colors.black87),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 12.0), // 왼쪽 패딩 추가
+                              child: Text(
+                                '${rec['price']}원',
+                                style: TextStyle(fontSize: 13, color: Colors.black87),
+                              ),
                             ),
                           ],
                         ),
@@ -266,6 +302,7 @@ class _AllSchedulePageState extends State<AllSchedulePage> {
 }
 
 class CartItem {
+  final String id;
   final String date;
   final String title;
   final String location;
@@ -273,6 +310,7 @@ class CartItem {
   final String imageUrl;
 
   CartItem({
+    required this.id,
     required this.date,
     required this.title,
     required this.location,
@@ -282,6 +320,7 @@ class CartItem {
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
     return CartItem(
+      id: json['id'].toString(),
       date: json['date'] ?? 'N/A',
       title: json['title'] ?? 'No Title',
       location: json['location'] ?? '',
