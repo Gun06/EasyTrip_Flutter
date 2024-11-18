@@ -26,11 +26,13 @@ class MainActivityState extends State<MainActivity> {
   void initState() {
     super.initState();
     _pages = [
-      ReviewFragment(),
+      ReviewFragment(
+        accessToken: widget.accessToken,
+      ),
       ScheduleFragment(
         username: widget.username,
         accessToken: widget.accessToken,
-        userId: widget.userId, // Pass userId to ScheduleFragment
+        userId: widget.userId,
       ),
       HomeFragment(),
       TrafficFragment(),
