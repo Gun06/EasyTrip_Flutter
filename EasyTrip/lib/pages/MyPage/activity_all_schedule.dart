@@ -254,7 +254,7 @@ class _AllSchedulePageState extends State<AllSchedulePage> {
                         (rec) => Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4.0),
                       child: Container(
-                        width: MediaQuery.of(context).size.width * 0.9, // 90% of screen width
+                        width: MediaQuery.of(context).size.width * 0.9,
                         padding: EdgeInsets.all(8.0),
                         decoration: BoxDecoration(
                           color: Colors.grey.shade100,
@@ -264,7 +264,7 @@ class _AllSchedulePageState extends State<AllSchedulePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.only(left: 12.0), // 왼쪽 패딩 추가
+                              padding: const EdgeInsets.only(left: 12.0),
                               child: Text(
                                 rec['placeName']!,
                                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
@@ -272,7 +272,7 @@ class _AllSchedulePageState extends State<AllSchedulePage> {
                             ),
                             SizedBox(height: 4),
                             Padding(
-                              padding: const EdgeInsets.only(left: 12.0), // 왼쪽 패딩 추가
+                              padding: const EdgeInsets.only(left: 12.0),
                               child: Text(
                                 rec['location']!,
                                 style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
@@ -280,7 +280,7 @@ class _AllSchedulePageState extends State<AllSchedulePage> {
                             ),
                             SizedBox(height: 4),
                             Padding(
-                              padding: const EdgeInsets.only(left: 12.0), // 왼쪽 패딩 추가
+                              padding: const EdgeInsets.only(left: 12.0),
                               child: Text(
                                 '${rec['price']}원',
                                 style: TextStyle(fontSize: 13, color: Colors.black87),
