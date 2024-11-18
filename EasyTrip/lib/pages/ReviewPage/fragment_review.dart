@@ -14,7 +14,6 @@ class ReviewFragment extends StatefulWidget {
 
 class _ReviewFragmentState extends State<ReviewFragment> {
   final ScrollController _scrollController = ScrollController();
-  bool _showScrollToTopButton = false;
   List<int> _scheduleIds = []; // Schedule ID 목록
   List<Map<String, dynamic>> _scheduleDetails = []; // Schedule 세부 정보
   List<List<Map<String, dynamic>>> _recommendations = []; // 추천 장소 정보
@@ -30,13 +29,7 @@ class _ReviewFragmentState extends State<ReviewFragment> {
 
   void _scrollListener() {
     if (_scrollController.offset >= 50) {
-      setState(() {
-        _showScrollToTopButton = true;
-      });
-    } else {
-      setState(() {
-        _showScrollToTopButton = false;
-      });
+      setState(() {});
     }
   }
 
@@ -133,21 +126,6 @@ class _ReviewFragmentState extends State<ReviewFragment> {
     });
   }
 
-  void _scrollToTop() {
-    _scrollController.animateTo(
-      0,
-      duration: Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
-    );
-  }
-
-  @override
-  void dispose() {
-    _scrollController.removeListener(_scrollListener);
-    _scrollController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -176,16 +154,6 @@ class _ReviewFragmentState extends State<ReviewFragment> {
           return _buildScheduleItem(context, _scheduleDetails[index], _recommendations[index], index);
         },
       ),
-      floatingActionButton: _showScrollToTopButton
-          ? FloatingActionButton(
-        onPressed: _scrollToTop,
-        backgroundColor: Colors.white70,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Icon(Icons.arrow_upward, color: Colors.black),
-      )
-          : null,
     );
   }
 
@@ -197,7 +165,7 @@ class _ReviewFragmentState extends State<ReviewFragment> {
       ) {
     return Card(
       color: Colors.white,
-      margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0), // 카드 좌우 여백 추가
+      margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.0),
       ),
@@ -229,18 +197,18 @@ class _ReviewFragmentState extends State<ReviewFragment> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        detail['title']!,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
                         detail['date']!,
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        detail['title']!,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                       SizedBox(height: 4),
@@ -265,50 +233,51 @@ class _ReviewFragmentState extends State<ReviewFragment> {
             ),
             if (_isExpanded[index])
               Column(
-                children: recommendations.map((rec) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 4.0,
-                      horizontal: 8.0,
-                    ),
-                    child: Container(
-                      width: MediaQuery.of(context).size.width * 0.9,
-                      padding: EdgeInsets.all(8.0),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(8),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 16),
+                  ...recommendations.map((rec) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                      child: Container(
+                        width: MediaQuery.of(context).size.width * 0.9,
+                        padding: EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(left: 12.0),
+                              child: Text(
+                                rec['placeName']!,
+                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 12.0),
+                              child: Text(
+                                rec['location']!,
+                                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 12.0),
+                              child: Text(
+                                '${rec['price']}원',
+                                style: TextStyle(fontSize: 13, color: Colors.black87),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 12.0),
-                            child: Text(
-                              rec['placeName']!,
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 12.0),
-                            child: Text(
-                              rec['location']!,
-                              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 12.0),
-                            child: Text(
-                              '${rec['price']}원',
-                              style: TextStyle(fontSize: 13, color: Colors.black87),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
+                ],
               ),
           ],
         ),
